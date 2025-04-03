@@ -1,0 +1,42 @@
+<div= class="cart_summary_container">
+        <div class="offcanvas-body">
+            
+            <!-- Cart content goes here -->
+            {%if cart_items %}
+                {% for item in cart_items %}
+                    <div class="card mb-3 card-szie" style="max-width: 540px;">
+                        <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="{{item.picture.url}}" class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                            <h5 class="card-title">{{item}}</h5>
+                            <p class="card-text"><small class="text-body-secondary">Amount:</small></p>
+                            <select class="form-select form-select-sm" id="qty-cart">
+                                <option selected>
+                            {% for key, value in quantities.items %}
+                                    {%if key == item.id|slugify%}
+                            <option selected> {{value}}</option>
+                                    {%endif%}
+                            {%endfor%}
+
+                            
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5 </option>
+                            </select>
+                            <p class="card-text"><small class="text-body-secondary">{{item.price}}</small></p>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {%else%}
+                    <p>Looks pretty empty over here if you are actually hungry...<p>
+                {%endif%}
+            </div>
+        </div>
+    </body>
