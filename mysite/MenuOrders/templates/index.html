@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Menu Webpage </title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+        rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
+        crossorigin="anonymous">
+
+        <script   src="https://code.jquery.com/jquery-3.7.1.min.js"   
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="   
+        crossorigin="anonymous"></script>
+
+        <!-- Bootstrap JS (including Popper.js) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <style>
+            .fixed-size-img {
+                width: 100%; /* Make it fill the width of the card */
+                height: 200px; /* Set a fixed height */
+                object-fit: cover; /* Crop the image to fit the box */
+            }
+            .card-spacing {
+                margin-right: 30px; /* Add extra spacing between the cards */
+            } 
+
+        </style>
+
+    </head>
+
+    <body>
+        {% include 'navbar.html' %}
+        <div class="container">
+            <br>
+            <br>
+
+                <h2> Appetizers </h2>
+
+            <div class="row">
+                {%for item in appetizer%}
+                    
+                    <div class="card mb-3 card-spacing" style="max-width: 540px;">
+                        <div class="row g-0">
+                            <div class="col-sm-4">
+                                <img src='{{item.picture.url}}' class="fixed-size-img card-img-top" alt="Food picture">
+                            </div>
+                            <div class="col-sm-8">
+
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.item }}</h5>
+                                    <h6 class="card-title">{{ item.price}}$</h6>
+                                    <p class="card-text">
+                                        {{ item.description }}
+                                        <div class="row justify-content">
+                                            <div class="col-md-3">Amount</div>
+                                            <div class="col-md-3">
+        
+                                                <select class="form-select form-select-sm" id="qty-cart">
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                    <option value="3">3</option>
+                                                    <option value="4">4</option>
+                                                    <option value="5">5</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                                                    </svg>
+                                                    Add to cart
+                                                </button>
+                                            </div>
+                                            
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+        
+                {% endfor %}
+            </div>
+
+            <br>
+            <h2> Pasta </h2>
+
+            <div class="row">
+                {%for item in pasta%}
+                    
+                    <div class="card mb-3 card-spacing" style="max-width: 540px;">
+                        <div class="row g-0">
+                            <div class="col-sm-4">
+                                <img src='{{item.picture.url}}' class="fixed-size-img card-img-top" alt="Food picture">
+                            </div>
+                            <div class="col-sm-8">
+
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.item }}</h5>
+                                    <h6 class="card-title">{{ item.price}}$</h6>
+                                    <p class="card-text">
+                                        {{ item.description }}
+                                        <div class="row justify-content">
+                                            <div class="col-md-3">Amount</div>
+                                            <div class="col-md-3">
+        
+                                                <select class="form-select form-select-sm" id="qty-cart">
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                    <option value="3">3</option>
+                                                    <option value="4">4</option>
+                                                    <option value="5">5</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                                                    </svg>
+                                                    Add to cart
+                                                </button>
+                                            </div>
+                                            
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+        
+                {% endfor %}
+            </div>
+            <br>
+            <h2> Grill </h2>
+
+            <div class="row">
+                {%for item in grill%}
+                    
+                    <div class="card mb-3 card-spacing" style="max-width: 540px;">
+                        <div class="row g-0">
+                            <div class="col-sm-4">
+                                <img src='{{item.picture.url}}' class="fixed-size-img card-img-top" alt="Food picture">
+                            </div>
+                            <div class="col-sm-8">
+
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.item }}</h5>
+                                    <h6 class="card-title">{{ item.price}}$</h6>
+                                    <p class="card-text">
+                                        {{ item.description }}
+                                        <div class="row justify-content">
+                                            <div class="col-md-3">Amount</div>
+                                            <div class="col-md-3">
+        
+                                                <select class="form-select form-select-sm" id="qty-cart">
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                    <option value="3">3</option>
+                                                    <option value="4">4</option>
+                                                    <option value="5">5</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="col-md-6">
+                                                <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                                                    </svg>
+                                                    Add to cart
+                                                </button>
+                                            </div>
+                                            
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+        
+                    
+                {% endfor %}
+            </div>
+            <br>
+            <h2> Seafood </h2>
+
+            <div class="row">
+                {%for item in seafood%}
+                    
+                    <div class="card mb-3 card-spacing" style="max-width: 540px;">
+                        <div class="row g-0">
+                            <div class="col-sm-4">
+                                <img src='{{item.picture.url}}' class="fixed-size-img card-img-top" alt="Food picture">
+                            </div>
+                            <div class="col-sm-8">
+
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.item }}</h5>
+                                    <h6 class="card-title">{{ item.price}}$</h6>
+                                    <p class="card-text">
+                                        {{ item.description }}
+                                <div class="row justify-content">
+                                    <div class="col-md-3">Amount</div>
+                                    <div class="col-md-3">
+
+                                        <select class="form-select form-select-sm" id="qty-cart">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                                                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                                            </svg>
+                                            Add to cart
+                                        </button>
+                                    </div>
+                                    
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% endfor %}
+            </div>
+            <br>
+            <h2> Dessert </h2>
+
+            <div class="row">
+                {%for item in dessert%}
+                    
+                    <div class="card mb-3 card-spacing" style="max-width: 540px;">
+                        <div class="row g-0">
+                            <div class="col-sm-4">
+                                <img src='{{item.picture.url}}' class="fixed-size-img card-img-top" alt="Food picture">
+                            </div>
+                            <div class="col-lg-8">
+
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.item }}</h5>
+                                    <h6 class="card-title">{{ item.price}}$</h6>
+                                    <p class="card-text">
+                                        {{ item.description }}
+                                    </p>
+                                <div class="row justify-content">
+                                    <div class="col-md-3">Amount</div>
+                                    <div class="col-md-3">
+
+                                        <select class="form-select form-select-sm" id="qty-cart">
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                                                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                                            </svg>
+                                            Add to cart
+                                        </button>
+                                    </div>
+                                    
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% endfor %}
+            </div>
+
+          
+        </div>
+
+
+    </body>
+    <script>
+        $(document).ready(function() {
+            console.log("Document ready, event delegation set up");
+        
+            $(document).on('click', '.add-cart', function(e) {
+                e.preventDefault();
+                console.log("Button clicked!");
+        
+                // Get the clicked button and item ID
+                const $button = $(this);
+                const itemId = $button.data('item-id');
+                console.log("Item ID:", itemId);
+        
+                // Find the closest quantity selector
+                const $qtySelect = $button.closest('.card').find('select[id^="qty-cart"]');
+                const itemQty = $qtySelect.length ? $qtySelect.find('option:selected').text() : 1;
+                if ($qtySelect.length) {
+                    console.log("Quantity found:", itemQty);
+                } else {
+                    console.log("WARNING: Quantity selector not found, defaulting to 1");
+                }
+        
+                // CSRF token (ensure this is properly rendered in your template)
+                const csrfToken = '{{csrf_token}}';
+                console.log("CSRF token present:", csrfToken ? "Yes" : "No");
+        
+                console.log("Sending AJAX request...");
+        
+                // Send AJAX POST request
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "cart:cart_add" %}',
+                    data: {
+                        item_id: itemId,
+                        item_qty: itemQty,
+                        csrfmiddlewaretoken: csrfToken,
+                        action: 'post'
+                    },
+                    dataType: 'json',
+                    cache: false,
+                    beforeSend: function() {
+                        console.log("AJAX request being sent with data:", {
+                            item_id: itemId,
+                            item_qty: itemQty,
+                            action: 'post'
+                        });
+                        $button.prop('disabled', true); // Prevent multiple clicks
+                    },
+                    success: function(json) {
+                        console.log("AJAX Success - Full response:", json);
+        
+                        // Update cart summary in offcanvas
+                        if (json.cart_summary_html) {
+                            const $offcanvasBody = $('#offcanvasRight .offcanvas-body');
+                            if ($offcanvasBody.length) {
+                                $offcanvasBody.html(json.cart_summary_html);
+                                console.log("Cart summary updated in offcanvas");
+        
+                                // Show the offcanvas 
+                                const offcanvas = bootstrap.Offcanvas.getOrCreateInstance('#offcanvasRight');
+                                //offcanvas.dont_show();
+                            } else {
+                                console.error("Offcanvas body not found in DOM!");
+                            }
+                        } else {
+                            console.error("Cart summary HTML not found in response!");
+                        }
+        
+                        // Update cart quantity
+                        const newQty = json.qty || json['qty'];
+                        console.log("New quantity value:", newQty);
+        
+                        const cartElement = document.getElementById('cart_quantity');
+                        if (cartElement) {
+                            console.log("Cart element found, updating from", cartElement.textContent, "to", newQty);
+                            cartElement.textContent = newQty;
+                            console.log("Cart element updated. New text:", cartElement.textContent);
+                        } else {
+                            console.error("Cart element #cart_quantity not found in DOM!");
+                        }
+                    },
+                    error: function(xhr, errmsg, err) {
+                        console.error("AJAX Error:", errmsg);
+                        console.error("Status:", xhr.status);
+                        console.error("Response text:", xhr.responseText);
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false); // Re-enable button
+                    }
+                });
+            });
+        });
+    </script>
+
+</html>
