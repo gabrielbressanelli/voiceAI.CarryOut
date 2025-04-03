@@ -27,6 +27,25 @@ class Cart():
 
         self.session.modified = True
 
+    def cart_total(self):
+        # get item ids
+        item_ids = self.cart.keys()
+        #Look up keys in database
+        items = Menu.objects.filter(id__in=item_ids)
+        #Get quantities
+        quantities = self.cart
+        # Start counting at 0
+        total = 0
+
+        for key, value in quantities.items():
+            #Converting string to int for math 
+            key= int(key)
+            for item in items: 
+                if item.id == key: 
+                    total = total + (item.price * value)
+        return total
+
+
     def __len__(self):
         return len(self.cart)
 
@@ -42,3 +61,31 @@ class Cart():
     def get_quants(self):
         quantites = self.cart
         return quantites
+
+    def update(self, item, quantity):
+        item_id = str(item)
+        item_qty = int(quantity)
+
+        # Get Cart
+        our_cart = self.cart
+
+        #Update dictionary (cart)
+        our_cart[item_id] = item_qty
+
+        self.session.modified = True
+
+        thing = self.cart
+
+        return thing
+
+    def delete(self, item):
+        item_id = str(item)
+
+        # Delete from dictionary (cart)
+        if item_id in self.cart:
+            del self.cart[item_id]
+
+        self.session.modified = True
+
+
+        
