@@ -47,7 +47,6 @@
                                 <img src='{{item.picture.url}}' class="fixed-size-img card-img-top" alt="Food picture">
                             </div>
                             <div class="col-sm-8">
-
                                 <div class="card-body">
                                     <h5 class="card-title">{{ item.item }}</h5>
                                     <h6 class="card-title">{{ item.price}}$</h6>
@@ -339,6 +338,8 @@
                     },
                     success: function(json) {
                         console.log("AJAX Success - Full response:", json);
+
+                        location.reload()
         
                         // Update cart summary in offcanvas
                         if (json.cart_summary_html) {
@@ -349,7 +350,7 @@
         
                                 // Show the offcanvas 
                                 const offcanvas = bootstrap.Offcanvas.getOrCreateInstance('#offcanvasRight');
-                                //offcanvas.dont_show();
+                                //offcanvas.show();
                             } else {
                                 console.error("Offcanvas body not found in DOM!");
                             }

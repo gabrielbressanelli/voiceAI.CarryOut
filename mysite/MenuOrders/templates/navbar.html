@@ -4,13 +4,19 @@
     <head>
 
         <style>
-            .card .col-md-4 img {
-                width: 100%; /* Make the image take the full width of its container */
-                height: 150px; /* Set a fixed height for all images */
-                object-fit: cover; /* Ensure images are cropped to fit while maintaining aspect ratio */
-                border-radius: 5px; /* Optional: Adjust for rounded corners */
-            }
+
+            .offcanvas {
+            --bs-offcanvas-width: 35vw; 
+            max-width: 700px;  
+            min-width: 400px;  
+        }
+            .canvas-images{
+            width: 100%; /* Make it fill the width of the card */
+            height: 2000px; /* Set a fixed height */
+            object-fit: cover; /* Crop the image to fit the box */
+        }      
         </style>
+
 
     </head>
     <body>

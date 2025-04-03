@@ -17,6 +17,7 @@ def index(request):
     cart = Cart(request)
     cart_items = cart.get_items
     quantities = cart.get_quants
+    totals = cart.cart_total() 
 
     context = {
         'menu': menu,
@@ -28,6 +29,7 @@ def index(request):
         'beverage': beverage,
         'cart_items': cart_items,
         'quantities': quantities,
+        'totals':totals,
     }
 
     return render(request, 'index.html', context)

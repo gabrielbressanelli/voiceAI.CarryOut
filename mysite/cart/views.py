@@ -8,7 +8,8 @@ def cart_summary(request):
     cart = Cart(request)
     cart_items = cart.get_items
     quantities = cart.get_quants
-    return render(request, "cart/cart_summary.html", {'cart_items': cart_items, 'quantities': quantities} )
+    totals = cart.cart_total() 
+    return render(request, "cart/cart_summary.html", {'cart_items': cart_items, 'quantities': quantities, 'totals': totals} )
 
 def cart_add(request):
     # Get the cart
@@ -49,9 +50,30 @@ def cart_add(request):
     # Add food to the cart 
 
 def cart_delete(request):
-    pass
+    cart = Cart(request)
+
+    if request.POST.get('action') == 'post':
+        # Get food option
+        item_id = int(request.POST.get('item_id'))
+
+        # Call delete function on Cart
+        cart.delete(item=item_id)
+
+        response = JsonResponse({'Item' : item_id}) 
+        return response 
 
 def cart_update(request):
-    pass
+    cart = Cart(request)
+
+    if request.POST.get('action') == 'post':
+        # Get food option
+        item_id = int(request.POST.get('item_id'))
+        item_qty = int(request.POST.get('item_qty'))
+
+        cart.update(item=item_id, quantity=item_qty)
+
+        response = JsonResponse({'qty' : item_qty}) 
+        return response 
+
 
 

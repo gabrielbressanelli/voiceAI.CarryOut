@@ -1,42 +1,168 @@
-<div= class="cart_summary_container">
-        <div class="offcanvas-body">
-            
-            <!-- Cart content goes here -->
-            {%if cart_items %}
-                {% for item in cart_items %}
-                    <div class="card mb-3 card-szie" style="max-width: 540px;">
-                        <div class="row g-0">
-                        <div class="col-md-4">
-                            <img src="{{item.picture.url}}" class="img-fluid rounded-start" alt="...">
-                        </div>
-                        <div class="col-md-8">
-                            <div class="card-body">
-                            <h5 class="card-title">{{item}}</h5>
-                            <p class="card-text"><small class="text-body-secondary">Amount:</small></p>
-                            <select class="form-select form-select-sm" id="qty-cart">
-                                <option selected>
-                            {% for key, value in quantities.items %}
-                                    {%if key == item.id|slugify%}
-                            <option selected> {{value}}</option>
-                                    {%endif%}
-                            {%endfor%}
+<style>
+        .btn-circle {
+        width: 30px;
+        height: 30px;
+        padding: 6px 0px;
+        border-radius: 15px;
+        text-align: center;
+        font-size:0.5px;
+        line-height: 1.42857;
+    }
 
-                            
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5 </option>
-                            </select>
-                            <p class="card-text"><small class="text-body-secondary">{{item.price}}</small></p>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {%else%}
-                    <p>Looks pretty empty over here if you are actually hungry...<p>
-                {%endif%}
+    .canvas-images{
+        width: 100%; /* Make it fill the width of the card */
+        height: 200px; /* Set a fixed height */
+        object-fit: cover; /* Crop the image to fit the box */
+    }  
+
+
+</style>
+
+<div class="cart_summary_container">
+  <div class="offcanvas-body">
+    <!-- Cart content goes here -->
+    {% if cart_items %}
+      {% for item in cart_items %}
+        <div class="card mb-3 card-szie" style="max-width: 540px;">
+          <div class="row g-0">
+            <div class="col-md-4">
+              <img src="{{item.picture.url}}" class="img-fluid rounded-start canvas-images" alt="...">
             </div>
+            <div class="col-md-8">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0">{{item}}</h5>
+                    <button type="button" data-index="{{item.id}}" class="btn btn-danger btn-circle delete-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                          </svg>
+                          </svg>
+                    </button>
+                </div>
+                <p class="card-text"><small class="text-body-secondary">Amount:</small></p>
+                <div class="d-flex align-items-center">
+                  <select class="form-select form-select-md  me-2" id="select{{item.id}}">
+                    {% for key, value in quantities.items %}
+                      {% if key == item.id|slugify %}
+                        <option selected>{{value}}</option>
+                      {% endif %}
+                    {% endfor %}
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                  <button type="button" data-index="{{item.id}}" class="btn btn-primary btn-sm update-cart">Update</button>
+                </div>
+                <p class="card-text"><small class="text-body-secondary">{{item.price}}</small></p>
+              </div>
+            </div>
+          </div>
         </div>
-    </body>
+      {% endfor %}
+      <h5>Total: $ {{ totals }}</h5>
+    {% else %}
+      <p>Looks pretty empty over here if you are actually hungry...</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// Update cart
+$(document).on('click', '.update-cart', function(e) {
+    e.preventDefault();
+
+    // Grab item ID
+    var itemId = $(this).data('index');
+
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'cart:cart_update' %}",  
+        data: {
+            item_id: itemId,
+            item_qty: $('#select' + itemId + ' option:selected').text(),  // Fix selector
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            action: 'post'
+        },
+
+        success: function(json) {
+            console.log("Cart Updated");
+// Set session storage to indicate that the offcanvas should remain open
+sessionStorage.setItem('keepOffcanvasOpen', 'true');
+
+// Reload the page
+location.reload();
+
+},
+
+error: function(xhr, status, error) {
+console.error("AJAX Error:", status, error);
+console.error("Response:", xhr.responseText);
+}
+});
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
+const offcanvasElement = document.getElementById('offcanvasRight');
+
+if (offcanvasElement) {
+// Add "show" class directly to avoid animation
+offcanvasElement.classList.add('show');
+
+// Optional: Remove the session storage flag after applying
+sessionStorage.removeItem('keepOffcanvasOpen');
+}
+}
+});
+
+// Delete item from the cart
+$(document).on('click', '.delete-item', function(e) {
+    e.preventDefault();
+
+    // Grab item ID
+    var itemId = $(this).data('index');
+
+    $.ajax({
+        type: 'POST',
+        url: "{% url 'cart:cart_delete' %}",  
+        data: {
+            item_id: itemId,
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            action: 'post'
+        },
+
+        success: function(json) {
+            console.log("Item deleted");
+
+            // Set session storage to indicate that the offcanvas should remain open
+            sessionStorage.setItem('keepOffcanvasOpen', 'true');
+
+            // Reload the page
+            location.reload();
+
+        },
+
+        error: function(xhr, status, error) {
+            console.error("AJAX Error:", status, error);
+            console.error("Response:", xhr.responseText);
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
+        const offcanvasElement = document.getElementById('offcanvasRight');
+
+        if (offcanvasElement) {
+            // Add "show" class directly to avoid animation
+            offcanvasElement.classList.add('show');
+
+            // Optional: Remove the session storage flag after applying
+            sessionStorage.removeItem('keepOffcanvasOpen');
+        }
+    }
+});
+
+</script>
