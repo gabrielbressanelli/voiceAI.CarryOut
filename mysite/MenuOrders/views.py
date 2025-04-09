@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Menu
 from cart.cart import Cart
+from django.contrib import messages
+
 
 
 def index(request):
@@ -30,6 +32,7 @@ def index(request):
         'cart_items': cart_items,
         'quantities': quantities,
         'totals':totals,
+
     }
 
     return render(request, 'index.html', context)

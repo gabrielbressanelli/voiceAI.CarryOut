@@ -3,6 +3,7 @@ from .cart import Cart
 from MenuOrders.models import Menu
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.contrib import messages 
 
 def cart_summary(request):
     cart = Cart(request)
