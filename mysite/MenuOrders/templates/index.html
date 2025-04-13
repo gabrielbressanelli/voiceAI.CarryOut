@@ -36,9 +36,14 @@
         {% include 'navbar.html' %}
 
         <div class="container">
-            <div id="liveAlertPlaceholder"></div>
-            <br>
-            <br>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                        <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
 
                 <h2> Appetizers </h2>
 

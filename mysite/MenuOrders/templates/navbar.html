@@ -16,49 +16,45 @@
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container px-4 px-lg-5">
-                <a class="navbar-brand" href="#">
-                    <img src="https://onesixtymain.com/wp-content/uploads/2023/06/160Main-New.png" alt="160 Main" width="220" height="68">
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                        <li class="nav-item"><a class="nav-link active" aria-current="page" href="#!">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#!">About</a></li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Shop</a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="#!">All Products</a></li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><a class="dropdown-item" href="#!">Popular Items</a></li>
-                                <li><a class="dropdown-item" href="#!">New Arrivals</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <!-- Offcanvas Cart Button -->
-                    <button class="btn btn-outline-dark d-flex align-items-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
-                        <i class="bi-cart-fill me-1"></i>
-                        Cart
-                        <span class="badge bg-dark text-white ms-1 rounded-pill" id="cart_quantity">
-                            {{ cart|length }}
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </nav>
+          <div class="container px-4 px-lg-5">
+            <!-- Always visible brand/logo -->
+            <a class="navbar-brand" href="{% url 'index' %}">
+              <img src="https://onesixtymain.com/wp-content/uploads/2023/06/160Main-New.png" alt="160 Main" width="220" height="68">
+            </a>
+      
 
-        <!-- Offcanvas Sidebar -->
+      
+            <!-- Navigation links: hide on small screens, show on large screens -->
+            <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarSupportedContent">
+              <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="{% url 'index' %}">Menu</a>
+                </li>
+                <!-- You can add more nav items here if needed -->
+              </ul>
+            </div>
+      
+            <!-- Offcanvas Cart Button - always visible -->
+            <button class="btn btn-outline-dark d-flex align-items-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
+              <i class="bi-cart-fill me-1"></i>
+              Cart
+              <span class="badge bg-dark text-white ms-1 rounded-pill" id="cart_quantity">
+                {{ cart|length }}
+              </span>
+            </button>
+          </div>
+        </nav>
+      
+        <!-- Offcanvas Sidebar for Cart -->
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-            <div class="offcanvas-header">
-                <h5 id="offcanvasRightLabel">Your Cart</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            <div class="offcanvas-body" id="cart_summary_container">
-                <!-- Cart content goes here -->
-                {% include 'cart/cart_summary.html' %}
-            </div>
+          <div class="offcanvas-header">
+            <h5 id="offcanvasRightLabel">Your Cart</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body" id="cart_summary_container">
+            {% include 'cart/cart_summary.html' %}
+          </div>
         </div>
-    </body>
+      </body>
+      
 </html>

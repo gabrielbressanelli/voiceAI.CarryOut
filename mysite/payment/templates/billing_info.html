@@ -42,7 +42,7 @@
                         <br>
                         <div class="card">
                             <div class="card-header">
-                                <h4>Order Summary </h4>
+                                <h4>Order Summary</h4>
                             </div>
                             <div class="card-body">
                                 {% for item in cart_items %}
@@ -65,23 +65,36 @@
                         <br><br>
                         <div class="card">
                             <div class="card-header">
-                                <h4>Delivery </h4>
+                                <h4>Delivery Info </h4>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{% url 'billing_info' %}">
-                                    {% csrf_token %}
-                                    {{form.as_p}}
+                                Name: {{shipping_info.full_name}}<br>
+                                Email: {{shipping_info.email}}<br>
+                                Address: {{shipping_info.address1}}<br>
+                                <small>{{shipping_info.address2}}, {{shipping_info.zipcode}}<br></small>
+                                City: {{shipping_info.city}}<br>
+                                State: {{shipping_info.state}}<br>
+                                <br>
+                                <a href="{% url 'delivery_form' %}" class="btn btn-outline-dark">
+                                    Update Address
+                                </a>
                             </div>
                         </div>
-                        <br>
-                            <div align="center">
-                                <button type="submit" class="btn btn-primary">
-                
-                                Proceed to Payment
-                                </button>
+                        <br><br>
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Billing Info</h4>
                             </div>
-                                </form>
-
+                            <form method="POST" action="{% url 'process_order' %}">
+                                {% csrf_token %}
+                                <div class="card-body">
+                                    {{ billing_form.as_p }}
+                                </div>
+                                <div class="card-footer text-center">
+                                    <button type="submit" class="btn btn-primary">Pay Now</button>
+                                </div>
+                            </form>
+                        </div>
                     <br><br>
                 </div>
             </div>
