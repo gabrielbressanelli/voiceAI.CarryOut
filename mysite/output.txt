@@ -1,0 +1,19 @@
+id,item,price,description,food_type
+1,"Sausage & Peppers",18,"Pan fried hot and sweet peppers, potato and onions",appetizer
+2,"Tuscan Artichoke",16,"Pan fried with a white wine, lemon, caper sauce.",appetizer
+3,"Grilled Shrimp",20,"Breaded, chargrilled, topped with a lemon cream sauce.",appetizer
+4,Calamari,16,"Tossed with capers and bell peppers.",appetizer
+5,"Crab Cakes",22,"Jumbo lump crab, panko crust, topped with an Italian cocktail sauce.",appetizer
+6,"Antipasto Italiano",26,"Charcuterie, cheeses, roasted peppers and caponata. Serves two.",appetizer
+7,Caprese,16,"Vine ripe tomato, fresh mozzarella, basil infused pesto.",appetizer
+8,"Mezza Rigatoni",20,"Rigatoni noodles sautéed with your choice of spicy vodka sauce or tomato basil sauce.",pasta
+9,"Pappardelle Al Funghi",30,"Egg pappardelle tossed with wild mushrooms sautéed in a black truffle parmigiona cream sauce",pasta
+10,"Rissoto All'Aragosta",38,"5oz lobster tail tossed in arborio rice and cherry tomatoes, sautéed with a white wine butter sauce",pasta
+11,"Chef's Lasagna",24,"Béchamel, parmigiano cheese, homemade meat sauce.",pasta
+12,Filet,52,"8oz center cut, chargrilled, served with potato tortino and grilled vegetables.",grill
+13,"Chargrilled Quail",38,"Served with arugula topped with a fresh Sicilian citrus drizzle and shaved parmigiano.",grill
+14,"Sicilian Style",22,"Your choice of meat, breaded, chargrilled served with ammoglio and grilled vegetables.",grill
+15,"Scottish Salmon",34,"Zesty champagne cream sauce served with sautéed spinach.",seafood
+16,Pescatore,38,"Mixture of fresh seafood, white wine pomodoro sauce.",seafood
+17,"Panna Cotta",5,"Sweetened cooked cream topped with a raspberry sauce. Served chilled.",dessert
+18,Tiramisu,8,"Espresso soaked lady fingers layered with marscapone cheese, dusted with cocoa powder.",dessert
