@@ -39,7 +39,7 @@ class OrderItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     
     def __str__(self):
-        return f'Order Item - {str(self.id)}'
+        return f'Order Item - {str(self.id)} from Order {str(self.order.id)}'
 
         
 
