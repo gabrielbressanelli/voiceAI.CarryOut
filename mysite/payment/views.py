@@ -63,11 +63,6 @@ def process_order(request):
         message.warning(request, 'Access Denied!')
         return redirect('/')
 
-def payment_success(request):
-    return render(request, "payment_success.html", {})
-
-def payment_failed(request):
-    return render(request, "payment_failed.html", {})
 
 def billing_info(request):
     # Checking to see if it is coming from a post button instead of just reaching the link by typing
@@ -95,7 +90,7 @@ def billing_info(request):
             'currency_code': 'USD',
             'notify_url': 'https://{}{}'.format(host, reverse("paypal-ipn")),
             'return_url': 'https://{}{}'.format(host, reverse("payment_success")),
-            'cancel_url': 'https://{}{}'.format(host, reverse("payment_failed")),
+            #'cancel_url': 'https://{}{}'.format(host, reverse("payment_failed")),
         }
 
         # Create PayPal Form(it is just a button)
