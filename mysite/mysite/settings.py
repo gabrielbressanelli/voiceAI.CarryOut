@@ -31,8 +31,8 @@ SECRET_KEY = '***REMOVED***'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['voiceaicarryout-production.up.railway.app', 'voiceaicarryout-production.up.railway.app']
-CSRF_TRUSTED_ORIGINS = ['voiceaicarryout-production.up.railway.app', 'voiceaicarryout-production.up.railway.app']
+ALLOWED_HOSTS = ['voiceaicarryout-production.up.railway.app', 'https://voiceaicarryout-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://voiceaicarryout-production.up.railway.app']
 
 
 # Application definition
