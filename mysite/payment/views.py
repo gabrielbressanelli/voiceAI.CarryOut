@@ -58,16 +58,6 @@ def process_order(request):
                 # delete the key
                 del request.session[key]
 
-
-
-
-
-
-
-
-            
-
-
         return render(request, 'process_order.html', {})
     else:
         message.warning(request, 'Access Denied!')
@@ -130,7 +120,11 @@ def billing_info(request):
         return redirect('/')
     
 
+def payment_success(request):
+    return render(request, "payment_success.html", {})
 
+def payment_failed(request):
+    return render(request, "payment_failed.html", {})
 
 
 def delivery_form(request):
