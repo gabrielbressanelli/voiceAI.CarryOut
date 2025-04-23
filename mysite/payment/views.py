@@ -4,6 +4,12 @@ from .forms import ShippingForm, PaymentForm
 from cart.cart import Cart
 from MenuOrders.models import Menu
 from .models import ShippingAddress, Order, OrderItem
+from django.urls import reverse
+from django.conf import settings
+import uuid # unique user id for NO duplicate orders
+
+# Importing paypal stuff
+from paypal.standard.forms import PayPalPaymentsForm
 
 def process_order(request):
     if request.POST:
@@ -70,6 +76,9 @@ def process_order(request):
 def payment_success(request):
     return render(request, "payment_success.html", {})
 
+def payment_failed(request):
+    return render(request, "payment_failed.html", {})
+
 def billing_info(request):
     # Checking to see if it is coming from a post button instead of just reaching the link by typing
     if request.POST:
@@ -83,8 +92,28 @@ def billing_info(request):
         my_shipping = request.POST 
         request.session['my_shipping'] = my_shipping # can reference this session in any other view
 
+        # Get the host
+        host = request.get_host()
+
+        # Create paypal form and some more stuff
+        paypal_dict = {
+            'business': settings.PAYPAL_RECEIVER_EMAIL,
+            'amount': totals,
+            'item': "Book Order",
+            'no_shipping': '2',
+            'invoice': str(uuid.uuid4()),
+            'currency_code': 'USD',
+            'notify_url': 'https://{}{}'.format(host, reverse("paypal-ipn")),
+            'return_url': 'https://{}{}'.format(host, reverse("payment_success")),
+            'cancel_url': 'https://{}{}'.format(host, reverse("payment_failed")),
+        }
+
+        # Create PayPal Form(it is just a button)
+        paypal_form = PayPalPaymentsForm(initial=paypal_dict)
+
         form = ShippingForm(request.POST)
         billing_form = PaymentForm()
+
         # Generating a context to pass both form and cart items
         context = {
         'cart_items': cart_items,
@@ -92,6 +121,7 @@ def billing_info(request):
         'totals':totals,
         'shipping_info': request.POST,
         'billing_form': billing_form,
+        'paypal_form': paypal_form,
         }
 
         return render(request, 'billing_info.html', context)
