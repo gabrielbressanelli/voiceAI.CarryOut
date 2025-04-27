@@ -80,17 +80,22 @@ def billing_info(request):
         # Get the host
         host = request.get_host()
 
+        # Create a Invoice Number  
+        my_Invoice = str(uuid.uuid4())
+
+        # Create 
+
         # Create paypal form and some more stuff
         paypal_dict = {
             'business': settings.PAYPAL_RECEIVER_EMAIL,
             'amount': totals,
-            'item': "Book Order",
+            'item_name': 'Food Order',
             'no_shipping': '2',
-            'invoice': str(uuid.uuid4()),
+            'invoice': my_Invoice,
             'currency_code': 'USD',
             'notify_url': 'https://{}{}'.format(host, reverse("paypal-ipn")),
             'return_url': 'https://{}{}'.format(host, reverse("payment_success")),
-            #'cancel_url': 'https://{}{}'.format(host, reverse("payment_failed")),
+            'cancel_return': 'https://{}{}'.format(host, reverse("payment_failed")),
         }
 
         # Create PayPal Form(it is just a button)
