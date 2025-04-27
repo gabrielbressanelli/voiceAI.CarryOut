@@ -83,8 +83,6 @@ def billing_info(request):
         # Create a Invoice Number  
         my_Invoice = str(uuid.uuid4())
 
-        # Create 
-
         # Create paypal form and some more stuff
         paypal_dict = {
             'business': settings.PAYPAL_RECEIVER_EMAIL,
@@ -100,6 +98,27 @@ def billing_info(request):
 
         # Create PayPal Form(it is just a button)
         paypal_form = PayPalPaymentsForm(initial=paypal_dict)
+
+        create_order = Order(full_name=full_name, email=email, shipping_address=shipping_address, amount_paid=amount_paid, invoice=my_Invocie)
+        create_order.save() 
+
+        # Add order items
+        # Get the order ID
+        order_id = create_order.pk # pk for primary key
+        # Get item info
+        for item in cart_items():
+            # Get item id
+            item_id = item.id
+            # Get item price
+            price = item.price
+            # Get quantity
+            for key, value in quantities().items():
+                if int(key) ==  item.id:
+                    #Create order item
+                    create_order_item = OrderItem(order_id=order_id ,  item_id= item_id,  quantity=value, price=price,)
+                    create_order_item.save()
+        
+
 
         form = ShippingForm(request.POST)
         billing_form = PaymentForm()
