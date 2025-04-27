@@ -160,8 +160,6 @@ def payment_success(request):
     'totals':totals,
     }
 
-
-
     for key in list(request.session.keys()):
         if key == 'session_key':
             del request.session[key]
