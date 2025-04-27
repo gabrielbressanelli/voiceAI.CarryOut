@@ -34,33 +34,33 @@ Bootstrap (for frontend styling)
 ## **Setup Instructions**
 
 ### **Clone the repository:**
-
+```bash
 git clone https://github.com/your-username/160maincarryout.git
 cd 160maincarryout
-
+```
 ### **Create a virtual environment and activate it:**
-
+```bash
 python3 -m venv venv
 source venv/bin/activate
-
+```
 ### **Install the dependencies:**
-
+```bash
 pip install -r requirements.txt
-
+```
 ### **Set up environment variables (e.g., in a .env file):**
-
+```bash
 SECRET_KEY=your-django-secret-key
 DEBUG=True
 DB_PASSWORD_YO=your-postgres-password
-
+```
 ### **Apply database migrations:**
-
+```bash
 python manage.py migrate
-
+```
 ###**Run the development server:**
-
+```bash
 python manage.py runserver
-
+```
 Access the app at http://127.0.0.1:8000/.
 
 ## **PayPal Setup Notes**
