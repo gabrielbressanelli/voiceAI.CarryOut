@@ -8,5 +8,5 @@ def paypal_payment_received(sender, **kwargs):
     # Grab the info that paypal sends
     paypal_obj = sender
     print(paypal_obj)
-    print(f'Amount paid { paypal_obj.mc_gross}')
+    print(f'Amount paid: { paypal_obj.mc_gross}')
 

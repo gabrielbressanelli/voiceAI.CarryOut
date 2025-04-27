@@ -26,6 +26,10 @@ class Order(models.Model):
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
     date_ordered = models.DateTimeField(auto_now_add=True)
 
+    # PayPal Invoice and Paid t/f (boolean)
+    invoice = models.CharField(max_length=250, null=True, blank=True)
+    paid = models.BooleanField(default=False)
+    
     def __str__(self):
         return f'Order - {str(self.id)}'
 
