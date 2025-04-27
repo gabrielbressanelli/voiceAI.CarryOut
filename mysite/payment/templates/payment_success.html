@@ -48,6 +48,7 @@
 
                             <div class="card-body">
                                 {% for item in cart_items %}
+                                <img src="{{item.picture.url}}" class="img-fluid rounded-start canvas-images" alt="...">
                                     <p>{{item.item}} : {{item.price}}
                                         <br>
                                     <small>Quantity:
