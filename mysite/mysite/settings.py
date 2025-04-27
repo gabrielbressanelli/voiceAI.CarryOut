@@ -35,6 +35,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'https://160maincarryout.com', '160maincarryout.com', 'voiceaicarryout-production.up.railway.app', 'https://voiceaicarryout-production.up.railway.app']
 CSRF_TRUSTED_ORIGINS = ['https://160maincarryout.com', 'https://voiceaicarryout-production.up.railway.app']
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 

@@ -124,7 +124,7 @@ def payment_success(request):
     return render(request, "payment_success.html", {})
 
 def payment_failed(request):
-    return render(request, "payment_success.html", {})
+    return render(request, "payment_failed.html", {})
 
 
 def delivery_form(request):
