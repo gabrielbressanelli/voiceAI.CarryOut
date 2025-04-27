@@ -46,6 +46,19 @@
                                 <p>Your order is completed...</p>
                             </div>
 
+                            <div class="card-body">
+                                {% for item in cart_items %}
+                                    <p>{{item.item}} : {{item.price}}
+                                        <br>
+                                    <small>Quantity:
+                                    {% for key, value in quantities.items %}
+                                        {% if key == item.id|slugify %}
+                                            {{value}}
+                                        {% endif %}
+                                    {% endfor %}</small>
+                                {% endfor %} </p>
+                            </div>
+
                 </div>
             </div>
         </div>

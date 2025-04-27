@@ -147,7 +147,27 @@ def billing_info(request):
     
 
 def payment_success(request):
-    return render(request, "payment_success.html", {})
+    # Delete browser cart
+    # First get cart
+    cart = Cart(request)
+    cart_items = cart.get_items
+    quantities = cart.get_quants
+    totals = cart.cart_total() 
+
+    context = {
+    'cart_items': cart_items,
+    'quantities': quantities,
+    'totals':totals,
+    }
+
+
+
+    for key in list(request.session.keys()):
+        if key == 'session_key':
+            del request.session[key]
+
+
+    return render(request, "payment_success.html", context)
 
 def payment_failed(request):
     return render(request, "payment_success.html", {})
