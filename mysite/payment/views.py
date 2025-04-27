@@ -106,7 +106,7 @@ def billing_info(request):
         # Create PayPal Form(it is just a button)
         paypal_form = PayPalPaymentsForm(initial=paypal_dict)
 
-        create_order = Order(full_name=full_name, email=email, shipping_address=shipping_address, amount_paid=amount_paid, invoice=my_Invocie)
+        create_order = Order(full_name=full_name, email=email, shipping_address=shipping_address, amount_paid=amount_paid, invoice=my_Invoice)
         create_order.save() 
 
         # Add order items
