@@ -77,6 +77,13 @@ def billing_info(request):
         my_shipping = request.POST 
         request.session['my_shipping'] = my_shipping # can reference this session in any other view
 
+        # Gather order info
+        full_name = my_shipping['full_name']
+        email = my_shipping['email']
+        # Creat Delivery address from session
+        shipping_address = f'{my_shipping['address1']}\n{my_shipping['address2']}\n{my_shipping['city']}\n{my_shipping['state']}\n{my_shipping['zipcode']}\n'
+        amount_paid = totals
+
         # Get the host
         host = request.get_host()
 
