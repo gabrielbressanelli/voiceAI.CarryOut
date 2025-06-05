@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load enviromental variables
 load_dotenv()
 
-DB_PASSWORD_YO = os.environ['DB_PASSWORD_YO']
+DB_PASSWORD_YO = os.environ.get('DB_PASSWORD_YO', '')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -160,4 +160,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 PAYPAL_TEST = True
 
 PAYPAL_RECEIVER_EMAIL = 'business@GSBcodingtest.com' # Business sandbox email
+
+#
 
