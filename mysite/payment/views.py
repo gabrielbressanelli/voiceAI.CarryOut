@@ -3,7 +3,7 @@ from django.contrib import messages
 from .forms import ShippingForm, PaymentForm
 from cart.cart import Cart
 from MenuOrders.models import Menu
-from .models import ShippingAddress, Order, OrderItem, M
+from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
 from django.conf import settings
 import json
