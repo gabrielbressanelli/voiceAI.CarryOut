@@ -3,13 +3,21 @@ from django.contrib import messages
 from .forms import ShippingForm, PaymentForm
 from cart.cart import Cart
 from MenuOrders.models import Menu
-from .models import ShippingAddress, Order, OrderItem
+from .models import ShippingAddress, Order, OrderItem, M
 from django.urls import reverse
 from django.conf import settings
+import json
+import stripe
+from decimal import Decimal, ROUND_HALF_UP
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 import uuid # unique user id for NO duplicate orders
 
 # Importing paypal stuff
 from paypal.standard.forms import PayPalPaymentsForm
+
+# Using stripe Key
+stripe.api_key = settings.STRIPE_SECRETE_KEY
 
 def process_order(request):
     if request.POST:
@@ -60,7 +68,7 @@ def process_order(request):
 
         return render(request, 'process_order.html', {})
     else:
-        message.warning(request, 'Access Denied!')
+        messages.warning(request, 'Access Denied!')
         return redirect('/')
 
 
@@ -197,4 +205,91 @@ def delivery_form(request):
     }
 
     return render(request, 'delivery.html', context)
+
+def _money_to_cents(amount: Decimal) -> int:
+    return int((amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) * 100))
+
+def create_checkout_session(request):
+    # get cart from session
+    cart = Cart(request)
+    if len(cart) == 0:
+        return JsonResponse({"error":"Cart is empty"}, status=400)
+    
+    # Building item lookup
+    item_ids = list(cart.cart.keys())
+    menu_map = {str(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
+
+    # Stripe Line Items
+    line_items = []
+    for item_id, qty in cart.cart.items():
+        m = menu_map.get(item_id)
+        if not m:
+            continue
+        line_items.append({
+            "price_data":{
+                "currency":"usd",
+                "product_data": {"name":m.item},
+                "unit_amount": _money_to_cents(m.price)
+            },
+            "quantity": int(qty),
+        })
+    
+    if not line_items:
+        return JsonResponse({"error": "No valid items in cart"}, status=400)
+    
+    # Success and Cancel URL's
+    success_url = request.build_absolute_uri(reverse("checkout_success") + "?session_id={CHECKOUT_SESSION_ID}")
+    cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
+
+    # Create the Checkout Session (No Shipping)
+    session = stripe.checkout.Session.create(
+        mode='payment',
+        line_items=line_items,
+        success_url=success_url,
+        cancel_url=cancel_url,
+        automatic_tax={"enabled":False},
+        allow_promotion_codes=True,
+
+        payment_intent_data={
+            "metadata":{
+                "source":"django_session_cart",
+                # Important: Store a snapshot for the webhook can reconcile
+                "cart_snapshot":json.dumps([
+                    {"menu_id": k, "qty": int(v)} for k, v in cart.cart.items()
+                ])
+            }
+        },
+    )
+
+    return JsonResponse({"checkout_url": session.url})
         
+def checkout_success(request):
+    return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
+
+def checkout_cancel(request):
+    return HttpResponse("Payment Canceled. Your cart is still available.")
+
+@csrf_exempt
+def stripe_webhook(request):
+    sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")
+    try:
+        event = stripe.Webhook.construct_event(request.body, sig, settings.STRIPE_WEBHOOK_SECRET)
+    except Exception:
+        return HttpResponse(status=400)
+    
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        snap = session.get("payment_intent") and stripe.PaymentIntent.retrieve(
+            session["payment_intent"]
+        ).metadata.get("cart_snapshot")
+
+        # TODO:
+
+        # PARSE SNAOSHOT IF SERVER NEEDS IT
+        # CREATE ORDER ROW, MARK PAID, PRINT TICKET ON THE KITCHEN, SEND RECIEPT ETC
+        # CLEAR USER CART FOR NEXCT LOAD PAGE
+        pass
+    return HttpResponse(status=200)
+
+
+

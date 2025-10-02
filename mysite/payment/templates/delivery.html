@@ -82,6 +82,8 @@
                             </div>
                                 </form>
 
+                            <button id="pay-btn">Pay with Stripe</button>
+
                     <br><br>
                 </div>
             </div>
@@ -89,5 +91,21 @@
 
 
     </body>
+
+    <script>
+        document.getElementById("pay-btn").addEventListener("click", async () => {
+          const btn = document.getElementById("pay-btn");
+          btn.disabled = true; btn.textContent = "Redirecting…";
+          try {
+            const r = await fetch("/pay/create-checkout-session/");
+            const { checkout_url, error } = await r.json();
+            if (error) throw new Error(error);
+            window.location.href = checkout_url;
+          } catch (e) {
+            alert("Could not start payment. Please try again.");
+            btn.disabled = false; btn.textContent = "Pay with Stripe";
+          }
+        });
+        </script>
 
 </html>
