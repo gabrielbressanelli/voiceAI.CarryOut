@@ -17,7 +17,7 @@ import uuid # unique user id for NO duplicate orders
 from paypal.standard.forms import PayPalPaymentsForm
 
 # Using stripe Key
-stripe.api_key = settings.STRIPE_SECRETE_KEY
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def process_order(request):
     if request.POST:
