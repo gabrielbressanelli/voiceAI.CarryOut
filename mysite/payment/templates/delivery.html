@@ -97,7 +97,7 @@
           const btn = document.getElementById("pay-btn");
           btn.disabled = true; btn.textContent = "Redirecting…";
           try {
-            const r = await fetch("/pay/create-checkout-session/");
+            const r = await fetch("/payment/create-checkout-session/");
             const { checkout_url, error } = await r.json();
             if (error) throw new Error(error);
             window.location.href = checkout_url;
