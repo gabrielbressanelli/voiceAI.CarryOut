@@ -42,12 +42,10 @@
                 <p class="card-text"><small class="text-body-secondary">Amount:</small></p>
                 <div class="d-flex align-items-center">
                   <select class="form-select form-select-md me-2" id="select{{ item.id }}">
-                    {% for n in "1,2,3,4,5".split(",") %}
+                    {% for n in '12345'|make_list %}
                       <option value="{{ n }}"
-                        {% for key, value in quantities.items %}
-                          {% if key|stringformat:"s" == item.id|stringformat:"s" and value|stringformat:"s" == n %}
-                            selected
-                          {% endif %}
+                        {% for k,v in quantities.items %}
+                          {% if k == item.id|slugify and v|stringformat:"s" == n %}selected{% endif %}
                         {% endfor %}
                       >{{ n }}</option>
                     {% endfor %}
