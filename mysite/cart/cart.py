@@ -1,49 +1,48 @@
 from MenuOrders.models import Menu
+from decimal import Decimal
+
+CART_SESSION_KEY = 'cart'
 
 class Cart():
     def __init__(self, request):
         self.session = request.session
+        data = self.session.get(CART_SESSION_KEY)
 
-        # Get current session key if it exists
-        cart = self.session.get('session_key')
+        # migrate from old key if present (cart = session_key)
+        if data is None and "session_key" in self.session and isinstance(self.session["session_key"], dict):
+            data = self.session["session_key"]
+            self.session[CART_SESSION_KEY] = data
+            del self.session["session_key"]
+            self.session.modified = True
 
-        # Create a new one if it does not find one
-        if 'session_key' not in request.session:
-            cart = self.session['session_key'] = {}
-
-        #cart available everywhere
-        self.cart = cart
+        if data is None:
+            data = {}
+            self.session[CART_SESSION_KEY] = data
+        
+        self.cart = data
 
     def add(self, item, quantity):
         item_id = str(item.id)
-        item_qty = str(quantity)
-
-        # Logic
-        if item_id in self.cart:
-            pass
-        else:
-            #self.cart[item_id] = {'price:' : str(item.price)}
-            self.cart[item_id] = int(item_qty)
-
+        qty = int(quantity)
+        self.cart[item_id] = int(self.cart.get(item_id, 0)) + qty
         self.session.modified = True
 
-    def cart_total(self):
-        # get item ids
-        item_ids = self.cart.keys()
-        #Look up keys in database
-        items = Menu.objects.filter(id__in=item_ids)
-        #Get quantities
-        quantities = self.cart
-        # Start counting at 0
-        total = 0
 
-        for key, value in quantities.items():
-            #Converting string to int for math 
-            key= int(key)
-            for item in items: 
-                if item.id == key: 
-                    total = total + (item.price * value)
+    def cart_total(self) -> Decimal:
+        if not self.cart:
+            return Decimal("0.00")
+        
+        # Make keys to ints and then map back for lookup
+        ids = [int(k) for k in self.cart.keys()]
+        menu_map = {str(m.id): m for m in Menu.objects.filter(id__in=ids)}
+
+        total = Decimal("0.00")
+        for item_id, qty in self.cart.items():
+            m = menu_map.get(item_id)
+            if m:
+                total += m.price * int(qty)
         return total
+
 
 
     def __len__(self):
@@ -51,10 +50,10 @@ class Cart():
 
     def get_items(self):
         # Get ids from carts
-        item_ids = self.cart.keys()
+        ids = list(self.cart.keys())
 
         # View ids to look up items on database model
-        items = Menu.objects.filter(id__in=item_ids)
+        items = Menu.objects.filter(id__in=ids)
 
         return items
 
@@ -64,19 +63,15 @@ class Cart():
 
     def update(self, item, quantity):
         item_id = str(item)
-        item_qty = int(quantity)
-
-        # Get Cart
-        our_cart = self.cart
-
-        #Update dictionary (cart)
-        our_cart[item_id] = item_qty
+        qty = max(0, int(quantity))
+        if qty == 0:
+            self.cart.pop(item_id, None)
+        else:
+            self.cart[item_id] = qty
 
         self.session.modified = True
 
-        thing = self.cart
-
-        return thing
+        return self.cart
 
     def delete(self, item):
         item_id = str(item)
@@ -84,7 +79,10 @@ class Cart():
         # Delete from dictionary (cart)
         if item_id in self.cart:
             del self.cart[item_id]
+            self.session.modified = True
 
+    def clear(self):
+        self.session[CART_SESSION_KEY] = {}
         self.session.modified = True
 
 

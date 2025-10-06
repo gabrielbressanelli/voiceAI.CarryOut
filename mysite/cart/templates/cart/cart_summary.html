@@ -41,17 +41,16 @@
                 </div>
                 <p class="card-text"><small class="text-body-secondary">Amount:</small></p>
                 <div class="d-flex align-items-center">
-                  <select class="form-select form-select-md  me-2" id="select{{item.id}}">
-                    {% for key, value in quantities.items %}
-                      {% if key == item.id|slugify %}
-                        <option selected>{{value}}</option>
-                      {% endif %}
+                  <select class="form-select form-select-md me-2" id="select{{ item.id }}">
+                    {% for n in "1,2,3,4,5".split(",") %}
+                      <option value="{{ n }}"
+                        {% for key, value in quantities.items %}
+                          {% if key|stringformat:"s" == item.id|stringformat:"s" and value|stringformat:"s" == n %}
+                            selected
+                          {% endif %}
+                        {% endfor %}
+                      >{{ n }}</option>
                     {% endfor %}
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
                   </select>
                   <button type="button" data-index="{{item.id}}" class="btn btn-primary btn-sm update-cart">Update</button>
                 </div>
