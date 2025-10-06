@@ -284,7 +284,7 @@ def items_from_snapshot(snapshot_json: str):
     except json.JSONDecodeError:
         snap = []
 
-    ids = [int(r["menu_id"] for r in snap if "menu_id" in r)]
+    ids = [int(r["menu_id"]) for r in snap if "menu_id" in r]
     menu_map = {m.id: m for m in Menu.objects.filter(id__in=ids)}
 
     items = []
