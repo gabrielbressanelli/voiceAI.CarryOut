@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+import stripe.error
 from .forms import ShippingForm, PaymentForm
 from cart.cart import Cart
 from MenuOrders.models import Menu
@@ -7,17 +8,22 @@ from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
 from django.conf import settings
 import json
-import stripe
+import stripe, requests
 from decimal import Decimal, ROUND_HALF_UP
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import uuid # unique user id for NO duplicate orders
+import os, environ
+
 
 # Importing paypal stuff
 from paypal.standard.forms import PayPalPaymentsForm
 
 # Using stripe Key
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# Bearer key for printing at the kitchen
+printing_key = os.getenv("order_printing_secret_key")
 
 def process_order(request):
     if request.POST:
@@ -269,6 +275,36 @@ def checkout_success(request):
 def checkout_cancel(request):
     return HttpResponse("Payment Canceled. Your cart is still available.")
 
+def items_from_snapshot(snapshot_json: str):
+    """
+    The "snapshot_json is what gert sotre in the paymentIntent MetaData:
+    [{"menu_id":12, "qty": 3}]
+    Which returns a list of dicts: [{'name':..., "qty":...}] and the decimal total
+    """
+    try:
+        snap = json.loads(snapshot_json) if snapshot_json else []
+    except json.JSONDecodeError:
+        snap = []
+
+    ids = [int(r["menu_id"] for r in snap if "menu_id" in r)]
+    menu_map = {m.id: m for m in Menu.objects.filter(id__in=ids)}
+
+    items = []
+    total = Decimal("0.00")
+    for r in snap:
+        mid = int(r.get("menu_id", 0))
+        qty = int(r.get("qty", 0))
+        m = menu_map.get(mid)
+
+        if not m or qty <= 0:
+            continue
+        total += m.price*qty
+        items.append({"name":m.item, "qty":qty})
+    return total, items
+
+def order_summary_string(items):
+    return "; ".join(f"{it['qty']}x {it['name']}" for it in items)
+
 @csrf_exempt
 def stripe_webhook(request):
     sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")
@@ -277,18 +313,54 @@ def stripe_webhook(request):
     except Exception:
         return HttpResponse(status=400)
     
-    if event["type"] == "checkout.session.completed":
+    if event["type"] in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
         session = event["data"]["object"]
-        snap = session.get("payment_intent") and stripe.PaymentIntent.retrieve(
-            session["payment_intent"]
-        ).metadata.get("cart_snapshot")
+        if session.get("payment_status") != 'paid':
+            return HttpResponse(status=200)
 
-        # TODO:
+        # 1) Grab PaymentIntent so we can read MetaData
+        pi_id = session.get("payment_intent")
+        cart_snapshot = None
+        if pi_id:
+            try: 
+                pi = stripe.PaymentIntent.retrieve(pi_id)
+                cart_snapshot = pi.metadata.get("cart_snapshot")
+            except stripe.error.StripeError:
+                return HttpResponse(status=400)
+        
+        # 2) Rebuild items and summary
+        items, _total = items_from_snapshot(cart_snapshot)
+        summary= order_summary_string(items)
 
-        # PARSE SNAOSHOT IF SERVER NEEDS IT
-        # CREATE ORDER ROW, MARK PAID, PRINT TICKET ON THE KITCHEN, SEND RECIEPT ETC
-        # CLEAR USER CART FOR NEXCT LOAD PAGE
-        pass
+        # 3) Customer Name
+        cust_name = (session.get("customer_details") or {}).get("name") or "Guest"
+
+        # 4) Order number based on session id last 6 chars
+        order_number = f"CHK-{(session.get('id') or '')[-6:] or 'UNKNOWN'}"
+
+        # 5) Send to printer
+        if settings.PRINT_SERVICE_URL and settings.order_printing_secret_key:
+            try:
+                resp = requests.post(
+                    settings.PRINT_SERVICE_URL,
+                    headers={
+                        "Authorization": f'Bearer {settings.order_printing_secret_key}',
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "customerName": cust_name,
+                        "order_summary": summary,
+                        "orderNumber": order_number,
+                    },
+                    timeout=8,
+                )
+            except requests.RequestException:
+                return HttpResponse(status=500)
+            
+            if not (200 <= resp.status_code < 300):
+                return HttpResponse(status=500)
+
+
     return HttpResponse(status=200)
 
 
