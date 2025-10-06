@@ -6,19 +6,18 @@ from MenuOrders.models import Menu
 from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
 from django.conf import settings
-import json
-import stripe, requests
+import stripe, requests, logging, os, environ, json, uuid
 from decimal import Decimal, ROUND_HALF_UP
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-import uuid # unique user id for NO duplicate orders
-import os, environ
+
 
 
 # Importing paypal stuff
 from paypal.standard.forms import PayPalPaymentsForm
 
 # Using stripe Key
+log = logging.getLogger("stripe_webhook")
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Bearer key for printing at the kitchen
@@ -307,14 +306,34 @@ def order_summary_string(items):
 @csrf_exempt
 def stripe_webhook(request):
     sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")
+
+    # --- Step 5: log signature failures precisely ---
     try:
-        event = stripe.Webhook.construct_event(request.body, sig, settings.STRIPE_WEBHOOK_SECRET)
-    except Exception:
+        event = stripe.Webhook.construct_event(
+            payload=request.body,
+            sig_header=sig,
+            secret=settings.STRIPE_WEBHOOK_SECRET,
+        )
+    except stripe.error.SignatureVerificationError as e:
+        log.error("Signature verify FAILED: %s", e)   # tells you wrong/stale whsec or mode mismatch
         return HttpResponse(status=400)
-    
-    if event["type"] in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
+    except ValueError as e:
+        log.error("Invalid payload JSON: %s", e)
+        return HttpResponse(status=400)
+    except Exception as e:
+        log.error("Generic webhook error: %s", e)
+        return HttpResponse(status=400)
+
+    etype = event.get("type")
+    log.info("Stripe event: %s", etype)
+
+    if etype in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
         session = event["data"]["object"]
-        if session.get("payment_status") != 'paid':
+        payment_status = session.get("payment_status")
+        log.info("payment_status=%s session_id=%s", payment_status, session.get("id"))
+
+        if payment_status != "paid":
+            log.info("Not paid yet; acknowledging without printing.")
             return HttpResponse(status=200)
 
         # 1) Grab PaymentIntent so we can read MetaData
