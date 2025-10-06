@@ -298,7 +298,7 @@ def items_from_snapshot(snapshot_json: str):
             continue
         total += m.price*qty
         items.append({"name":m.item, "qty":qty})
-    return total, items
+    return items, total
 
 def order_summary_string(items):
     return "; ".join(f"{it['qty']}x {it['name']}" for it in items)
