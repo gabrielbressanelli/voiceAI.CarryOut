@@ -347,7 +347,7 @@ def stripe_webhook(request):
                         "Content-Type": "application/json",
                     },
                     json={
-                        "Type":"Web Carryout",
+                        "type":"Web Carryout",
                         "customerName": cust_name,
                         "order_summary": summary,
                         "orderNumber": order_number,
