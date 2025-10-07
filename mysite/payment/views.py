@@ -21,7 +21,7 @@ log = logging.getLogger("stripe_webhook")
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Bearer key for printing at the kitchen
-printing_key = os.getenv("order_printing_secret_key")
+printing_key = os.getenv("PRINT_SERVICE_TOKEN")
 
 def process_order(request):
     if request.POST:
@@ -357,12 +357,12 @@ def stripe_webhook(request):
         order_number = f"CHK-{(session.get('id') or '')[-6:] or 'UNKNOWN'}"
 
         # 5) Send to printer
-        if settings.PRINT_SERVICE_URL and settings.order_printing_secret_key:
+        if settings.PRINT_SERVICE_URL and settings.PRINT_SERVICE_TOKEN:
             try:
                 resp = requests.post(
                     settings.PRINT_SERVICE_URL,
                     headers={
-                        "Authorization": f'Bearer {settings.order_printing_secret_key}',
+                        "Authorization": f'Bearer {settings.PRINT_SERVICE_TOKEN}',
                         "Content-Type": "application/json",
                     },
                     json={
