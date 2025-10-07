@@ -93,7 +93,7 @@ def billing_info(request):
         full_name = my_shipping['full_name']
         email = my_shipping['email']
         # Creat Delivery address from session
-        shipping_address = f'{my_shipping['address1']}\n{my_shipping['address2']}\n{my_shipping['city']}\n{my_shipping['state']}\n{my_shipping['zipcode']}\n'
+        #shipping_address = f'{my_shipping['address1']}\n{my_shipping['address2']}\n{my_shipping['city']}\n{my_shipping['state']}\n{my_shipping['zipcode']}\n'
         amount_paid = totals
 
         # Get the host
@@ -118,7 +118,7 @@ def billing_info(request):
         # Create PayPal Form(it is just a button)
         paypal_form = PayPalPaymentsForm(initial=paypal_dict)
 
-        create_order = Order(full_name=full_name, email=email, shipping_address=shipping_address, amount_paid=amount_paid, invoice=my_Invoice)
+        create_order = Order(full_name=full_name, email=email, shipping_address="shipping_address", amount_paid=amount_paid, invoice=my_Invoice)
         create_order.save() 
 
         # Add order items
