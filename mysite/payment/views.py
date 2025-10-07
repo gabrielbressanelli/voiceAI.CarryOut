@@ -41,11 +41,11 @@ def process_order(request):
         full_name = my_shipping['full_name']
         email = my_shipping['email']
         # Creat Delivery address from session
-        shipping_address = f'{my_shipping['address1']}\n{my_shipping['address2']}\n{my_shipping['city']}\n{my_shipping['state']}\n{my_shipping['zipcode']}\n'
+        #shipping_address = f'{my_shipping['address1']}\n{my_shipping['address2']}\n{my_shipping['city']}\n{my_shipping['state']}\n{my_shipping['zipcode']}\n'
         amount_paid = totals
 
         # Creat Order
-        create_order = Order(full_name=full_name, email=email, shipping_address=shipping_address, amount_paid=amount_paid)
+        create_order = Order(full_name=full_name, email=email, shipping_address="shipping_address", amount_paid=amount_paid)
         create_order.save() 
 
         # Add order items
