@@ -225,18 +225,21 @@ def create_checkout_session(request):
 
     # Stripe Line Items
     line_items = []
-    for item_id, qty in cart.cart.items():
-        m = menu_map.get(item_id)
-        if not m:
-            continue
+    for L in cart.lines:
+        mods = "; ".join(
+            ([f"{o['group']}: {o['name']}" if o['price_delta']=="0.00" else f"{o['group']} (+${o['price_delta']})" for o in L["options"]]) 
+            or []
+        )
+        display_name = L["menu_name"] + (f"- {mods}" if mods else "") 
         line_items.append({
-            "price_data":{
-                "currency":"usd",
-                "product_data": {"name":m.item},
-                "unit_amount": _money_to_cents(m.price)
+            "price_delta": {
+                "currency": "usd",
+                "product_data": {"name": display_name},
+                "unit_amount": int(Decimal(L["unit_price"]) * 100),
             },
-            "quantity": int(qty),
+            "quantity": int(L["qty"]),
         })
+        
     
     if not line_items:
         return JsonResponse({"error": "No valid items in cart"}, status=400)
@@ -275,7 +278,7 @@ def checkout_cancel(request):
 
 def items_from_snapshot(snapshot_json: str):
     """
-    The "snapshot_json is what gert sotre in the paymentIntent MetaData:
+    The "snapshot_json is what get sotre in the paymentIntent MetaData:
     [{"menu_id":12, "qty": 3}]
     Which returns a list of dicts: [{'name':..., "qty":...}] and the decimal total
     """
@@ -289,16 +292,31 @@ def items_from_snapshot(snapshot_json: str):
 
     items = []
     total = Decimal("0.00")
-    for r in snap:
-        mid = int(r.get("menu_id", 0))
-        qty = int(r.get("qty", 0))
-        m = menu_map.get(mid)
+    for L in snap:
+        qty = int(L.get("qty", 0))
+        name = L.get("menu_name") or "Item"
+        unit = Decimal(str(L.get("unit_price", "0.00")))
+        opts = L.get("options") or []
+        note = L.get("note", "")
+        total += unit * qty
 
-        if not m or qty <= 0:
-            continue
-        total += m.price*qty
-        items.append({"name":m.item, "qty":qty})
+
+        if opts:
+            mod_text = "; ".join(
+                f"{o.get('group', '')}: {o.get('name', '')}" + (f" (+${o.get('price_delta')})" if o.get("price_delta") not in (None, "0.00", "0") else "" )
+                for o in opts
+            )
+
+            disp_name = f"{name} ({mod_text})"
+        else:
+            disp_name = name
+
+        if note:
+            disp_name = f"{disp_name} [Note: {note}]"
+        items.append({"name": disp_name, "qty":qty})
     return items, total
+
+
 
 def order_summary_string(items):
     return "; ".join(f"{it['qty']}x {it['name']}" for it in items)

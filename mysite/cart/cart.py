@@ -1,4 +1,4 @@
-from MenuOrders.models import Menu
+from MenuOrders.models import Menu, MenuModifierGroup, ModfierOption
 from decimal import Decimal
 
 CART_SESSION_KEY = 'cart'
@@ -6,47 +6,102 @@ CART_SESSION_KEY = 'cart'
 class Cart():
     def __init__(self, request):
         self.session = request.session
-        data = self.session.get(CART_SESSION_KEY)
-
-        # migrate from old key if present (cart = session_key)
-        if data is None and "session_key" in self.session and isinstance(self.session["session_key"], dict):
-            data = self.session["session_key"]
-            self.session[CART_SESSION_KEY] = data
-            del self.session["session_key"]
-            self.session.modified = True
-
-        if data is None:
-            data = {}
-            self.session[CART_SESSION_KEY] = data
-        
-        self.cart = data
-
-    def add(self, item, quantity):
-        item_id = str(item.id)
-        qty = int(quantity)
-        self.cart[item_id] = int(self.cart.get(item_id, 0)) + qty
+        self.lines = self.session.get(CART_SESSION_KEY) or []
+        # normalize for a list
+        if not isinstance(self.lines, list):
+            self.lines = []
+            self.session[CART_SESSION_KEY] = self.lines
+    def _save(self):
+        self.session[CART_SESSION_KEY] = self.lines
         self.session.modified = True
 
 
-    def cart_total(self) -> Decimal:
-        if not self.cart:
-            return Decimal("0.00")
-        
-        # Make keys to ints and then map back for lookup
-        ids = [int(k) for k in self.cart.keys()]
-        menu_map = {str(m.id): m for m in Menu.objects.filter(id__in=ids)}
+    def add(self, menu:Menu, quantity: int, selected_option_ids: list[int] | None = None, note: str = ""):
+        """ Selected option ids, list of ids chosen by the user for modifiers"""
+        selected_option_ids = selected_option_ids or [] 
+        # validate selection and compute unit price now (snapshot)
+        unit_price, options_snapshot = self._validate_and_price(menu,selected_option_ids)
 
+        # Attempt to merge identical lines (same item + same options)
+        for line in self.lines:
+            if line["menu_id"] == menu.id and sorted(line['options']) == sorted([o["id"]for o in options_snapshot]):
+                line["qty"] += int(quantity)
+                self._save()
+                return
+        self.lines.append({
+            "menu_id": menu.id,
+            "menu_name":menu.item,
+            "qty": int(quantity),
+            "unit_price": str(unit_price), # str for JSON
+            "options": options_snapshot,
+            "note": note or "",
+        })
+        self._save()
+
+    def _validate_and_price(self, menu:Menu, selected_ids: list[int]) -> tuple[Decimal, list[dict]]:
+        mmgs = menu.modfier_groups.select_related("group").all().order_by("sort_order")
+        selected = ModfierOption.objects.filter(id__in=selected_ids, group__in=[m.group for m in mmgs], active=True).select_related("group")
+
+        # per group validation
+        by_group: dict[int, list[ModfierOption]] = {}
+        for opt in selected:
+            by_group.setdefault(opt.group_id, []).append(opt)
+        
+        for m in mmgs:
+            req = m.effective_required()
+            mn = m.effective_min()
+            mx = m.effective_max()
+            chosen = by_group.get(m.group_id, [])
+            if req and len(chosen) == 0:
+                raise ValueError(f"Missing required selection: {m.group.name}")
+            if mn and len(chosen) < mn:
+                raise ValueError(f"Select at least {mn} option(s) for {m.group.name}")
+            if mx and len(chosen) > mx:
+                raise ValueError(f'Select at most {mx} option(s) for {m.group.name}')
+            
+        # compute price 
+        base = menu.price
+        addons = sum((opt.price_delta for opt in selected), start=Decimal("0.00"))
+        unit = (base + addons).quantize(Decimal("0.01"))
+        
+        #Snapshot options (names + deltas) so Stripe printer do not need DB
+        options_snapshot = [{
+            "id": opt.id,
+            "name": opt.name,
+            "group": opt.group.name,
+            "price_delta": str(opt.price_delta)
+        } for opt in selected]
+
+        return unit, options_snapshot
+
+
+
+    def cart_total(self):
         total = Decimal("0.00")
-        for item_id, qty in self.cart.items():
-            m = menu_map.get(item_id)
-            if m:
-                total += m.price * int(qty)
-        return total
+        for L in self.lines:
+            total += Decimal(L["unit_price"]) * int(L["qty"])
+        return total.quantize(Decimal("0.01"))
 
 
 
     def __len__(self):
-        return len(self.cart)
+        return sum(int(L["qty"]) for L in self.lines)
+    
+    def as_snapshot_for_stripe(self):
+        """Serialize a compact, selfsuficient snapshot for PI metadada"""
+
+        return [
+            {
+                "menu_id":L["menu_id"],
+                "menu_name": L["menu_name"],
+                "qty": int(L["qty"]),
+                "unit_price": L["unit_price"],
+                "options": L["options"],
+                "note": L.get("note", ""),
+
+            }
+            for L in self.lines
+        ]
 
     def get_items(self):
         # Get ids from carts
@@ -61,25 +116,15 @@ class Cart():
         quantites = self.cart
         return quantites
 
-    def update(self, item, quantity):
-        item_id = str(item)
-        qty = max(0, int(quantity))
-        if qty == 0:
-            self.cart.pop(item_id, None)
-        else:
-            self.cart[item_id] = qty
+    def update_qty(self, line_index: int, qty: int):
+        if 0 <= line_index < len(self.lines):
+            self.lines[line_index]["qty"] = int(qty)
+            self._save()
 
-        self.session.modified = True
-
-        return self.cart
-
-    def delete(self, item):
-        item_id = str(item)
-
-        # Delete from dictionary (cart)
-        if item_id in self.cart:
-            del self.cart[item_id]
-            self.session.modified = True
+    def delete(self, line_index: int):
+        if 0 <= line_index < len(self.lines):
+            del self.lines[line_index]
+            self._save()
 
     def clear(self):
         self.session[CART_SESSION_KEY] = {}

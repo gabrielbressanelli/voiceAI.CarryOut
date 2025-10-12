@@ -30,15 +30,27 @@ def cart_summary(request):
 
 @require_POST
 def cart_add(request):
+    menu_id= int(request.POST["menu_id"])
+    qty = int(request.POST["qty", 1])
+
+    raw = request.POST.getlist("modifier_options_ids[]") or request.POST.get("modifier_option_ids", "")
+    if isinstance(raw, str):
+        selected_ids = [int(x) for x in raw.split(",") if x.strip().isdigit()]
+
+    else:
+        selected_ids = [int(x) for x in raw if str(x).isdigit()]
+
+    note = request.POST.get("note", "")
+    menu = get_object_or_404(Menu, id=menu_id)
     # Get the cart
     cart = Cart(request)
 
 
     try:
-        item_id = int(request.POST.get('item_id'))
-        item_qty = int(request.POST.get('item_qty', 1))
-    except (TypeError, ValueError):
-        return HttpResponseBadRequest("Bad Params")
+        cart.add(menu,qty, selected_option_ids=selected_ids, note=note)
+    except ValueError as e:
+        return JsonResponse({"ok":False, "error":str(e)}, status=400)
+    return JsonResponse({"ok": True, "cart_qty": len(cart)})
     
 
 
