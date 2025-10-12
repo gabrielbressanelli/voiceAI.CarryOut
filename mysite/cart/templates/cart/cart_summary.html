@@ -20,150 +20,132 @@
 
 <div class="cart_summary_container">
   <div class="offcanvas-body">
-    <!-- Cart content goes here -->
-    {% if cart_items %}
-      {% for item in cart_items %}
+
+    {% if lines %}
+      {% for line in lines %}
         <div class="card mb-3 card-szie" style="max-width: 540px;">
           <div class="row g-0">
             <div class="col-md-4">
-              <img src="{{item.picture.url}}" class="img-fluid rounded-start canvas-images" alt="...">
+              {% if line.picture_url %}
+                <img src="{{ line.picture_url }}" class="img-fluid rounded-start canvas-images" alt="">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light canvas-images rounded-start">
+                  <span class="text-muted">No image</span>
+                </div>
+              {% endif %}
             </div>
+
             <div class="col-md-8">
               <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
-                    <h5 class="card-title mb-0">{{item}}</h5>
-                    <button type="button" data-index="{{item.id}}" class="btn btn-danger btn-circle delete-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                          </svg>
-                          </svg>
-                    </button>
+                  <h5 class="card-title mb-0">{{ line.name }}</h5>
+                  <button type="button" data-index="{{ line.index }}" class="btn btn-danger btn-circle delete-line">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                      <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                    </svg>
+                  </button>
                 </div>
-                <p class="card-text"><small class="text-body-secondary">Amount:</small></p>
+
+                {% if line.options %}
+                  <div class="mt-2">
+                    {% for o in line.options %}
+                      <span class="opt-chip">
+                        {% if o.group %}<strong>{{ o.group }}:</strong> {% endif %}{{ o.name }}
+                        {% if o.price_delta and o.price_delta != "0.00" %} (+${{ o.price_delta }}){% endif %}
+                      </span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                {% if line.note %}
+                  <div class="note-chip">Note: {{ line.note }}</div>
+                {% endif %}
+
+                <p class="card-text mt-2"><small class="text-body-secondary">Amount:</small></p>
+
                 <div class="d-flex align-items-center">
-                  <select class="form-select form-select-md me-2" id="select{{ item.id }}">
+                  <select class="form-select form-select-md me-2" id="select{{ line.index }}">
                     {% for n in '12345'|make_list %}
-                      <option value="{{ n }}"
-                        {% for k,v in quantities.items %}
-                          {% if k == item.id|slugify and v|stringformat:"s" == n %}selected{% endif %}
-                        {% endfor %}
-                      >{{ n }}</option>
+                      <option value="{{ n }}" {% if line.qty|stringformat:"s" == n %}selected{% endif %}>{{ n }}</option>
                     {% endfor %}
                   </select>
-                  <button type="button" data-index="{{item.id}}" class="btn btn-primary btn-sm update-cart">Update</button>
+                  <button type="button" data-index="{{ line.index }}" class="btn btn-primary btn-sm update-line">Update</button>
                 </div>
-                <p class="card-text"><small class="text-body-secondary">${{item.price}}</small></p>
+
+                <p class="card-text mt-1">
+                  <small class="text-body-secondary">
+                    ${{ line.unit_price }} each
+                  </small>
+                </p>
+
               </div>
             </div>
           </div>
         </div>
       {% endfor %}
-      <div align="right">
+
+      <div class="text-end">
         <h5>Total: $ {{ totals }}</h5>
-        <a href="{% url 'delivery_form' %}" class='btn btn-success'>Checkout</a>
+        <a href="{% url 'payment:delivery' %}" class="btn btn-success">Checkout</a>
       </div>
+
     {% else %}
       <p>Looks pretty empty over here if you are actually hungry...</p>
     {% endif %}
+
   </div>
 </div>
 
 <script>
-// Update cart
-$(document).on('click', '.update-cart', function(e) {
-    e.preventDefault();
-
-    // Grab item ID
-    var itemId = $(this).data('index');
-
-    $.ajax({
-        type: 'POST',
-        url: "{% url 'cart:cart_update' %}",  
-        data: {
-            item_id: itemId,
-            item_qty: $('#select' + itemId + ' option:selected').text(),  // Fix selector
-            csrfmiddlewaretoken: '{{ csrf_token }}',
-            action: 'post'
-        },
-
-        success: function(json) {
-            console.log("Cart Updated");
-// Set session storage to indicate that the offcanvas should remain open
-sessionStorage.setItem('keepOffcanvasOpen', 'true');
-
-// Reload the page
-location.reload();
-
-},
-
-error: function(xhr, status, error) {
-console.error("AJAX Error:", status, error);
-console.error("Response:", xhr.responseText);
-}
-});
+// Update qty for a line
+$(document).on('click', '.update-line', function(e) {
+  e.preventDefault();
+  var idx = $(this).data('index');
+  $.ajax({
+    type: 'POST',
+    url: "{% url 'cart:cart_update' %}",
+    data: {
+      line_index: idx,
+      item_qty: $('#select' + idx + ' option:selected').val(),
+      csrfmiddlewaretoken: '{{ csrf_token }}',
+      action: 'post'
+    },
+    success: function() {
+      sessionStorage.setItem('keepOffcanvasOpen', 'true');
+      location.reload();
+    },
+    error: function(xhr){ console.error("AJAX Error:", xhr.responseText); }
+  });
 });
 
+// Delete a line
+$(document).on('click', '.delete-line', function(e) {
+  e.preventDefault();
+  var idx = $(this).data('index');
+  $.ajax({
+    type: 'POST',
+    url: "{% url 'cart:cart_delete' %}",
+    data: {
+      line_index: idx,
+      csrfmiddlewaretoken: '{{ csrf_token }}',
+      action: 'post'
+    },
+    success: function(){
+      sessionStorage.setItem('keepOffcanvasOpen', 'true');
+      location.reload();
+    },
+    error: function(xhr){ console.error("AJAX Error:", xhr.responseText); }
+  });
+});
+
+// Keep offcanvas open after reload
 document.addEventListener('DOMContentLoaded', function() {
-if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
-const offcanvasElement = document.getElementById('offcanvasRight');
-
-if (offcanvasElement) {
-// Add "show" class directly to avoid animation
-offcanvasElement.classList.add('show');
-
-// Optional: Remove the session storage flag after applying
-sessionStorage.removeItem('keepOffcanvasOpen');
-}
-}
-});
-
-// Delete item from the cart
-$(document).on('click', '.delete-item', function(e) {
-    e.preventDefault();
-
-    // Grab item ID
-    var itemId = $(this).data('index');
-
-    $.ajax({
-        type: 'POST',
-        url: "{% url 'cart:cart_delete' %}",  
-        data: {
-            item_id: itemId,
-            csrfmiddlewaretoken: '{{ csrf_token }}',
-            action: 'post'
-        },
-
-        success: function(json) {
-            console.log("Item deleted");
-
-            // Set session storage to indicate that the offcanvas should remain open
-            sessionStorage.setItem('keepOffcanvasOpen', 'true');
-
-            // Reload the page
-            location.reload();
-
-        },
-
-        error: function(xhr, status, error) {
-            console.error("AJAX Error:", status, error);
-            console.error("Response:", xhr.responseText);
-        }
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
-        const offcanvasElement = document.getElementById('offcanvasRight');
-
-        if (offcanvasElement) {
-            // Add "show" class directly to avoid animation
-            offcanvasElement.classList.add('show');
-
-            // Optional: Remove the session storage flag after applying
-            sessionStorage.removeItem('keepOffcanvasOpen');
-        }
+  if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
+    const offcanvasElement = document.getElementById('offcanvasRight');
+    if (offcanvasElement) {
+      offcanvasElement.classList.add('show');
     }
+    sessionStorage.removeItem('keepOffcanvasOpen');
+  }
 });
-
-
 </script>
