@@ -8,24 +8,31 @@ from django.views.decorators.http import require_POST
 
 def cart_summary(request):
     cart = Cart(request)
-    items_qs = cart.get_items()
-    quantities = cart.get_quants()
-    totals = cart.cart_total() 
 
+    ids = [L["menu_id"] for L in cart.lines]
+    menu_map = {m.id: m for m in Menu.objects.filter(id__in=ids)}
     # Build rows for template rendering
-    rows = []
-    for m in items_qs:
-        qty = int(quantities.get(str(m.id), 0))
-        rows.append({
-            "item": m,
-            "qty": qty,
-            "line_total": m.price*qty,
+    lines_for_ui = []
+    for i, L in enumerate(cart.lines):
+        m = menu_map.get(L["menu_id"])
+        lines_for_ui.append({
+
+            "index":i,
+            "menu_id": L["menu_id"],
+            "name":L.get("menu_name") or (m.item if m else "Item"),
+            "qty": int(L.get("qty", 0)),
+            "unit_price": int(L.get("unit_price", "0.00")),
+            "options": L.get("options", []),
+            "note": L.get("note", ""),
+            "picture_url": (m.picture.url if m and m.picture else None),
+            "raw": L,
+
         })
 
     return render(
         request,
         "cart/cart_summary.html",
-        {"rows": rows, "totals":totals, "cart_size":len(cart)}
+        {"lines": lines_for_ui, "totals":cart.cart_total(),}
     )
 
 @require_POST
@@ -79,52 +86,23 @@ def cart_add(request):
 
 
 @require_POST
-def cart_delete(request):
+def cart_update(request):
+    if request.POST.get('action') != 'post':
+        return JsonResponse({"error": "bad request"}, status=400)
+    idx = int(request.POST.get("line_index", -1))
+    qty = int(request.POST.get("item_qty", 1))
     cart = Cart(request)
-
-    
-    # Get food option
-    try:
-        item_id = int(request.POST.get('item_id'))
-    except (TypeError, ValueError):
-        return HttpResponseBadRequest("Bad Params")
-    
-
-    # Call delete function on Cart
-    cart.delete(item=item_id)
-
-    html = _render_cart_partial(request, cart)
-
-
-    response = JsonResponse({
-        'Item' : item_id,
-
-        }) 
-    return response 
-
+    cart.update_qty(idx, qty)
+    return JsonResponse({"ok": True})
 
 @require_POST
-def cart_update(request):
+def cart_delete(request):
+    if request.POST.get('action') != 'post':
+        return JsonResponse({"error": "bad request"}, status=400)
+    idx = int(request.POST.get("line_index", -1))
     cart = Cart(request)
-
-    try:
-        # Get food option
-        item_id = int(request.POST.get('item_id'))
-        item_qty = int(request.POST.get('item_qty'))
-    except (TypeError, ValueError):
-        return HttpResponseBadRequest("Bad Params")
-
-    cart.update(item=item_id, quantity=item_qty)
-
-    html = _render_cart_partial(request, cart)
-
-    response = JsonResponse({
-        'qty' : item_qty,
-        "cart_size": len(cart),
-        "totals": str(cart.cart_total()),
-        "cart_summary": html,
-        }) 
-    return response 
+    cart.delete(idx)
+    return JsonResponse({"ok": True})
 
 # Handler to keep partial rendering consistent throughout all the acitons
 def _render_cart_partial(request, cart: Cart) -> str:
