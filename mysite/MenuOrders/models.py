@@ -69,6 +69,9 @@ class MenuModifierGroup(models.Model):
         unique_together = ("menu", "group")
         ordering = ["sort_order", "id"]
 
+    def __str__(self):
+        return f"{self.group} is required: {self.required}"
+
     def effective_required(self): 
         return self.required if self.required is not None else self.group.required
     def effective_min(self):
