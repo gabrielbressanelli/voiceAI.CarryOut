@@ -38,7 +38,7 @@ def cart_summary(request):
 @require_POST
 def cart_add(request):
     menu_id= int(request.POST["menu_id"])
-    qty = int(request.POST("qty", 1))
+    qty = int(request.POST.get("qty", 1))
 
     raw = request.POST.getlist("modifier_options_ids[]") or request.POST.get("modifier_option_ids", "")
     if isinstance(raw, str):
