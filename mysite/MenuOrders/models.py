@@ -34,6 +34,9 @@ class ModifierGroup(models.Model):
     max_choices = models.PositiveIntegerField(default=1)
     sort_order = models.PositiveIntegerField(default=0)
 
+    def __str__(self):
+        return f"{self.name} is required: {self.required}"
+
 
 class ModfierOption(models.Model):
     """Options inside each group"""
@@ -69,8 +72,6 @@ class MenuModifierGroup(models.Model):
         unique_together = ("menu", "group")
         ordering = ["sort_order", "id"]
 
-    def __str__(self):
-        return f"{self.group} is required: {self.required}"
 
     def effective_required(self): 
         return self.required if self.required is not None else self.group.required
