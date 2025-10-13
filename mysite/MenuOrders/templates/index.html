@@ -298,71 +298,181 @@
 
     </body>
     <script>
-        // Get CSRF token from cookie (Django default cookie name = "csrftoken")
+        // --- CSRF helper (Django default cookie name is "csrftoken")
         function getCookie(name) {
           const value = `; ${document.cookie}`;
           const parts = value.split(`; ${name}=`);
           if (parts.length === 2) return parts.pop().split(';').shift();
         }
-        const csrfToken = getCookie('csrftoken');
-      
+        const csrftoken = getCookie('csrftoken');
+        
+        // --- Utility: refresh the cart offcanvas using your cart_summary view
+        async function refreshCartSummary() {
+          try {
+            const res = await fetch('{% url "cart:cart_summary" %}', {
+              method: 'GET',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            // We expect full HTML (the template "cart/cart_summary.html")
+            const html = await res.text();
+            const $body = $('#offcanvasRight .offcanvas-body');
+            if ($body.length) $body.html(html);
+          } catch (e) {
+            console.error('Failed to refresh cart summary:', e);
+          }
+        }
+        
+        // --- Utility: update the cart bubble/count in the header, if present
+        function setCartQty(qty) {
+          const el = document.querySelector('.cart_quantity');
+          if (el != null && qty != null) el.textContent = qty;
+        }
+        
         $(document).ready(function () {
+        
+          // ADD to cart
           $(document).on('click', '.add-cart', function (e) {
             e.preventDefault();
-      
-            const $button = $(this);
-            const menuId = $button.data('item-id');  // <-- keep data-attr but send as 'menu_id'
-            const $qtySelect = $button.closest('.card').find('select[id^="qty-cart"]');
-            const itemQty = $qtySelect.length ? $qtySelect.val() : 1;
-      
+            const $btn = $(this);
+        
+            // Expect data attributes on the button/card, e.g. data-menu-id="123"
+            const menuId = Number($btn.data('menu-id') ?? $btn.data('item-id'));
+            if (!menuId) {
+              console.error('Missing data-menu-id on .add-cart');
+              return;
+            }
+        
+            // Quantity: read from a nearby select like <select id="qty-cart-{{id}}"> or any [data-role="qty"]
+            const $card = $btn.closest('.card');
+            let qty = 1;
+            const $qtySelect = $card.find('select[id^="qty-cart"], select[data-role="qty"]');
+            if ($qtySelect.length) qty = Number($qtySelect.val() || 1);
+        
+            // Note: optional textarea/input near the button/card (customize selector as needed)
+            const note = ($card.find('textarea[name="note"], input[name="note"]').val() || '').toString();
+        
+            // Modifier options: collect checked inputs with data-option-id or name="modifier_options_ids[]"
+            const selectedOptionIds = [];
+            $card.find('[data-option-id]:checked, input[name="modifier_options_ids[]"]:checked').each(function () {
+              const v = Number($(this).data('option-id') ?? $(this).val());
+              if (!Number.isNaN(v)) selectedOptionIds.push(v);
+            });
+        
+            $btn.prop('disabled', true);
+        
             $.ajax({
               type: 'POST',
               url: '{% url "cart:cart_add" %}',
-              headers: { 'X-CSRFToken': csrfToken },
-              data: {
-                menu_id: menuId,          // <-- matches your view
-                item_qty: itemQty,
-                action: 'post'
-              },
+              headers: { 'X-CSRFToken': csrftoken },
               dataType: 'json',
-              cache: false,
-              beforeSend: function () {
-                $button.prop('disabled', true);
+              data: {
+                // Your view expects these exact names:
+                menu_id: menuId,
+                qty: qty,
+                note: note,
+                // Send array form so request.POST.getlist("modifier_options_ids[]") works
+                'modifier_options_ids[]': selectedOptionIds
               },
-              success: function (json) {
-                // Update offcanvas if HTML provided
-                if (json.cart_summary_html) {
-                  const $offcanvasBody = $('#offcanvasRight .offcanvas-body');
-                  if ($offcanvasBody.length) {
-                    $offcanvasBody.html(json.cart_summary_html);
-                    const offcanvas = bootstrap.Offcanvas.getOrCreateInstance('#offcanvasRight');
-                    // offcanvas.show(); // enable if you want to auto-open
-                  }
+              success: async function (json) {
+                if (json.ok) {
+                  // Update cart bubble if your response includes count
+                  if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
+        
+                  // Refresh the offcanvas summary HTML
+                  await refreshCartSummary();
+        
+                  // Optionally open the offcanvas:
+                  // const oc = bootstrap.Offcanvas.getOrCreateInstance('#offcanvasRight'); oc.show();
+                } else {
+                  console.error('Add failed:', json);
+                  toastr?.error?.(json.error || 'Could not add item.');
                 }
-      
-                // Update cart quantity bubble
-                const newQty = json.qty ?? json['qty'];
-                const cartEl = document.querySelector('.cart_quantity');
-                if (cartEl && typeof newQty !== 'undefined') {
-                  cartEl.textContent = newQty;
-                }
-      
-                // If you prefer a hard refresh, do it at the end:
-                // location.reload();
               },
-              error: function (xhr, errmsg) {
-                console.error("AJAX Error:", errmsg, "Status:", xhr.status, "Response:", xhr.responseText);
+              error: function (xhr) {
+                console.error('ADD error', xhr.status, xhr.responseText);
+                toastr?.error?.('Add to cart failed.');
               },
               complete: function () {
-                $button.prop('disabled', false);
+                $btn.prop('disabled', false);
               }
             });
           });
+        
+          // UPDATE line quantity in cart (expects buttons/inputs with data-line-index and a qty control)
+          $(document).on('change click', '.cart-update', function (e) {
+            // You can use this on a "+" / "-" button or on a quantity select
+            const $el = $(this);
+            const lineIndex = Number($el.data('line-index'));
+            if (Number.isNaN(lineIndex)) return;
+        
+            // Determine the new quantity: if the control is a select/input, read its value;
+            // if it's a +/- button, locate a sibling select/input.
+            let newQty = Number($el.val());
+            if (Number.isNaN(newQty) || !newQty) {
+              const $row = $el.closest('[data-line-index]');
+              const $qtyInput = $row.find('select[data-role="qty"], input[data-role="qty"]');
+              newQty = Number($qtyInput.val() || 1);
+            }
+        
+            $.ajax({
+              type: 'POST',
+              url: '{% url "cart:cart_update" %}',
+              headers: { 'X-CSRFToken': csrftoken },
+              dataType: 'json',
+              data: {
+                action: 'post',
+                line_index: lineIndex,
+                item_qty: newQty
+              },
+              success: async function (json) {
+                if (json.ok) {
+                  await refreshCartSummary();
+                } else {
+                  toastr?.error?.('Update failed.');
+                }
+              },
+              error: function (xhr) {
+                console.error('UPDATE error', xhr.status, xhr.responseText);
+                toastr?.error?.('Update failed.');
+              }
+            });
+          });
+        
+          // DELETE a line
+          $(document).on('click', '.cart-delete', function (e) {
+            e.preventDefault();
+            const $btn = $(this);
+            const lineIndex = Number($btn.data('line-index'));
+            if (Number.isNaN(lineIndex)) return;
+        
+            $btn.prop('disabled', true);
+            $.ajax({
+              type: 'POST',
+              url: '{% url "cart:cart_delete" %}',
+              headers: { 'X-CSRFToken': csrftoken },
+              dataType: 'json',
+              data: {
+                action: 'post',
+                line_index: lineIndex
+              },
+              success: async function (json) {
+                if (json.ok) {
+                  await refreshCartSummary();
+                } else {
+                  toastr?.error?.('Delete failed.');
+                }
+              },
+              error: function (xhr) {
+                console.error('DELETE error', xhr.status, xhr.responseText);
+                toastr?.error?.('Delete failed.');
+              },
+              complete: function () {
+                $btn.prop('disabled', false);
+              }
+            });
+          });
+        
         });
-      
-        document.getElementById('bt')?.addEventListener('click', function () {
-          toastr.success('Button Clicked!');
-        });
-      </script>
+        </script>
 
 </html>
