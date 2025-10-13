@@ -5,23 +5,44 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from django.contrib import messages 
 from django.views.decorators.http import require_POST
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+
+def _dec(val, default="0.00"):
+    try:
+        return Decimal(str(val))
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal(default)
+    
 
 def cart_summary(request):
     cart = Cart(request)
 
-    ids = [L["menu_id"] for L in cart.lines]
+    ids = []
+    for L in cart.lines:
+        try:
+            ids.append(int(L.get("menu_id", 0)))
+        except (TypeError, ValueError):
+            pass
+
     menu_map = {m.id: m for m in Menu.objects.filter(id__in=ids)}
     # Build rows for template rendering
     lines_for_ui = []
     for i, L in enumerate(cart.lines):
-        m = menu_map.get(L["menu_id"])
+        m = menu_map.get(int(L["menu_id"])) if str(L.get("menu_id", "")).isdigit() else None
+        qty = int(L.get("qty", 0) or 0)
+
+        # Keep price as decimal
+        unit_price = _dec(L.get("unit_price", "0.00"))
+        unit_price = unit_price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        unit_price_display = f"{unit_price:.2f}"
+
         lines_for_ui.append({
 
             "index":i,
             "menu_id": L["menu_id"],
             "name":L.get("menu_name") or (m.item if m else "Item"),
             "qty": int(L.get("qty", 0)),
-            "unit_price": int(L.get("unit_price", "0.00")),
+            "unit_price": unit_price,
             "options": L.get("options", []),
             "note": L.get("note", ""),
             "picture_url": (m.picture.url if m and m.picture else None),
@@ -29,10 +50,15 @@ def cart_summary(request):
 
         })
 
+        # Totals round to 2 digit after point 
+        totals_dec = _dec(cart.cart_total())
+        totals_dec = totals_dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        totals_display = f"{totals_dec:.2f}"
+
     return render(
         request,
         "cart/cart_summary.html",
-        {"lines": lines_for_ui, "totals":cart.cart_total(),}
+        {"lines": lines_for_ui, "totals":totals_dec, "totals_display":totals_display}
     )
 
 @require_POST

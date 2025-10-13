@@ -74,7 +74,7 @@
 
                 <p class="card-text mt-1">
                   <small class="text-body-secondary">
-                    ${{ line.unit_price }} each
+                    ${{ line.unit_price_display }} each
                   </small>
                 </p>
 
@@ -85,7 +85,7 @@
       {% endfor %}
 
       <div class="text-end">
-        <h5>Total: $ {{ totals }}</h5>
+        <h5>Total: $ {{ totals_display }}</h5>
         <a href="{% url 'payment:delivery' %}" class="btn btn-success">Checkout</a>
       </div>
 
