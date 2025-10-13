@@ -45,22 +45,26 @@
                                 <h4>Order Summary </h4>
                             </div>
                             <div class="card-body">
-                                {% for item in cart_items %}
-                                    <p>{{item.item}} : {{item.price}}
-                                        <br>
-                                    <small>Quantity:
-                                    {% for key, value in quantities.items %}
-                                        {% if key == item.id|slugify %}
-                                            {{value}}
-                                        {% endif %}
-                                    {% endfor %}</small>
-                                {% endfor %} </p>
-                                <button class="btn btn-outline-dark d-flex align-items-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">
-                                    <i class="bi-cart-fill me-1"></i>
-                                    Update Cart
-                                </button>
-
-                            </div>
+                                {% for L in lines %}
+                                  <p>
+                                    {{ L.name }} : {{ L.unit_price }}<br>
+                                    <small>Quantity: {{ L.qty }}</small>
+                                    {% if L.options and L.options|length %}
+                                      <br><small>Options:
+                                        {% for opt in L.options %}
+                                          {{ opt.name }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                      </small>
+                                    {% endif %}
+                                    {% if L.note %}<br><small>Note: {{ L.note }}</small>{% endif %}
+                                  </p>
+                                {% empty %}
+                                  <p>Your cart is empty.</p>
+                                {% endfor %}
+                              
+                                <hr>
+                                <p><strong>Total: {{ totals }}</strong></p>
+                              </div>
                         </div>
                         <br><br>
                         <div class="card">

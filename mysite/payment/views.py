@@ -187,28 +187,33 @@ def delivery_form(request):
 
     # Generating content from cart.py
     cart = Cart(request)
-    cart_items = cart.get_items
-    quantities = cart.get_quants
-    totals = cart.cart_total() 
 
-    if request.method == 'POST':
-        form = ShippingForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Your info has been saved")
-            return redirect( "billing_info")
-    else: 
-        form = ShippingForm()
+    ids = [L["menu_id"] for L in cart.lines]
+    menu_map = {m.id: m for m in Menu.objects.filter(id__in=ids)}
 
-    # Generating a context to pass both form and cart items
+    lines_for_ui = []
+    for i, L in enumerate(cart.lines):
+        m = menu_map.get(L["menu_id"])
+        lines_for_ui.append({
+            "index": i,
+            "menu_id":L["menu_id"],
+            "name": L.get("menu_name") or (m.item if m else "item"),
+            "qty": int(L.get("qty", 0)),
+            "unit_price": m.price if m else L.get("unit_price", 0),
+            "options": L.get("options", []),
+            "note": L.get("note", ""),
+            "picture_url": (m.picture.url if m and m.picture else None),
+            "Raw": L,
+        })
+
     context = {
-    'cart_items': cart_items,
-    'quantities': quantities,
-    'totals':totals,
-    'form': form,
+        "lines": lines_for_ui,
+        "totals": cart.cart_total()
     }
 
-    return render(request, 'delivery.html', context)
+    return render(request, "delivery.html", context)
+
+
 
 def _money_to_cents(amount: Decimal) -> int:
     return int((amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) * 100))
