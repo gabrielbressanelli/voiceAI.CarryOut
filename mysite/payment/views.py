@@ -225,7 +225,12 @@ def create_checkout_session(request):
         return JsonResponse({"error":"Cart is empty"}, status=400)
     
     # Building item lookup
-    item_ids = list(cart.cart.keys())
+    item_ids = []
+    for L in cart.lines:
+        try:
+            item_ids.append(int(L.get("menu_id", 0)))
+        except (TypeError, ValueError):
+            pass
     menu_map = {str(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
 
     # Stripe Line Items
