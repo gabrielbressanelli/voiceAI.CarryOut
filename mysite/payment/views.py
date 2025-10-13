@@ -264,7 +264,7 @@ def create_checkout_session(request):
         line_items=line_items,
         success_url=success_url,
         cancel_url=cancel_url,
-        automatic_tax={"enabled":False},
+        automatic_tax={"enabled":True},
         allow_promotion_codes=True,
 
         payment_intent_data={
@@ -272,7 +272,12 @@ def create_checkout_session(request):
                 "source":"django_session_cart",
                 # Important: Store a snapshot for the webhook can reconcile
                 "cart_snapshot":json.dumps([
-                    {"menu_id": k, "qty": int(v)} for k, v in cart.cart.items()
+                    {
+                        "menu_id": int(L["menu_id"]),
+                        "qty": int(L.get("qty", 1))
+                                       
+                    } 
+                    for L in cart.lines
                 ])
             }
         },
