@@ -298,107 +298,71 @@
 
     </body>
     <script>
-        $(document).ready(function() {
-            console.log("Document ready, event delegation set up");
-        
-            $(document).on('click', '.add-cart', function(e) {
-                e.preventDefault();
-                console.log("Button clicked!");
-        
-                // Get the clicked button and item ID
-                const $button = $(this);
-                const itemId = $button.data('item-id');
-                console.log("Item ID:", itemId);
-        
-                // Find the closest quantity selector
-                const $qtySelect = $button.closest('.card').find('select[id^="qty-cart"]');
-                const itemQty = $qtySelect.length ? $qtySelect.find('option:selected').text() : 1;
-                if ($qtySelect.length) {
-                    console.log("Quantity found:", itemQty);
-                } else {
-                    console.log("WARNING: Quantity selector not found, defaulting to 1");
+        // Get CSRF token from cookie (Django default cookie name = "csrftoken")
+        function getCookie(name) {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        const csrfToken = getCookie('csrftoken');
+      
+        $(document).ready(function () {
+          $(document).on('click', '.add-cart', function (e) {
+            e.preventDefault();
+      
+            const $button = $(this);
+            const menuId = $button.data('item-id');  // <-- keep data-attr but send as 'menu_id'
+            const $qtySelect = $button.closest('.card').find('select[id^="qty-cart"]');
+            const itemQty = $qtySelect.length ? $qtySelect.val() : 1;
+      
+            $.ajax({
+              type: 'POST',
+              url: '{% url "cart:cart_add" %}',
+              headers: { 'X-CSRFToken': csrfToken },
+              data: {
+                menu_id: menuId,          // <-- matches your view
+                item_qty: itemQty,
+                action: 'post'
+              },
+              dataType: 'json',
+              cache: false,
+              beforeSend: function () {
+                $button.prop('disabled', true);
+              },
+              success: function (json) {
+                // Update offcanvas if HTML provided
+                if (json.cart_summary_html) {
+                  const $offcanvasBody = $('#offcanvasRight .offcanvas-body');
+                  if ($offcanvasBody.length) {
+                    $offcanvasBody.html(json.cart_summary_html);
+                    const offcanvas = bootstrap.Offcanvas.getOrCreateInstance('#offcanvasRight');
+                    // offcanvas.show(); // enable if you want to auto-open
+                  }
                 }
-        
-                // CSRF token (ensure this is properly rendered in your template)
-                const csrfToken = '{{csrf_token}}';
-                console.log("CSRF token present:", csrfToken ? "Yes" : "No");
-        
-                console.log("Sending AJAX request...");
-        
-                // Send AJAX POST request
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url "cart:cart_add" %}',
-                    data: {
-                        item_id: itemId,
-                        item_qty: itemQty,
-                        csrfmiddlewaretoken: csrfToken,
-                        action: 'post'
-                    },
-                    dataType: 'json',
-                    cache: false,
-                    beforeSend: function() {
-                        console.log("AJAX request being sent with data:", {
-                            item_id: itemId,
-                            item_qty: itemQty,
-                            action: 'post'
-                        });
-                        $button.prop('disabled', true); // Prevent multiple clicks
-                    },
-                    success: function(json) {
-                        console.log("AJAX Success - Full response:", json);
-
-                        location.reload()
-        
-                        // Update cart summary in offcanvas
-                        if (json.cart_summary_html) {
-                            const $offcanvasBody = $('#offcanvasRight .offcanvas-body');
-                            if ($offcanvasBody.length) {
-                                $offcanvasBody.html(json.cart_summary_html);
-                                console.log("Cart summary updated in offcanvas");
-        
-                                // Show the offcanvas 
-                                const offcanvas = bootstrap.Offcanvas.getOrCreateInstance('#offcanvasRight');
-                                //offcanvas.show();
-                            } else {
-                                console.error("Offcanvas body not found in DOM!");
-                            }
-                        } else {
-                            console.error("Cart summary HTML not found in response!");
-                        }
-        
-                        // Update cart quantity
-                        const newQty = json.qty || json['qty'];
-                        console.log("New quantity value:", newQty);
-        
-                        const cartElement = document.getElementsByClassName('.cart_quantity');
-                        if (cartElement) {
-                            console.log("Cart element found, updating from", cartElement.textContent, "to", newQty);
-                            cartElement.textContent = newQty;
-                            console.log("Cart element updated. New text:", cartElement.textContent);
-                        } else {
-                            console.error("Cart element #cart_quantity not found in DOM!");
-                        }
-                    },
-                    error: function(xhr, errmsg, err) {
-                        console.error("AJAX Error:", errmsg);
-                        console.error("Status:", xhr.status);
-                        console.error("Response text:", xhr.responseText);
-                    },
-                    complete: function() {
-                        $button.prop('disabled', false); // Re-enable button
-                    }
-                });
+      
+                // Update cart quantity bubble
+                const newQty = json.qty ?? json['qty'];
+                const cartEl = document.querySelector('.cart_quantity');
+                if (cartEl && typeof newQty !== 'undefined') {
+                  cartEl.textContent = newQty;
+                }
+      
+                // If you prefer a hard refresh, do it at the end:
+                // location.reload();
+              },
+              error: function (xhr, errmsg) {
+                console.error("AJAX Error:", errmsg, "Status:", xhr.status, "Response:", xhr.responseText);
+              },
+              complete: function () {
+                $button.prop('disabled', false);
+              }
             });
+          });
         });
-
-        document.getElementById('bt').addEventListener('click', function(){
-            toastr.success('Button Clicked!');
-        })
-
-
-
-
-    </script>
+      
+        document.getElementById('bt')?.addEventListener('click', function () {
+          toastr.success('Button Clicked!');
+        });
+      </script>
 
 </html>
