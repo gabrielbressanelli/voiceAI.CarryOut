@@ -242,7 +242,7 @@ def create_checkout_session(request):
         )
         display_name = L["menu_name"] + (f"- {mods}" if mods else "") 
         line_items.append({
-            "price_delta": {
+            "price_data": {
                 "currency": "usd",
                 "product_data": {"name": display_name},
                 "unit_amount": int(Decimal(L["unit_price"]) * 100),
