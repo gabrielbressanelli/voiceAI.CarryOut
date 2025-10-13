@@ -39,7 +39,7 @@ class Cart():
         self._save()
 
     def _validate_and_price(self, menu:Menu, selected_ids: list[int]) -> tuple[Decimal, list[dict]]:
-        mmgs = menu.modfier_groups.select_related("group").all().order_by("sort_order")
+        mmgs = menu.modfier_group.select_related("group").all().order_by("sort_order")
         selected = ModfierOption.objects.filter(id__in=selected_ids, group__in=[m.group for m in mmgs], active=True).select_related("group")
 
         # per group validation
