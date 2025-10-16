@@ -291,13 +291,74 @@
                     
                 {% endfor %}
             </div>
-
-          
         </div>
+
+        <div class="modal fade" id="modifierModal" tabindex="-1" aria-labelledby="modifierModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modifierModalLabel">Choose Options</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modifierModalBody">
+                        <!-- Modifier groups will be dynamically inserted here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="modifierConfirmBtn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 
     </body>
     <script>
+
+        function showModifierModal(menuId, groups, onConfirm) {
+            const $body = $('#modifierModalBody');
+            $body.empty();
+
+            // Build modifier HTML
+            groups.forEach((group, idx) => {
+                const html = `
+                    <div class="mb-4">
+                        <h6>${group.name}${group.required ? '<span class="text-danger">*</span>' : ''}</h6>
+                        <div>
+                            ${group.options.map(opt => `
+                                <div class="form-check">
+                                    <input class="form-check-input modifier-option" type="checkbox" 
+                                           value="${opt.id}" 
+                                           data-option-id="${opt.id}"
+                                           id="option_${opt.id}">
+                                    <label class="form-check-label" for="option_${opt.id}">
+                                        ${opt.name} ${opt.price ? `(+$${opt.price})` : ''}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                $body.append(html);
+            });
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('modifierModal'));
+            modal.show();
+
+            // Handle confirm button
+            $('#modifierConfirmBtn').off('click').on('click', function () {
+                const selectedIds = [];
+                $('.modifier-option:checked').each(function () {
+                    selectedIds.push(Number($(this).val()));
+                });
+                modal.hide();
+                onConfirm(selectedIds);
+            });
+        }
         // --- CSRF helper (Django default cookie name is "csrftoken")
         function getCookie(name) {
           const value = `; ${document.cookie}`;
@@ -313,76 +374,93 @@
               method: 'GET',
               headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
-            // We expect full HTML (the template "cart/cart_summary.html")
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const html = await res.text();
             const $body = $('#offcanvasRight .offcanvas-body');
             if ($body.length) $body.html(html);
           } catch (e) {
             console.error('Failed to refresh cart summary:', e);
+            toastr?.error?.('Failed to update cart display.');
           }
         }
         
-        // --- Utility: update the cart bubble/count in the header, if present
+        // --- Utility: update the cart bubble/count in the header
         function setCartQty(qty) {
           const el = document.querySelector('.cart_quantity');
           if (el != null && qty != null) el.textContent = qty;
         }
         
         $(document).ready(function () {
-        
           // ADD to cart
           $(document).on('click', '.add-cart', function (e) {
             e.preventDefault();
+            
             const $btn = $(this);
-        
-            // Expect data attributes on the button/card, e.g. data-menu-id="123"
-            const menuId = Number($btn.data('menu-id') ?? $btn.data('item-id'));
+            const menuId = $btn.data('item_id');
+            const $card = $btn.closest('.card');
+            
             if (!menuId) {
-              console.error('Missing data-menu-id on .add-cart');
+              console.error('Missing data-item_id on .add-cart');
+              toastr?.error?.('Item ID not found.');
               return;
             }
-        
-            // Quantity: read from a nearby select like <select id="qty-cart-{{id}}"> or any [data-role="qty"]
-            const $card = $btn.closest('.card');
+            
             let qty = 1;
             const $qtySelect = $card.find('select[id^="qty-cart"], select[data-role="qty"]');
-            if ($qtySelect.length) qty = Number($qtySelect.val() || 1);
-        
-            // Note: optional textarea/input near the button/card (customize selector as needed)
+            if ($qtySelect.length) {
+              qty = Number($qtySelect.val() || 1);
+              if (qty < 1) qty = 1;
+            }
             const note = ($card.find('textarea[name="note"], input[name="note"]').val() || '').toString();
-        
-            // Modifier options: collect checked inputs with data-option-id or name="modifier_options_ids[]"
+            
             const selectedOptionIds = [];
             $card.find('[data-option-id]:checked, input[name="modifier_options_ids[]"]:checked').each(function () {
               const v = Number($(this).data('option-id') ?? $(this).val());
               if (!Number.isNaN(v)) selectedOptionIds.push(v);
             });
-        
+            
             $btn.prop('disabled', true);
-        
+            
+            $.getJSON(`/${menuId}/modifiers`, function (groups) {
+              if (!groups || !groups.length) {
+                addToCartAjax(menuId, qty, selectedOptionIds, note, $btn);
+                return;
+              }
+              
+              if (typeof showModifierModal !== 'function') {
+                console.error('showModifierModal function not found');
+                toastr?.error?.('Could not load options.');
+                $btn.prop('disabled', false);
+                return;
+              }
+              
+              showModifierModal(menuId, groups, function onConfirm(selectedModifierIds) {
+                addToCartAjax(menuId, qty, selectedModifierIds, note, $btn);
+              });
+            }).fail(function (xhr) {
+              console.error('Failed to load modifiers:', xhr.status, xhr.responseText);
+              toastr?.error?.('Could not load options for this item.');
+              $btn.prop('disabled', false);
+            });
+          });
+          
+          function addToCartAjax(menuId, qty, selectedOptionIds, note, $btn) {
             $.ajax({
               type: 'POST',
               url: '{% url "cart:cart_add" %}',
               headers: { 'X-CSRFToken': csrftoken },
               dataType: 'json',
               data: {
-                // Your view expects these exact names:
                 menu_id: menuId,
                 qty: qty,
                 note: note,
-                // Send array form so request.POST.getlist("modifier_options_ids[]") works
                 'modifier_options_ids[]': selectedOptionIds
               },
               success: async function (json) {
                 if (json.ok) {
-                  // Update cart bubble if your response includes count
                   if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
-        
-                  // Refresh the offcanvas summary HTML
                   await refreshCartSummary();
-        
-                  // Optionally open the offcanvas:
-                  // const oc = bootstrap.Offcanvas.getOrCreateInstance('#offcanvasRight'); oc.show();
+                  toastr?.success?.('Item added to cart!');
                 } else {
                   console.error('Add failed:', json);
                   toastr?.error?.(json.error || 'Could not add item.');
@@ -396,24 +474,26 @@
                 $btn.prop('disabled', false);
               }
             });
-          });
-        
-          // UPDATE line quantity in cart (expects buttons/inputs with data-line-index and a qty control)
+          }
+          
+          // UPDATE line quantity in cart
           $(document).on('change click', '.cart-update', function (e) {
-            // You can use this on a "+" / "-" button or on a quantity select
             const $el = $(this);
             const lineIndex = Number($el.data('line-index'));
             if (Number.isNaN(lineIndex)) return;
-        
-            // Determine the new quantity: if the control is a select/input, read its value;
-            // if it's a +/- button, locate a sibling select/input.
+            
             let newQty = Number($el.val());
             if (Number.isNaN(newQty) || !newQty) {
               const $row = $el.closest('[data-line-index]');
               const $qtyInput = $row.find('select[data-role="qty"], input[data-role="qty"]');
               newQty = Number($qtyInput.val() || 1);
             }
-        
+            
+            if (newQty < 1) {
+              toastr?.error?.('Quantity must be at least 1.');
+              return;
+            }
+            
             $.ajax({
               type: 'POST',
               url: '{% url "cart:cart_update" %}',
@@ -428,7 +508,7 @@
                 if (json.ok) {
                   await refreshCartSummary();
                 } else {
-                  toastr?.error?.('Update failed.');
+                  toastr?.error?.(json.error || 'Update failed.');
                 }
               },
               error: function (xhr) {
@@ -437,14 +517,14 @@
               }
             });
           });
-        
+          
           // DELETE a line
           $(document).on('click', '.cart-delete', function (e) {
             e.preventDefault();
             const $btn = $(this);
             const lineIndex = Number($btn.data('line-index'));
             if (Number.isNaN(lineIndex)) return;
-        
+            
             $btn.prop('disabled', true);
             $.ajax({
               type: 'POST',
@@ -458,8 +538,9 @@
               success: async function (json) {
                 if (json.ok) {
                   await refreshCartSummary();
+                  toastr?.success?.('Item removed.');
                 } else {
-                  toastr?.error?.('Delete failed.');
+                  toastr?.error?.(json.error || 'Delete failed.');
                 }
               },
               error: function (xhr) {
@@ -471,8 +552,7 @@
               }
             });
           });
-        
         });
-        </script>
+      </script>
 
 </html>

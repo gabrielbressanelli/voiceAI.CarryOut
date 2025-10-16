@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from django.http import HttpResponse
-from .models import Menu
+from django.http import HttpResponse, JsonResponse
+from .models import Menu, MenuModifierGroup, ModfierOption, ModifierGroup
 from cart.cart import Cart
 from django.contrib import messages
 
@@ -36,4 +36,34 @@ def index(request):
     }
 
     return render(request, 'index.html', context)
+
+def menu_modifiers(request, menu_id):
+    try:
+        menu = Menu.objects.get(id=menu_id)
+
+    except Menu.DoesNotExist:
+        return JsonResponse({"error": "Menu Item not found"}, statu=400)
+    
+    groups = menu.modifier_groups().all.prefetch_related("options")
+
+    payload = []
+    for g in groups:
+        payload.append({
+            "group_id":g.id,
+            "group_name":g.name,
+            "required": g.required,
+            "max_choices": g.max_choices,
+            "options": [
+                {
+                    "id": opt.id,
+                    "name": opt.name,
+                    "price_delta": opt.price_delta,
+                    "is_default": opt.is_default,
+                }
+                for opt in g.options.all()
+            ]
+
+        })
+    return JsonResponse(payload, safe=False)
+
 
