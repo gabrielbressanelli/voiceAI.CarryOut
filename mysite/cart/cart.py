@@ -105,7 +105,8 @@ class Cart():
 
     def get_items(self):
         # Get ids from carts
-        ids = list(self.cart.keys())
+        ids = [L["menu_id"] for L in self.lines if "menu_id" in L]
+        return Menu.object.filter(id__in=ids)
 
         # View ids to look up items on database model
         items = Menu.objects.filter(id__in=ids)
@@ -113,8 +114,7 @@ class Cart():
         return items
 
     def get_quants(self):
-        quantites = self.cart
-        return quantites
+        return { str(L['menu_id']): int(L.get('qty', 0)) for L in self.lines if "menu_id" in L}
 
     def update_qty(self, line_index: int, qty: int):
         if 0 <= line_index < len(self.lines):
@@ -127,7 +127,7 @@ class Cart():
             self._save()
 
     def clear(self):
-        self.session[CART_SESSION_KEY] = {}
+        self.session[CART_SESSION_KEY] = []
         self.session.modified = True
 
 

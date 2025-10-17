@@ -125,5 +125,10 @@ def _render_cart_partial(request, cart: Cart) -> str:
             {"rows":rows, "totals":cart.cart_total(), "cart_size":len(cart)},
             request=request
         )
+    
+def cart_count(request):
+    cart = Cart(request)
+    return JsonResponse({"cart_qty": len(cart)}, headers={"Cache-control":"no-store"})
+
 
 
