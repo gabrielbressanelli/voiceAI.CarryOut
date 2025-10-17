@@ -51,9 +51,9 @@ def cart_summary(request):
         })
 
         # Totals round to 2 digit after point 
-        totals_dec = _dec(cart.cart_total())
-        totals_dec = totals_dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        totals_display = f"{totals_dec:.2f}"
+    totals_dec = _dec(cart.cart_total())
+    totals_dec = totals_dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    totals_display = f"{totals_dec:.2f}"
 
     return render(
         request,
@@ -84,31 +84,7 @@ def cart_add(request):
     except ValueError as e:
         return JsonResponse({"ok":False, "error":str(e)}, status=400)
     return JsonResponse({"ok": True, "cart_qty": len(cart)})
-    
 
-
-    #Look up food option in DataBase
-    item = get_object_or_404(Menu, id=item_id)
-
-    # save to session
-    cart.add(item=item, quantity=item_qty)
-
-    # Get cart Quantity
-    cart_quantity = cart.__len__()
-
-    # Dynamically updating cart_summary.html
-    html = _render_cart_partial(request, cart)
-
-
-    # Return JsonResponse
-    response = JsonResponse({
-        'ok':True,
-        'cart_size': len(cart),
-        'totals': str(cart.cart_total()),
-        'cart_summary_html': html,
-        })
-    
-    return response 
 
 
 @require_POST
