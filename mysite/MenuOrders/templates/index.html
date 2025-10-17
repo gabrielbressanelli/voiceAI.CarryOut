@@ -75,13 +75,25 @@
                                             </div>
                                             
                                             <div class="col-md-6">
-                                                <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
-                                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
-                                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
-                                                    </svg>
-                                                    Add to cart
-                                                </button>
+                                                <button
+                                                type="button"
+                                                class="btn btn-primary add-cart ml-auto"
+                                                data-item-id="{{ item.id }}"
+                                                data-cart-add-url="{% url 'cart:cart_add' %}"
+                                                data-modifiers-url="{% url 'menu:menu_modifiers' item.id %}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                                     class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                  <path fill-rule="evenodd"
+                                                        d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1
+                                                           0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5" />
+                                                  <path
+                                                        d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5
+                                                           3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2
+                                                           2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0
+                                                           1-1-1z" />
+                                                </svg>
+                                                Add to cart
+                                              </button>
                                             </div>
                                             
                                         </div>
@@ -125,13 +137,25 @@
                                             </div>
                                             
                                             <div class="col-md-6">
-                                                <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
-                                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
-                                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
-                                                    </svg>
-                                                    Add to cart
-                                                </button>
+                                                <button
+                                                type="button"
+                                                class="btn btn-primary add-cart ml-auto"
+                                                data-item-id="{{ item.id }}"
+                                                data-cart-add-url="{% url 'cart:cart_add' %}"
+                                                data-modifiers-url="{% url 'menu:menu_modifiers' item.id %}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                                     class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                  <path fill-rule="evenodd"
+                                                        d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1
+                                                           0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5" />
+                                                  <path
+                                                        d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5
+                                                           3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2
+                                                           2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0
+                                                           1-1-1z" />
+                                                </svg>
+                                                Add to cart
+                                              </button>
                                             </div>
                                             
                                         </div>
@@ -174,14 +198,25 @@
                                             </div>
                                             
                                             <div class="col-md-6">
-                                                <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" id="bt" >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
-                                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
-                                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
-                                                    </svg>
-                                                    Add to cart
-                                                </button>
-                                            </div>
+                                                <button
+                                                type="button"
+                                                class="btn btn-primary add-cart ml-auto"
+                                                data-item-id="{{ item.id }}"
+                                                data-cart-add-url="{% url 'cart:cart_add' %}"
+                                                data-modifiers-url="{% url 'menu:menu_modifiers' item.id %}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                                     class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                                  <path fill-rule="evenodd"
+                                                        d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1
+                                                           0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5" />
+                                                  <path
+                                                        d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5
+                                                           3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2
+                                                           2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0
+                                                           1-1-1z" />
+                                                </svg>
+                                                Add to cart
+                                              </button>
                                             
                                         </div>
                                         </div>
@@ -224,13 +259,25 @@
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
-                                                <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
-                                                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
-                                            </svg>
-                                            Add to cart
-                                        </button>
+                                        <button
+                                        type="button"
+                                        class="btn btn-primary add-cart ml-auto"
+                                        data-item-id="{{ item.id }}"
+                                        data-cart-add-url="{% url 'cart:cart_add' %}"
+                                        data-modifiers-url="{% url 'menu:menu_modifiers' item.id %}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                             class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                          <path fill-rule="evenodd"
+                                                d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1
+                                                   0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5" />
+                                          <path
+                                                d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5
+                                                   3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2
+                                                   2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0
+                                                   1-1-1z" />
+                                        </svg>
+                                        Add to cart
+                                      </button>
                                     </div>
                                     
                                 </div>
@@ -274,13 +321,25 @@
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <button type="button" data-item-id="{{ item.id }}" class="btn btn-primary add-cart ml-auto" >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus" viewBox="0 0 16 16">
-                                                <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
-                                                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
-                                            </svg>
-                                            Add to cart
-                                        </button>
+                                        <button
+                                        type="button"
+                                        class="btn btn-primary add-cart ml-auto"
+                                        data-item-id="{{ item.id }}"
+                                        data-cart-add-url="{% url 'cart:cart_add' %}"
+                                        data-modifiers-url="{% url 'menu:menu_modifiers' item.id %}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                             class="bi bi-bag-plus" viewBox="0 0 16 16">
+                                          <path fill-rule="evenodd"
+                                                d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1
+                                                   0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5" />
+                                          <path
+                                                d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5
+                                                   3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2
+                                                   2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0
+                                                   1-1-1z" />
+                                        </svg>
+                                        Add to cart
+                                      </button>
                                     </div>
                                     
                                 </div>
@@ -310,9 +369,7 @@
                 </div>
             </div>
         </div>
-    
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 
 
     </body>
@@ -396,7 +453,9 @@
             e.preventDefault();
             
             const $btn = $(this);
-            const menuId = $btn.data('item_id');
+            const menuId = $btn.data('item-id');
+            const addUrl = $btn.data('cart-add-url');
+            const modsUrls = $btn.data('modifiers-url');
             const $card = $btn.closest('.card');
             
             if (!menuId) {
@@ -421,7 +480,7 @@
             
             $btn.prop('disabled', true);
             
-            $.getJSON(`/${menuId}/modifiers`, function (groups) {
+            $.getJSON(`/${menuId}/modifiers/`, function (groups) {
               if (!groups || !groups.length) {
                 addToCartAjax(menuId, qty, selectedOptionIds, note, $btn);
                 return;
@@ -447,7 +506,7 @@
           function addToCartAjax(menuId, qty, selectedOptionIds, note, $btn) {
             $.ajax({
               type: 'POST',
-              url: '{% url "cart:cart_add" %}',
+              url: addUrl,
               headers: { 'X-CSRFToken': csrftoken },
               dataType: 'json',
               data: {
