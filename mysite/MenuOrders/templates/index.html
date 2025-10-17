@@ -106,49 +106,7 @@
           </div>
         </div>
       </body>
-    <script>
-
-        function showModifierModal(menuId, groups, onConfirm) {
-            const $body = $('#modifierModalBody');
-            $body.empty();
-
-            // Build modifier HTML
-            groups.forEach((group, idx) => {
-                const html = `
-                    <div class="mb-4">
-                        <h6>${group.name}${group.required ? '<span class="text-danger">*</span>' : ''}</h6>
-                        <div>
-                            ${group.options.map(opt => `
-                                <div class="form-check">
-                                    <input class="form-check-input modifier-option" type="checkbox" 
-                                           value="${opt.id}" 
-                                           data-option-id="${opt.id}"
-                                           id="option_${opt.id}">
-                                    <label class="form-check-label" for="option_${opt.id}">
-                                        ${opt.name} ${opt.price ? `(+$${opt.price})` : ''}
-                                    </label>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-                $body.append(html);
-            });
-
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('modifierModal'));
-            modal.show();
-
-            // Handle confirm button
-            $('#modifierConfirmBtn').off('click').on('click', function () {
-                const selectedIds = [];
-                $('.modifier-option:checked').each(function () {
-                    selectedIds.push(Number($(this).val()));
-                });
-                modal.hide();
-                onConfirm(selectedIds);
-            });
-        }
+      <script>
         // --- CSRF helper (Django default cookie name is "csrftoken")
         function getCookie(name) {
           const value = `; ${document.cookie}`;
@@ -156,8 +114,52 @@
           if (parts.length === 2) return parts.pop().split(';').shift();
         }
         const csrftoken = getCookie('csrftoken');
-        
-        // --- Utility: refresh the cart offcanvas using your cart_summary view
+      
+        // --- Modal builder
+        function showModifierModal(menuId, groups, onConfirm) {
+          const $body = $('#modifierModalBody');
+          $body.empty();
+      
+          groups.forEach((group) => {
+            const gName = group.group_name ?? group.name ?? 'Options';
+            const required = !!group.required;
+            const opts = group.options || [];
+      
+            const html = `
+              <div class="mb-4">
+                <h6>${gName}${required ? '<span class="text-danger">*</span>' : ''}</h6>
+                <div>
+                  ${opts.map(opt => {
+                    const price = (opt.price_delta ?? opt.price) || 0;
+                    const plus = price ? ` (+$${Number(price).toFixed(2)})` : '';
+                    return `
+                      <div class="form-check">
+                        <input class="form-check-input modifier-option" type="checkbox"
+                               value="${opt.id}" data-option-id="${opt.id}" id="option_${opt.id}">
+                        <label class="form-check-label" for="option_${opt.id}">
+                          ${opt.name}${plus}
+                        </label>
+                      </div>`;
+                  }).join('')}
+                </div>
+              </div>`;
+            $body.append(html);
+          });
+      
+          const modal = new bootstrap.Modal(document.getElementById('modifierModal'));
+          modal.show();
+      
+          $('#modifierConfirmBtn').off('click').on('click', function () {
+            const selectedIds = [];
+            $('.modifier-option:checked').each(function () {
+              selectedIds.push(Number($(this).val()));
+            });
+            modal.hide();
+            onConfirm(selectedIds);
+          });
+        }
+      
+        // --- Utilities
         async function refreshCartSummary() {
           try {
             const res = await fetch('{% url "cart:cart_summary" %}', {
@@ -170,73 +172,56 @@
             if ($body.length) $body.html(html);
           } catch (e) {
             console.error('Failed to refresh cart summary:', e);
-            toastr?.error?.('Failed to update cart display.');
+            window.toastr?.error?.('Failed to update cart display.');
           }
         }
-        
-        // --- Utility: update the cart bubble/count in the header
+      
         function setCartQty(qty) {
           const el = document.querySelector('.cart_quantity');
           if (el != null && qty != null) el.textContent = qty;
         }
-        
+      
+        // --- Main bind block (single source of truth)
         $(document).ready(function () {
-          // ADD to cart
+      
+          // ADD to cart (delegated)
           $(document).on('click', '.add-cart', function (e) {
             e.preventDefault();
-            
-            const $btn = $(this);
+      
+            const $btn   = $(this);
             const menuId = $btn.data('item-id');
             const addUrl = $btn.data('cart-add-url');
-            const modsUrls = $btn.data('modifiers-url');
-            const $card = $btn.closest('.card');
-            
-            if (!menuId) {
-              console.error('Missing data-item_id on .add-cart');
-              toastr?.error?.('Item ID not found.');
+            const modsUrl = $btn.data('modifiers-url') || `/${menuId}/modifiers/`;
+            const $card  = $btn.closest('.card');
+      
+            if (!menuId || !addUrl) {
+              console.error('Missing item id or add url');
               return;
             }
-            
+      
             let qty = 1;
-            const $qtySelect = $card.find('select[id^="qty-cart"], select[data-role="qty"]');
-            if ($qtySelect.length) {
-              qty = Number($qtySelect.val() || 1);
-              if (qty < 1) qty = 1;
-            }
-            const note = ($card.find('textarea[name="note"], input[name="note"]').val() || '').toString();
-            
-            const selectedOptionIds = [];
-            $card.find('[data-option-id]:checked, input[name="modifier_options_ids[]"]:checked').each(function () {
-              const v = Number($(this).data('option-id') ?? $(this).val());
-              if (!Number.isNaN(v)) selectedOptionIds.push(v);
-            });
-            
+            const $qtySelect = $card.find('select[data-role="qty"], select.qty-cart');
+            if ($qtySelect.length) qty = Math.max(1, Number($qtySelect.val() || 1));
+            const note = ($card.find('[name="note"]').val() || '').toString();
+      
             $btn.prop('disabled', true);
-            
-            $.getJSON(`/${menuId}/modifiers/`, function (groups) {
-              if (!groups || !groups.length) {
-                addToCartAjax(menuId, qty, selectedOptionIds, note, $btn);
-                return;
+      
+            $.getJSON(modsUrl, function (payload) {
+              const groups = Array.isArray(payload) ? payload : (payload.groups || []);
+              if (!groups.length) {
+                return addToCartAjax(addUrl, menuId, qty, [], note, $btn);
               }
-              
-              if (typeof showModifierModal !== 'function') {
-                console.error('showModifierModal function not found');
-                toastr?.error?.('Could not load options.');
-                $btn.prop('disabled', false);
-                return;
-              }
-              
-              showModifierModal(menuId, groups, function onConfirm(selectedModifierIds) {
-                addToCartAjax(menuId, qty, selectedModifierIds, note, $btn);
+              showModifierModal(menuId, groups, function onConfirm(selectedIds) {
+                addToCartAjax(addUrl, menuId, qty, selectedIds, note, $btn);
               });
             }).fail(function (xhr) {
               console.error('Failed to load modifiers:', xhr.status, xhr.responseText);
-              toastr?.error?.('Could not load options for this item.');
-              $btn.prop('disabled', false);
+              // Graceful fallback: add without options
+              addToCartAjax(addUrl, menuId, qty, [], note, $btn);
             });
           });
-          
-          function addToCartAjax(menuId, qty, selectedOptionIds, note, $btn) {
+      
+          function addToCartAjax(addUrl, menuId, qty, selectedOptionIds, note, $btn) {
             $.ajax({
               type: 'POST',
               url: addUrl,
@@ -247,45 +232,40 @@
                 qty: qty,
                 note: note,
                 'modifier_options_ids[]': selectedOptionIds
-              },
-              success: async function (json) {
-                if (json.ok) {
-                  if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
-                  await refreshCartSummary();
-                  toastr?.success?.('Item added to cart!');
-                } else {
-                  console.error('Add failed:', json);
-                  toastr?.error?.(json.error || 'Could not add item.');
-                }
-              },
-              error: function (xhr) {
-                console.error('ADD error', xhr.status, xhr.responseText);
-                toastr?.error?.('Add to cart failed.');
-              },
-              complete: function () {
-                $btn.prop('disabled', false);
               }
+            }).done(async function (json) {
+              if (json?.ok) {
+                if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
+                await refreshCartSummary();
+                window.toastr?.success?.('Item added to cart!');
+              } else {
+                window.toastr?.error?.(json?.error || 'Could not add item.');
+              }
+            }).fail(function (xhr) {
+              console.error('ADD error', xhr.status, xhr.responseText);
+              window.toastr?.error?.('Add to cart failed.');
+            }).always(function () {
+              $btn.prop('disabled', false);
             });
           }
-          
-          // UPDATE line quantity in cart
-          $(document).on('change click', '.cart-update', function (e) {
+      
+          // UPDATE line quantity in cart (delegated)
+          $(document).on('change click', '.cart-update', function () {
             const $el = $(this);
             const lineIndex = Number($el.data('line-index'));
             if (Number.isNaN(lineIndex)) return;
-            
+      
             let newQty = Number($el.val());
             if (Number.isNaN(newQty) || !newQty) {
               const $row = $el.closest('[data-line-index]');
               const $qtyInput = $row.find('select[data-role="qty"], input[data-role="qty"]');
               newQty = Number($qtyInput.val() || 1);
             }
-            
             if (newQty < 1) {
-              toastr?.error?.('Quantity must be at least 1.');
+              window.toastr?.error?.('Quantity must be at least 1.');
               return;
             }
-            
+      
             $.ajax({
               type: 'POST',
               url: '{% url "cart:cart_update" %}',
@@ -295,28 +275,26 @@
                 action: 'post',
                 line_index: lineIndex,
                 item_qty: newQty
-              },
-              success: async function (json) {
-                if (json.ok) {
-                  await refreshCartSummary();
-                } else {
-                  toastr?.error?.(json.error || 'Update failed.');
-                }
-              },
-              error: function (xhr) {
-                console.error('UPDATE error', xhr.status, xhr.responseText);
-                toastr?.error?.('Update failed.');
               }
+            }).done(async function (json) {
+              if (json.ok) {
+                await refreshCartSummary();
+              } else {
+                window.toastr?.error?.(json.error || 'Update failed.');
+              }
+            }).fail(function (xhr) {
+              console.error('UPDATE error', xhr.status, xhr.responseText);
+              window.toastr?.error?.('Update failed.');
             });
           });
-          
-          // DELETE a line
+      
+          // DELETE a line (delegated)
           $(document).on('click', '.cart-delete', function (e) {
             e.preventDefault();
             const $btn = $(this);
             const lineIndex = Number($btn.data('line-index'));
             if (Number.isNaN(lineIndex)) return;
-            
+      
             $btn.prop('disabled', true);
             $.ajax({
               type: 'POST',
@@ -326,25 +304,23 @@
               data: {
                 action: 'post',
                 line_index: lineIndex
-              },
-              success: async function (json) {
-                if (json.ok) {
-                  await refreshCartSummary();
-                  toastr?.success?.('Item removed.');
-                } else {
-                  toastr?.error?.(json.error || 'Delete failed.');
-                }
-              },
-              error: function (xhr) {
-                console.error('DELETE error', xhr.status, xhr.responseText);
-                toastr?.error?.('Delete failed.');
-              },
-              complete: function () {
-                $btn.prop('disabled', false);
               }
+            }).done(async function (json) {
+              if (json.ok) {
+                await refreshCartSummary();
+                window.toastr?.success?.('Item removed.');
+              } else {
+                window.toastr?.error?.(json.error || 'Delete failed.');
+              }
+            }).fail(function (xhr) {
+              console.error('DELETE error', xhr.status, xhr.responseText);
+              window.toastr?.error?.('Delete failed.');
+            }).always(function () {
+              $btn.prop('disabled', false);
             });
           });
-        });
+      
+        }); // <-- closes document.ready (only once)
       </script>
 
 </html>
