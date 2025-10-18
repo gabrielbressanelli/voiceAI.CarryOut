@@ -368,7 +368,7 @@
               if (!groups.length) {
                 return addToCartAjax(addUrl, menuId, qty, [], note, $btn);
               }
-              showModifierModal(menuId, groups, function onConfirm(selectedIds) {
+              showModifierModal(menuId, groups, function onConfirm(selectedIds, {trigger}) {
                 addToCartAjax(addUrl, menuId, qty, selectedIds, note, $btn);
               });
             }).fail(function (xhr) {
