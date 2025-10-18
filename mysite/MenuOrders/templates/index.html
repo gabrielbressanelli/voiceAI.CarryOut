@@ -131,35 +131,92 @@
         function showModifierModal(menuId, groups, onConfirm) {
           const $body = $('#modifierModalBody');
           $body.empty();
-      
-          groups.forEach((group) => {
-            const gName = group.group_name ?? group.name ?? 'Options';
-            const required = !!group.required;
-            const opts = group.options || [];
-      
+
+          groups.forEach((group, idx) => {
+            const gId       = group.group_id ?? group.id ?? idx;
+            const gName     = group.group_name ?? group.name ?? 'Options';
+            const required  = !!group.required;
+            const maxChoice = Number(group.max_choices ?? 0);     // <-- use this if available
+            const opts      = Array.isArray(group.options) ? group.options : [];
+
+            const single    = (maxChoice === 1);
+            const inputType = single ? 'radio' : 'checkbox';
+            const nameAttr  = `group_${gId}`; // radios share a name
+
+            const hasDefault = opts.some(o => !!o.is_default);
+
             const html = `
-              <div class="mb-4">
+              <div class="mb-4 modifier-group" data-group-id="${gId}" data-max-choices="${maxChoice}">
                 <h6>${gName}${required ? '<span class="text-danger">*</span>' : ''}</h6>
                 <div>
-                  ${opts.map(opt => {
-                    const price = (opt.price_delta ?? opt.price) || 0;
-                    const plus = price ? ` (+$${Number(price).toFixed(2)})` : '';
+                  ${opts.map((opt, i) => {
+                    const price = Number(opt.price_delta ?? opt.price ?? 0);
+                    const plus  = price ? ` (+$${price.toFixed(2)})` : '';
+                    const deflt = !!opt.is_default;
+                    const check = single && !hasDefault && i === 0 ? 'checked' : (deflt ? 'checked' : '');
                     return `
                       <div class="form-check">
-                        <input class="form-check-input modifier-option" type="checkbox"
-                               value="${opt.id}" data-option-id="${opt.id}" id="option_${opt.id}">
-                        <label class="form-check-label" for="option_${opt.id}">
+                        <input class="form-check-input modifier-option"
+                              type="${inputType}"
+                              name="${nameAttr}"
+                              value="${opt.id}"
+                              data-option-id="${opt.id}"
+                              data-group-id="${gId}"
+                              id="option_${gId}_${opt.id}"
+                              ${check}>
+                        <label class="form-check-label" for="option_${gId}_${opt.id}">
                           ${opt.name}${plus}
                         </label>
                       </div>`;
                   }).join('')}
                 </div>
+                ${maxChoice > 0 ? `<div class="form-text">Choose up to ${maxChoice}.</div>` : ''}
               </div>`;
             $body.append(html);
+
+            // Safety: if single+required and somehow none checked, check the first
+            if (single && required) {
+              const $grp = $(`.modifier-group[data-group-id="${gId}"]`);
+              if (!$grp.find('.modifier-option:checked').length) {
+                $grp.find('.modifier-option').first().prop('checked', true);
+              }
+            }
           });
-      
-          const modal = new bootstrap.Modal(document.getElementById('modifierModal'));
+
+          // Enforce exclusivity/limits even if markup ever changes
+          $(document).off('change.modifier').on('change.modifier', '.modifier-option', function () {
+            const $opt   = $(this);
+            const gId    = $opt.data('groupId');
+            const $grp   = $(`.modifier-group[data-group-id="${gId}"]`);
+            const max    = Number($grp.data('maxChoices')) || 0;
+            const $all   = $grp.find('.modifier-option');
+
+            if (max === 1) {
+              if ($opt.is(':checked')) $all.not($opt).prop('checked', false); // single-select behavior
+            } else if (max > 0) {
+              const $checked = $all.filter(':checked');
+              if ($checked.length > max) {
+                $opt.prop('checked', false);
+                window.toastr?.info?.(`Choose up to ${max}.`);
+              }
+            }
+          });
+
+          // Open modal (assuming markup exists on the page)
+          const modalEl = document.getElementById('modifierModal');
+          const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
           modal.show();
+
+          // Confirm → collect IDs and hand off
+          $('#modifierConfirmBtn').off('click').on('click', function () {
+            const selectedIds = [];
+            $('.modifier-option:checked').each(function () {
+              selectedIds.push(Number(this.value));
+            });
+            modal.hide();
+            onConfirm(selectedIds);
+          });
+
       
           $('#modifierConfirmBtn').off('click').on('click', function () {
             const selectedIds = [];
