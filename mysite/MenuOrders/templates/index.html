@@ -121,7 +121,8 @@
         async function refreshCartQtyOnly() {
             try {
                 const res = await fetch("{% url 'cart_count'}?t=" + Date.now(), {
-                    headers: { 'X-Requested-with': 'XMLHttpRequest' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin', 
                 });
                 if (!res.ok) return;
                 const { cart_qty } = await res.json();
