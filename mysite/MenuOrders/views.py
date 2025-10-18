@@ -56,7 +56,7 @@ def menu_modifiers(request, menu_id):
         payload.append({
             "group_id":grp.id,
             "group_name":grp.name,
-            "required": g.required if g.requited is not None else grp.required,
+            "required": g.required if g.required is not None else grp.required,
             "min_choices": g.min_choices if g.min_choices is not None else grp.min_choices,
             "max_choices": g.max_choices if g.max_choices is not None else grp.max_choices,
             "options": [
