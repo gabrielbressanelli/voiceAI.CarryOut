@@ -47,7 +47,7 @@
                             <div class="card-body">
                                 {% for L in lines %}
                                   <p>
-                                    {{ L.name }} : {{ L.unit_price }}<br>
+                                    {{ L.name }} : {{ L.total_price }}<br>
                                     <small>Quantity: {{ L.qty }}</small>
                                     {% if L.options and L.options|length %}
                                       <br><small>Options:
