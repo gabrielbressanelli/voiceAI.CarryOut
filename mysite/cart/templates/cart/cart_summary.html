@@ -52,7 +52,7 @@
                       <span class="opt-chip">
                         {% if o.group %}<strong>{{ o.group }}:</strong> {% endif %}{{ o.name }}
                         {% if o.price_delta and o.price_delta != "0.00" %} (+${{ o.price_delta }}){% endif %}
-                      </span>
+                      </span><br>
                     {% endfor %}
                   </div>
                 {% endif %}
