@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from .models import Menu, MenuModifierGroup, ModfierOption, ModifierGroup
+from .models import Menu, MenuModifierGroup, ModifierOption, ModifierGroup
 from cart.cart import Cart
 from django.contrib import messages
 

@@ -58,7 +58,7 @@ def cart_summary(request):
     return render(
         request,
         "cart/cart_summary.html",
-        {"lines": lines_for_ui, "totals":totals_dec, "totals_display":totals_display}
+        {"lines": lines_for_ui, "totals":totals_dec, "totals_display":totals_display, "unity_price_display": unit_price_display}
     )
 
 @require_POST

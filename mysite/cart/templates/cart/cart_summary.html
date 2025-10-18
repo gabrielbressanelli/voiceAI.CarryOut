@@ -22,79 +22,76 @@
   <div class="offcanvas-body">
 
     {% if lines %}
-    {% for line in lines %}
-      <div class="card mb-3 card-szie" style="max-width: 540px;">
-        <div class="row g-0">
-          <div class="col-md-4">
-            {% if line.picture_url %}
-              <img src="{{ line.picture_url }}" class="img-fluid rounded-start canvas-images" alt="">
-            {% else %}
-              <div class="d-flex align-items-center justify-content-center bg-light canvas-images rounded-start">
-                <span class="text-muted">No image</span>
-              </div>
-            {% endif %}
-          </div>
-          <div class="col-md-8">
-            <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between">
-                <h5 class="card-title mb-0">{{ line.name }}</h5>
-                <button type="button" data-index="{{ line.index }}" class="btn btn-danger btn-circle delete-line">
-                  <!-- x icon svg -->
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                       class="bi bi-x-lg" viewBox="0 0 16 16">
-                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                  </svg>
-                </button>
-              </div>
-  
-              {% if line.options %}
-                <div class="mt-2">
-                  {% for o in line.options %}
-                    <span class="opt-chip">
-                      {% if o.group %}<strong>{{ o.group }}:</strong> {% endif %}{{ o.name }}
-                      {% if o.price_delta and o.price_delta != "0.00" %} (+${{ o.price_delta }}){% endif %}
-                    </span>
-                  {% endfor %}
+      {% for line in lines %}
+        <div class="card mb-3 card-szie" style="max-width: 540px;">
+          <div class="row g-0">
+            <div class="col-md-4">
+              {% if line.picture_url %}
+                <img src="{{ line.picture_url }}" class="img-fluid rounded-start canvas-images" alt="">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light canvas-images rounded-start">
+                  <span class="text-muted">No image</span>
                 </div>
               {% endif %}
-  
-              {% if line.note %}
-                <div class="note-chip">Note: {{ line.note }}</div>
-              {% endif %}
-  
-              <p class="card-text mt-2"><small class="text-body-secondary">Amount:</small></p>
-  
-              <div class="d-flex align-items-center">
-                <select class="form-select form-select-md me-2 cart-update-qty"
-                        data-line-index="{{ line.index }}">
-                  {% for n in '12345'|make_list %}
-                    <option value="{{ n }}" {% if line.qty|stringformat:"s" == n %}selected{% endif %}>{{ n }}</option>
-                  {% endfor %}
-                </select>
-                <button type="button" data-index="{{ line.index }}" class="btn btn-primary btn-sm update-line">
-                  Update
-                </button>
+            </div>
+
+            <div class="col-md-8">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <h5 class="card-title mb-0">{{ line.name }}</h5>
+                  <button type="button" data-index="{{ line.index }}" class="btn btn-danger btn-circle delete-line">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                      <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {% if line.options %}
+                  <div class="mt-2">
+                    {% for o in line.options %}
+                      <span class="opt-chip">
+                        {% if o.group %}<strong>{{ o.group }}:</strong> {% endif %}{{ o.name }}
+                        {% if o.price_delta and o.price_delta != "0.00" %} (+${{ o.price_delta }}){% endif %}
+                      </span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                {% if line.note %}
+                  <div class="note-chip">Note: {{ line.note }}</div>
+                {% endif %}
+
+                <p class="card-text mt-2"><small class="text-body-secondary">Amount:</small></p>
+
+                <div class="d-flex align-items-center">
+                  <select class="form-select form-select-md me-2" id="select{{ line.index }}">
+                    {% for n in '12345'|make_list %}
+                      <option value="{{ n }}" {% if line.qty|stringformat:"s" == n %}selected{% endif %}>{{ n }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="button" data-index="{{ line.index }}" class="btn btn-primary btn-sm update-line">Update</button>
+                </div>
+
+                <p class="card-text mt-1">
+                  <small class="text-body-secondary">
+                    ${{ line.unit_price_display }} each
+                  </small>
+                </p>
+
               </div>
-  
-              <p class="card-text mt-1">
-                <small class="text-body-secondary">
-                  ${{ line.unit_price_display }} each
-                </small>
-              </p>
             </div>
           </div>
         </div>
+      {% endfor %}
+
+      <div class="text-end">
+        <h5>Total: $ {{ totals_display }}</h5>
+        <a href="{% url 'delivery' %}" class="btn btn-success">Checkout</a>
       </div>
-    {% endfor %}
-  
-    <div class="text-end">
-      <h5>Total: $ {{ totals_display }}</h5>
-      <a href="{% url 'delivery' %}" class="btn btn-success">Checkout</a>
-    </div>
-  
-  {% else %}
-    <p class="text-muted">Looks pretty empty over here if you are actually hungry...</p>
-  {% endif %}
+
+    {% else %}
+      <p>Looks pretty empty over here if you are actually hungry...</p>
+    {% endif %}
 
   </div>
 </div>

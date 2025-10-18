@@ -38,7 +38,7 @@ class ModifierGroup(models.Model):
         return f"{self.name}"
 
 
-class ModfierOption(models.Model):
+class ModifierOption(models.Model):
     """Options inside each group"""
     group = models.ForeignKey(ModifierGroup, on_delete=models.CASCADE, related_name="options")
     name = models.CharField(max_length=50)
