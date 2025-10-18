@@ -254,8 +254,9 @@
               if (json?.ok) {
                 if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
                 await refreshCartSummary();
-                await refreshCartQtyOnly();
                 window.toastr?.success?.('Item added to cart!');
+                await refreshCartQtyOnly();
+                location.reload();
               } else {
                 window.toastr?.error?.(json?.error || 'Could not add item.');
               }
@@ -297,6 +298,7 @@
                 }).done(async (json) => {
                     if (json?.ok) await refreshCartSummary();
                     await refreshCartQtyOnly();
+                    location.reload();
                 }).fail(xhr => console.error('DELETE error', xhr.status, xhr.responseText));
             });
         }); // <-- closes document.ready (only once)
