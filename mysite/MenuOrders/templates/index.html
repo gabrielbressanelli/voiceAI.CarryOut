@@ -413,10 +413,12 @@
                     dataType: 'json',
                     data: { action: 'post', line_index: idx },
                 }).done(async (json) => {
-                    if (json?.ok) await refreshCartSummary();
-                    // await refreshCartQtyOnly();
+                    if (json?.ok) {
+                    await new Promise(r => setTimeout(r, 120));
+                    await refreshCartSummary();
+                    await refreshCartQtyOnly();
+                    }
                     sessionStorage.setItem('keepOffcanvasOpen', 'true');
-                    location.reload();
                 }).fail(xhr => console.error('DELETE error', xhr.status, xhr.responseText));
             });
         }); // <-- closes document.ready (only once)
