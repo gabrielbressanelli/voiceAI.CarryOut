@@ -47,12 +47,16 @@
                             <div class="card-body">
                                 {% for L in lines %}
                                   <p>
-                                    {{ L.name }} : {{ L.total_price }}<br>
+                                    {{ L.name }} : {{ L.unit_price }}<br>
                                     <small>Quantity: {{ L.qty }}</small>
                                     {% if L.options and L.options|length %}
                                       <br><small>Options:
                                         {% for opt in L.options %}
-                                          {{ opt.name }}{% if not forloop.last %}, {% endif %}
+                                          {{ opt.name }} 
+                                          {% if opt.price_delta and opt.price_delta != "0.00"%}
+                                          (+${{ opt.price_delta }})
+                                          {% endif %}
+                                          {% if not forloop.last %}, {% endif %}
                                         {% endfor %}
                                       </small>
                                     {% endif %}
