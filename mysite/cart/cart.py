@@ -1,4 +1,4 @@
-from MenuOrders.models import Menu, MenuModifierGroup, ModfierOption
+from MenuOrders.models import Menu, MenuModifierGroup, ModifierOption
 from decimal import Decimal
 
 CART_SESSION_KEY = 'cart'
@@ -40,10 +40,10 @@ class Cart():
 
     def _validate_and_price(self, menu:Menu, selected_ids: list[int]) -> tuple[Decimal, list[dict]]:
         mmgs = menu.modifier_group.select_related("group").all().order_by("sort_order")
-        selected = ModfierOption.objects.filter(id__in=selected_ids, group__in=[m.group for m in mmgs], active=True).select_related("group")
+        selected = ModifierOption.objects.filter(id__in=selected_ids, group__in=[m.group for m in mmgs], active=True).select_related("group")
 
         # per group validation
-        by_group: dict[int, list[ModfierOption]] = {}
+        by_group: dict[int, list[ModifierOption]] = {}
         for opt in selected:
             by_group.setdefault(opt.group_id, []).append(opt)
         
