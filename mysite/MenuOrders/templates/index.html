@@ -255,8 +255,7 @@
                 if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
                 await refreshCartSummary();
                 window.toastr?.success?.('Item added to cart!');
-                refreshCartQtyOnly();
-                //location.reload();
+                location.reload();
               } else {
                 window.toastr?.error?.(json?.error || 'Could not add item.');
               }
@@ -282,6 +281,7 @@
             }).done(async (json) => {
                 if (json?.ok) await refreshCartSummary();
                 await refreshCartQtyOnly();
+                sessionStorage.setItem('keepOffcanvasOpen', 'true');
                 location.reload();
             }).fail(xhr => console.error('UPDATE error', xhr.status, xhr.responseText));
             });
