@@ -42,17 +42,23 @@ def menu_modifiers(request, menu_id):
         menu = Menu.objects.get(id=menu_id)
 
     except Menu.DoesNotExist:
-        return JsonResponse({"error": "Menu Item not found"}, statu=400)
+        return JsonResponse({"error": "Menu Item not found"}, status=400)
     
-    groups = menu.modifier_group.all().prefetch_related("group")
+    groups = (
+        menu.modifier_group
+        .select_related("group")
+        .prefetch_related("group__options")
+    )
 
     payload = []
     for g in groups:
+        grp = g.group
         payload.append({
-            "group_id":g.id,
-            "group_name":g.name,
-            "required": g.required,
-            "max_choices": g.max_choices,
+            "group_id":grp.id,
+            "group_name":grp.name,
+            "required": g.required if g.requited is not None else grp.required,
+            "min_choices": g.min_choices if g.min_choices is not None else grp.min_choices,
+            "max_choices": g.max_choices if g.max_choices is not None else grp.max_choices,
             "options": [
                 {
                     "id": opt.id,
@@ -60,8 +66,8 @@ def menu_modifiers(request, menu_id):
                     "price_delta": opt.price_delta,
                     "is_default": opt.is_default,
                 }
-                for opt in g.options.all()
-            ]
+                for opt in grp.options.all()
+            ],
 
         })
     return JsonResponse(payload, safe=False)
