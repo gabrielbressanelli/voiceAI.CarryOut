@@ -44,7 +44,7 @@ def menu_modifiers(request, menu_id):
     except Menu.DoesNotExist:
         return JsonResponse({"error": "Menu Item not found"}, statu=400)
     
-    groups = menu.modifier_group.all().prefetch_related("options")
+    groups = menu.modifier_group.all().prefetch_related("group")
 
     payload = []
     for g in groups:
