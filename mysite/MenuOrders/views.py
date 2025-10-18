@@ -11,6 +11,7 @@ def index(request):
     appetizer = Menu.objects.filter(food_type='appetizer')
     pasta = Menu.objects.filter(food_type='pasta')
     grill = Menu.objects.filter(food_type='grill')
+    saute = Menu.objects.filter(food_type="saute")
     seafood = Menu.objects.filter(food_type='seafood')
     dessert = Menu.objects.filter(food_type='dessert')
     beverage = Menu.objects.filter(food_type='beverage')
@@ -26,6 +27,7 @@ def index(request):
         'appetizer': appetizer,
         'pasta': pasta,
         'grill': grill,
+        'saute': saute,
         'seafood': seafood,
         'dessert': dessert,
         'beverage': beverage,
