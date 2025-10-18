@@ -109,6 +109,7 @@ def cart_delete(request):
     if not (0 <= idx < len(cart.lines)):
         return JsonResponse({"ok":True, "cart_qty": len(cart)})
     cart.delete(idx)
+    cart.save()
     return JsonResponse({"ok":True, "cart_qty": len(cart)})
 
 # Handler to keep partial rendering consistent throughout all the acitons
