@@ -101,10 +101,15 @@ def cart_update(request):
 def cart_delete(request):
     if request.POST.get('action') != 'post':
         return JsonResponse({"error": "bad request"}, status=400)
-    idx = int(request.POST.get("line_index", -1))
+    try:
+        idx = int(request.POST.get("line_index", -1))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok":False, "error":"invalid index"}, status=400)
     cart = Cart(request)
+    if not (0 <= idx < len(cart.lines)):
+        return JsonResponse({"ok":True, "cart_qty": len(cart)})
     cart.delete(idx)
-    return JsonResponse({"ok": True})
+    return JsonResponse({"ok":True, "cart_qty": len(cart)})
 
 # Handler to keep partial rendering consistent throughout all the acitons
 def _render_cart_partial(request, cart: Cart) -> str:
