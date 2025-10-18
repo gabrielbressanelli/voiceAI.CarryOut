@@ -100,46 +100,6 @@
 </div>
 
 <script>
-// Update qty for a line
-$(document).on('click', '.update-line', function(e) {
-  e.preventDefault();
-  var idx = $(this).data('index');
-  $.ajax({
-    type: 'POST',
-    url: "{% url 'cart:cart_update' %}",
-    data: {
-      line_index: idx,
-      item_qty: $('#select' + idx + ' option:selected').val(),
-      csrfmiddlewaretoken: '{{ csrf_token }}',
-      action: 'post'
-    },
-    success: function() {
-      sessionStorage.setItem('keepOffcanvasOpen', 'true');
-      location.reload();
-    },
-    error: function(xhr){ console.error("AJAX Error:", xhr.responseText); }
-  });
-});
-
-// Delete a line
-$(document).on('click', '.delete-line', function(e) {
-  e.preventDefault();
-  var idx = $(this).data('index');
-  $.ajax({
-    type: 'POST',
-    url: "{% url 'cart:cart_delete' %}",
-    data: {
-      line_index: idx,
-      csrfmiddlewaretoken: '{{ csrf_token }}',
-      action: 'post'
-    },
-    success: function(){
-      sessionStorage.setItem('keepOffcanvasOpen', 'true');
-      location.reload();
-    },
-    error: function(xhr){ console.error("AJAX Error:", xhr.responseText); }
-  });
-});
 
 // Keep offcanvas open after reload
 document.addEventListener('DOMContentLoaded', function() {
