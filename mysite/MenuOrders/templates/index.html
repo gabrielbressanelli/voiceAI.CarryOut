@@ -414,8 +414,9 @@
                     data: { action: 'post', line_index: idx },
                 }).done(async (json) => {
                     if (json?.ok) await refreshCartSummary();
-                    await refreshCartQtyOnly();
-                    // location.reload();
+                    // await refreshCartQtyOnly();
+                    sessionStorage.setItem('keepOffcanvasOpen', 'true');
+                    location.reload();
                 }).fail(xhr => console.error('DELETE error', xhr.status, xhr.responseText));
             });
         }); // <-- closes document.ready (only once)
