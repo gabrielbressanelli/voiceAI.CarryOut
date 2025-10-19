@@ -61,6 +61,8 @@
           .main-wrapper { min-height: 100svh; }   /* or 100dvh; requires modern iOS */
 
           .navbar.fixed-top.nav-under-offcanvas { z-index: 1030; }
+
+          .navbar.fixed-top.nav-under.modal {z-index: 1030;}
         </style>
 
 
@@ -124,6 +126,15 @@
             });
             oc.addEventListener('hidden.bs.offcanvas', () => {
               nav?.classList.remove('nav-under-offcanvas');
+            });
+          });
+
+          document.querySelector('.modal').forEach(oc => {
+            oc.addEventListener('show.bs.modal', () => {
+              nav?.classList.add('nav-under-modal');
+            });
+            oc.addEventListener('hidden.bs.modal', () => {
+              nav?.classList.remove('nav-under-modal');
             });
           });
         });
