@@ -289,7 +289,7 @@ def checkout_success(request):
     return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
 
 def checkout_cancel(request):
-    return render(request, 'delivery.html')
+    return redirect("/payment/delivery/") 
 
 def items_from_snapshot(snapshot_json: str):
     """
