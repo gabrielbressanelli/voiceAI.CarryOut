@@ -32,8 +32,13 @@
               0 10px 30px rgba(0, 0, 0, 0.08);          /* soft drop shadow */
 
             /* spacing and layering */
-            z-index: 1080;               /* above content */
+            z-index: 1030;               /* above content */
             transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease;
+          }
+
+          .glass-nav.nav-under-modal,
+          .navbar.fixed-top{
+            z-index: 900 !important;
           }
 
           body { padding-top: 6.5rem; }
@@ -62,7 +67,6 @@
 
           .navbar.fixed-top.nav-under-offcanvas { z-index: 1030; }
 
-          .navbar.fixed-top.nav-under.modal {z-index: 1030;}
         </style>
 
 
@@ -116,20 +120,15 @@
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll(); // init on load
 
-        document.addEventListener('DOMContentLoaded', () => {
-          const nav = document.querySelector('.navbar.fixed-top');
 
           // handle all offcanvas instances on the page
-          document.querySelectorAll('.offcanvas').forEach(oc => {
-            oc.addEventListener('show.bs.offcanvas', () => {
-              nav?.classList.add('nav-under-offcanvas');
-            });
-            oc.addEventListener('hidden.bs.offcanvas', () => {
-              nav?.classList.remove('nav-under-offcanvas');
-            });
-          });
 
-        });
+          document.addEventListener('show.bs.modal', () => {
+            nav?.classList.add('nav-under-modal');
+          });
+          document.addEventListener('hidden.bs.modal', () => {
+            nav?.classList.remove('nav-under-modal');
+          });
       </script>
       
 </html>

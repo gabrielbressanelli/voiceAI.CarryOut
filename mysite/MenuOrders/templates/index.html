@@ -29,7 +29,7 @@
             } 
 
             .nav-under-modal {
-              z-index: 900;
+              z-index: 900 !important;
             }
 
         </style>
@@ -451,14 +451,6 @@
             })
           });
           // modal over fixed navbar
-          const nav = document.querySelector('.navbar');
-
-          document.addEventListener('show.bs.modal', () => {
-              nav?.classList.add('nav-under-modal');
-            });
-            document.addEventListener('hidden.bs.modal', () => {
-              nav?.classList.remove('nav-under-modal');
-            });
         });// <-- closes document.ready (only once)
       </script>
 </html>
