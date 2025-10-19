@@ -98,6 +98,12 @@
     </body>
 
     <script>
+      function resetPayBtn() {
+        const btn = document.getElementById('pay-btn');
+        if (btn) { btn.disabled = false; btn.textContent = 'Proceed to Payment'; }
+      }
+      window.addEventListener('pageshow', resetPayBtn);
+      
       // ---------- CSRF helper ----------
       function getCookie(name) {
         const value = `; ${document.cookie}`;
