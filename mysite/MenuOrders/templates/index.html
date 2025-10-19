@@ -311,8 +311,15 @@
         });
       
         function setCartQty(qty) {
-          const el = document.getElementById('cart_quantity');
-          if (el != null && qty != null) el.textContent = qty;
+          // Faster and avoids selector typos:
+          const el = document.getElementById('cart_quantity'); 
+          if (!el) return;
+
+          const n = Math.max(0, Number(qty) || 0); // coerce & clamp
+          el.textContent = n;
+          // optional niceties:
+          el.classList.toggle('invisible', n <= 0);
+          el.setAttribute('aria-label', `Cart items: ${n}`);
         }
       
         // --- Main bind block (single source of truth)
@@ -405,24 +412,40 @@
       
           // DELETE a line (delegated)
           $(document).on('click', '.delete-line', function (e) {
-                e.preventDefault();
-                const idx = $(this).data('index');
-                $.ajax({
-                    type: 'POST',
-                    url: "{% url 'cart:cart_delete' %}",
-                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                    dataType: 'json',
-                    data: { action: 'post', line_index: idx },
-                }).done(async (json) => {
-                    if (json?.ok) {
-                    await new Promise(r => setTimeout(r, 120));
-                    await refreshCartSummary();
-                    await refreshCartQtyOnly();
-                    }
-                    sessionStorage.setItem('keepOffcanvasOpen', 'true');
-                }).fail(xhr => console.error('DELETE error', xhr.status, xhr.responseText));
-            });
-        }); // <-- closes document.ready (only once)
-      </script>
+            e.preventDefault();
+            const idx = $(this).data('index');
 
+            $.ajax({
+              type: 'POST',
+              url: "{% url 'cart:cart_delete' %}",
+              headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+              dataType: 'json',
+              data: { action: 'post', line_index: idx },
+            })
+            .done(async (json) => {
+              if (!json || json.ok !== true) {
+                console.warn('Delete returned not-ok JSON:', json);
+                window.toastr?.warning?.('Could not remove item. Try again.');
+                return;
+              }
+
+              // 1) Update the pill immediately from the server-confirmed count
+              if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
+
+              // 2) Refresh summary and re-validate count in parallel
+              await Promise.all([
+                refreshCartSummary(),
+                refreshCartQtyOnly(),
+              ]);
+
+              // 3) Keep offcanvas open (your existing behavior)
+              sessionStorage.setItem('keepOffcanvasOpen', 'true');
+            })
+            .fail(xhr => {
+              console.error('DELETE error', xhr.status, xhr.responseText);
+              window.toastr?.error?.('Delete failed.');
+            })
+          });
+        });// <-- closes document.ready (only once)
+      </script>
 </html>
