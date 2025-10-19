@@ -10,6 +10,66 @@
             max-width: 700px;  
             min-width: 400px;  
         }    
+
+            .glass-nav {
+            /* translucent fill + gentle gradient */
+            background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.75),
+                rgba(255, 255, 255, 0.55)
+            );
+            /* blur whatever is behind the bar */
+            -webkit-backdrop-filter: saturate(180%) blur(14px);
+            backdrop-filter: saturate(180%) blur(14px);
+
+            /* subtle glass edges */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow:
+              0 1px 0 rgba(255, 255, 255, 0.3) inset,   /* inner highlight */
+              0 10px 30px rgba(0, 0, 0, 0.08);          /* soft drop shadow */
+
+            /* spacing and layering */
+            z-index: 1080;               /* above content */
+            transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease;
+        }
+
+      /* Dark mode variant (auto if you use system dark mode) */
+          @media (prefers-color-scheme: dark) {
+            .glass-nav {
+              background: linear-gradient(
+                180deg,
+                rgba(22, 22, 24, 0.65),
+                rgba(22, 22, 24, 0.45)
+              );
+              border-bottom-color: rgba(255, 255, 255, 0.08);
+              box-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.05) inset,
+                0 10px 30px rgba(0, 0, 0, 0.35);
+            }
+          }
+
+          /* Optional: intensify once the user scrolls */
+          .glass-nav.scrolled {
+            background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.85),
+                rgba(255, 255, 255, 0.70)
+            );
+            -webkit-backdrop-filter: saturate(180%) blur(18px);
+            backdrop-filter: saturate(180%) blur(18px);
+          }
+          @media (prefers-color-scheme: dark) {
+            .glass-nav.scrolled {
+              background: linear-gradient(
+                180deg,
+                rgba(22, 22, 24, 0.78),
+                rgba(22, 22, 24, 0.60)
+              );
+            }
+          }
+
+          /* If you used fixed-top, keep content visible below it */
+          body { padding-top: 4.5rem; } 
         </style>
 
 
@@ -56,5 +116,12 @@
           </div>
         </div>
       </body>
+      
+      <script>
+        const nav = document.querySelector('.glass-nav');
+        const onScroll = () => nav?.classList.toggle('scrolled', window.scrollY > 8);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll(); // init on load
+      </script>
       
 </html>
