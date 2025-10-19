@@ -379,7 +379,7 @@
                 if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
                 await refreshCartSummary();
                 window.toastr?.success?.('Item added to cart!');
-                location.reload();
+                //location.reload();
               } else {
                 window.toastr?.error?.(json?.error || 'Could not add item.');
               }
