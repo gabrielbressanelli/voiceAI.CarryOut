@@ -33,32 +33,12 @@
             transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease;
         }
 
-
-          /* Optional: intensify once the user scrolls */
-          .glass-nav.scrolled {
-            background: linear-gradient(
-                180deg,
-                rgba(255, 255, 255, 0.85),
-                rgba(255, 255, 255, 0.70)
-            );
-            -webkit-backdrop-filter: saturate(180%) blur(18px);
-            backdrop-filter: saturate(180%) blur(18px);
-          }
-          @media (prefers-color-scheme: dark) {
-            .glass-nav.scrolled {
-              background: linear-gradient(
-                180deg,
-                rgba(22, 22, 24, 0.78),
-                rgba(22, 22, 24, 0.60)
-              );
-            }
-          }
         </style>
 
 
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg glass-nav sticky-top">
+        <nav class="navbar navbar-expand-lg glass-nav fixed-top">
           <div class="container px-4 px-lg-5">
             <!-- Always visible brand/logo -->
             <a class="navbar-brand" href="{% url 'index' %}">
