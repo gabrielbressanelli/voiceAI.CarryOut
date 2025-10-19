@@ -269,11 +269,11 @@
           let modalAction = 'cancel';
 
           //re-enable originating button on cancel or close 
-          const onHiden = () => {
+          const onHidden = () => {
             if (modalAction === 'cancel' ){
-              $btn?.prop('disable', False);
+              $btn?.prop('disabled', False);
             }
-            modalEL.removeEventListener('hidden.bs.modal', onHidden);
+            modalEl.removeEventListener('hidden.bs.modal', onHidden);
           };
 
           modalEl.removeEventListener('hidden.bs.modal', onHidden);
