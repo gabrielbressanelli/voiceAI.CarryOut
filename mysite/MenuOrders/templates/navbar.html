@@ -59,6 +59,8 @@
 
           html, body { height: 100%; }
           .main-wrapper { min-height: 100svh; }   /* or 100dvh; requires modern iOS */
+
+          .navbar.fixed-top.nav-under-offcanvas { z-index: 1030; }
         </style>
 
 
@@ -111,6 +113,20 @@
         const onScroll = () => nav?.classList.toggle('scrolled', window.scrollY > 8);
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll(); // init on load
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const nav = document.querySelector('.navbar.fixed-top');
+
+          // handle all offcanvas instances on the page
+          document.querySelectorAll('.offcanvas').forEach(oc => {
+            oc.addEventListener('show.bs.offcanvas', () => {
+              nav?.classList.add('nav-under-offcanvas');
+            });
+            oc.addEventListener('hidden.bs.offcanvas', () => {
+              nav?.classList.remove('nav-under-offcanvas');
+            });
+          });
+        });
       </script>
       
 </html>
