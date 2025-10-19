@@ -33,20 +33,6 @@
             transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease;
         }
 
-      /* Dark mode variant (auto if you use system dark mode) */
-          @media (prefers-color-scheme: dark) {
-            .glass-nav {
-              background: linear-gradient(
-                180deg,
-                rgba(22, 22, 24, 0.65),
-                rgba(22, 22, 24, 0.45)
-              );
-              border-bottom-color: rgba(255, 255, 255, 0.08);
-              box-shadow:
-                0 1px 0 rgba(255, 255, 255, 0.05) inset,
-                0 10px 30px rgba(0, 0, 0, 0.35);
-            }
-          }
 
           /* Optional: intensify once the user scrolls */
           .glass-nav.scrolled {
