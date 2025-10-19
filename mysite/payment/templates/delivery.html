@@ -98,124 +98,137 @@
     </body>
 
     <script>
-        document.getElementById("pay-btn").addEventListener("click", async () => {
-          const btn = document.getElementById("pay-btn");
-          btn.disabled = true; btn.textContent = "Redirecting…";
-          try {
-            const r = await fetch("/payment/create-checkout-session/");
-            const { checkout_url, error } = await r.json();
-            if (error) throw new Error(error);
-            window.location.href = checkout_url;
-          } catch (e) {
-            alert("Could not start payment. Please try again.");
-            btn.disabled = false; btn.textContent = "Pay with Stripe";
-          }
+      // ---------- CSRF helper ----------
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+      const csrftoken = getCookie('csrftoken');
 
-        async function refreshCartQtyOnly() {
-          try {
-            const res = await fetch("{% url 'cart_count'}?t=" + Date.now(), {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin', 
-            });
-              if (!res.ok) return;
-              const { cart_qty } = await res.json();
-              if (typeof cart_qty !== 'undefined') setCartQty(cart_qty)
-            } catch (_) {}
-            
-          }
+      // ---------- Cart pill updater ----------
+      function setCartQty(qty) {
+        const el = document.getElementById('cart_quantity');
+        if (!el) return;
+        const n = Math.max(0, Number(qty) || 0);
+        el.textContent = n;
+        el.classList.toggle('invisible', n <= 0);
+        el.setAttribute('aria-label', `Cart items: ${n}`);
+      }
 
-          // --- CSRF helper (Django default cookie name is "csrftoken")
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-          }
-
-        const csrftoken = getCookie('csrftoken');
-
-        async function refreshCartSummary() {
-          try {
-            const res = await fetch('{% url "cart:cart_summary" %}', {
-              method: 'GET',
-              headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const html = await res.text();
-            const $body = $('#offcanvasRight .offcanvas-body');
-            if ($body.length) $body.html(html);
-          } catch (e) {
-            console.error('Failed to refresh cart summary:', e);
-            window.toastr?.error?.('Failed to update cart display.');
-          }
-          }
-
-        function setCartQty(qty) {
-          // Faster and avoids selector typos:
-          const el = document.getElementById('cart_quantity'); 
-          if (!el) return;
-
-          const n = Math.max(0, Number(qty) || 0); // coerce & clamp
-          el.textContent = n;
-          // optional niceties:
-          el.classList.toggle('invisible', n <= 0);
-          el.setAttribute('aria-label', `Cart items: ${n}`);
-        }
-
-        $(document).on('click', '.update-line', function (e) {
-            e.preventDefault();
-            const idx = $(this).data('index');
-            const newQty = $(`select.cart-update-qty[data-line-index="${idx}"]`).val();
-            $.ajax({
-                type: 'POST',
-                url: "{% url 'cart:cart_update' %}",
-                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                dataType: 'json',
-                data: { action: 'post', line_index: idx, item_qty: newQty },
-            }).done(async (json) => {
-                if (json?.ok) await refreshCartSummary();
-                await refreshCartQtyOnly();
-                sessionStorage.setItem('keepOffcanvasOpen', 'true');
-                location.reload();
-            }).fail(xhr => console.error('UPDATE error', xhr.status, xhr.responseText));
+      // ---------- Fetch the current cart count ----------
+      async function refreshCartQtyOnly() {
+        try {
+          const res = await fetch("{% url 'cart_count' %}?t=" + Date.now(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
           });
-      
-          // DELETE a line (delegated)
-        $(document).on('click', '.delete-line', function (e) {
-          e.preventDefault();
-          const idx = $(this).data('index');
+          if (!res.ok) return;
+          const { cart_qty } = await res.json();
+          if (typeof cart_qty !== 'undefined') setCartQty(cart_qty);
+        } catch (_) {}
+      }
 
-          $.ajax({
-              type: 'POST',
-              url: "{% url 'cart:cart_delete' %}",
-              headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-              dataType: 'json',
-              data: { action: 'post', line_index: idx },
-          })
-          .done(async (json) => {
-            if (!json || json.ok !== true) {
-              console.warn('Delete returned not-ok JSON:', json);
-              window.toastr?.warning?.('Could not remove item. Try again.');
-              return;
-            }
+      // ---------- Load the offcanvas cart fragment ----------
+      async function refreshCartSummary() {
+        try {
+          const res = await fetch("{% url 'cart:cart_summary' %}?t=" + Date.now(), {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const html = await res.text();
+          const $body = $('#offcanvasRight .offcanvas-body');
+          if ($body.length) $body.html(html);
+        } catch (e) {
+          console.error('Failed to refresh cart summary:', e);
+          window.toastr?.error?.('Failed to update cart display.');
+        }
+      }
 
-              // 1) Update the pill immediately from the server-confirmed count
-            if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
-
-              // 2) Refresh summary and re-validate count in parallel
-            await Promise.all([
-              refreshCartSummary(),
-              refreshCartQtyOnly(),
-            ]);
-
-              // 3) Keep offcanvas open (your existing behavior)
+      // ---------- Update quantity (delegated; survives re-renders) ----------
+      $(document).on('click', '.update-line', function (e) {
+        e.preventDefault();
+        const idx = $(this).data('index');
+        const newQty = $(`select.cart-update-qty[data-line-index="${idx}"]`).val();
+        $.ajax({
+          type: 'POST',
+          url: "{% url 'cart:cart_update' %}",
+          headers: { 'X-CSRFToken': csrftoken },
+          dataType: 'json',
+          data: { action: 'post', line_index: idx, item_qty: newQty },
+        })
+        .done(async (json) => {
+          if (json?.ok) {
+            await Promise.all([refreshCartSummary(), refreshCartQtyOnly()]);
             sessionStorage.setItem('keepOffcanvasOpen', 'true');
-          })
-          .fail(xhr => {
-            console.error('DELETE error', xhr.status, xhr.responseText);
-            window.toastr?.error?.('Delete failed.');
-          })
-         });
-      });// <-- closes document
-        </script>
+          } else {
+            window.toastr?.warning?.('Could not update item.');
+          }
+        })
+        .fail(xhr => console.error('UPDATE error', xhr.status, xhr.responseText));
+      });
+
+      // ---------- Delete a line (delegated) ----------
+      $(document).on('click', '.delete-line', function (e) {
+        e.preventDefault();
+        const idx = $(this).data('index');
+
+        $.ajax({
+          type: 'POST',
+          url: "{% url 'cart:cart_delete' %}",
+          headers: { 'X-CSRFToken': csrftoken },
+          dataType: 'json',
+          data: { action: 'post', line_index: idx },
+        })
+        .done(async (json) => {
+          if (!json || json.ok !== true) {
+            console.warn('Delete returned not-ok JSON:', json);
+            window.toastr?.warning?.('Could not remove item. Try again.');
+            return;
+          }
+          if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty); // instant pill update
+          await Promise.all([refreshCartSummary(), refreshCartQtyOnly()]);
+          sessionStorage.setItem('keepOffcanvasOpen', 'true');
+        })
+        .fail(xhr => {
+          console.error('DELETE error', xhr.status, xhr.responseText);
+          window.toastr?.error?.('Delete failed.');
+        });
+      });
+
+      // ---------- Start checkout (Stripe) ----------
+      document.getElementById("pay-btn").addEventListener("click", async (e) => {
+        const btn = e.currentTarget;
+        btn.disabled = true; btn.textContent = "Redirecting…";
+        try {
+          const r = await fetch("/payment/create-checkout-session/", {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+          });
+          const { checkout_url, error } = await r.json();
+          if (error) throw new Error(error);
+          window.location.href = checkout_url;
+        } catch (err) {
+          alert("Could not start payment. Please try again.");
+          btn.disabled = false; btn.textContent = "Proceed to Payment";
+        }
+      });
+
+      // ---------- Optional: keep offcanvas open after refreshes ----------
+      document.addEventListener('DOMContentLoaded', async () => {
+        // Hydrate pill & offcanvas contents on page load
+        await Promise.all([refreshCartQtyOnly(), refreshCartSummary()]);
+
+        // Reopen offcanvas if previous op asked to keep it open
+        if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
+          sessionStorage.removeItem('keepOffcanvasOpen');
+          const oc = new bootstrap.Offcanvas('#offcanvasRight');
+          oc.show();
+        }
+      });
+    </script>
 
 </html>
