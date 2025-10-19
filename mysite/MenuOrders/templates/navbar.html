@@ -33,14 +33,19 @@
             transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease;
         }
 
-        body { padding-top: 6rem; }
+            body { padding-top: 6rem; }
+
+            .use-sticky {
+            position: sticky !important;
+            top: env(safe-area-inset-top, 0) !important;
+          }
 
         </style>
 
 
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg glass-nav fixed-top">
+        <nav class="navbar navbar-expand-lg glass-nav fixed-top ios-sticky-fallback">
           <div class="container px-4 px-lg-5">
             <!-- Always visible brand/logo -->
             <a class="navbar-brand" href="{% url 'index' %}">
