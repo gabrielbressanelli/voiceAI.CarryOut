@@ -119,7 +119,7 @@
       // ---------- Fetch the current cart count ----------
       async function refreshCartQtyOnly() {
         try {
-          const res = await fetch("{% url 'cart_count' %}?t=" + Date.now(), {
+          const res = await fetch("{% url 'cart:cart_count' %}?t=" + Date.now(), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin',
           });
