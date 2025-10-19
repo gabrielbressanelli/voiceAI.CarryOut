@@ -3,15 +3,18 @@
 
     <head>
 
+      <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
         <style>
 
-            .offcanvas {
+
+          .offcanvas {
             --bs-offcanvas-width: 35vw; 
             max-width: 700px;  
             min-width: 400px;  
-        }    
+          }    
 
-            .glass-nav {
+          .glass-nav {
             /* translucent fill + gentle gradient */
             background: linear-gradient(
                 180deg,
@@ -31,15 +34,31 @@
             /* spacing and layering */
             z-index: 1080;               /* above content */
             transition: background .25s ease, backdrop-filter .25s ease, border-color .25s ease;
-        }
+          }
 
-            body { padding-top: 6rem; }
+          body { padding-top: 6.5rem; }
 
-            .use-sticky {
+          .use-sticky {
             position: sticky !important;
             top: env(safe-area-inset-top, 0) !important;
           }
 
+          /* your fixed navbar */
+          .navbar.fixed-top {
+            position: fixed;            /* be explicit on iOS */
+            top: env(safe-area-inset-top, 0);
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1080;              /* above offcanvas/backdrops */
+            /* if using the glass look, keep a non-zero alpha background */
+            background: rgba(255,255,255,0.7); /* or your glass gradient */
+            -webkit-backdrop-filter: saturate(180%) blur(14px);
+            backdrop-filter: saturate(180%) blur(14px);
+          }
+
+          html, body { height: 100%; }
+          .main-wrapper { min-height: 100svh; }   /* or 100dvh; requires modern iOS */
         </style>
 
 
