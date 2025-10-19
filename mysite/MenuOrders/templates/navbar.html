@@ -67,9 +67,6 @@
               );
             }
           }
-
-          /* If you used fixed-top, keep content visible below it */
-          body { padding-top: 4.5rem; } 
         </style>
 
 
@@ -116,7 +113,7 @@
           </div>
         </div>
       </body>
-      
+
       <script>
         const nav = document.querySelector('.glass-nav');
         const onScroll = () => nav?.classList.toggle('scrolled', window.scrollY > 8);
