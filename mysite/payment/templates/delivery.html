@@ -147,12 +147,6 @@
         }
       }
 
-      function syncDeliveryFromOffcanvas() {
-        const src = document.querySelector('#offcanvasRight .offcanvas-body');
-        const dst = document.getElementById('delivery_order_summary');
-        if (src && dst) dst.innerHTML = src.innerHTML;
-      }
-
       // ---------- Update quantity (delegated; survives re-renders) ----------
       $(document).on('click', '.update-line', function (e) {
         e.preventDefault();
@@ -168,7 +162,7 @@
         .done(async (json) => {
           if (json?.ok) {
             await Promise.all([refreshCartSummary(), refreshCartQtyOnly()]);
-            syncDeliveryFromOffcanvas(); 
+            locaion.reload()
             sessionStorage.setItem('keepOffcanvasOpen', 'true');
           } else {
             window.toastr?.warning?.('Could not update item.');
@@ -198,7 +192,7 @@
           if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty); // instant pill update
           await Promise.all([refreshCartSummary(), refreshCartQtyOnly()]);
           //sessionStorage.setItem('keepOffcanvasOpen', 'true');
-          syncDeliveryFromOffcanvas(); 
+          location.reload();
         })
         .fail(xhr => {
           console.error('DELETE error', xhr.status, xhr.responseText);
