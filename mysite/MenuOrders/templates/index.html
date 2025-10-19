@@ -264,6 +264,19 @@
           // Show the modal
           const modalEl = document.getElementById('modifierModal');
           const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+          // track cancel or confirm
+          let modalAction = 'cancel';
+
+          //re-enable originating button on cancel or close 
+          const onHiden = () => {
+            if (modalAction === 'cancel' ){
+              $btn?.prop('disable', False);
+            }
+            modalEL.removeEventListener('hidden.bs.modal', onHidden);
+          };
+
+          modalEl.removeEventListener('hidden.bs.modal', onHidden);
           modal.show();
 
           // Initial footer state
@@ -275,6 +288,7 @@
             const { isGloballyOptional, allRequiredSatisfied, anySelected } = computeModalState(groups);
             if (!isGloballyOptional && !allRequiredSatisfied) return;
 
+            modalAction = 'confirm';
             const selectedIds = [];
             $('.modifier-option:checked').each(function () {
               selectedIds.push(Number(this.value));
@@ -289,6 +303,12 @@
             if (!isGloballyOptional) return; // safety
             modal.hide();
             onConfirm([]); // explicit “no add-ons”
+          });
+
+          //On Cancel or close
+          $('#modifierCancelBtn').off('click.mod').on('click.mod', function () {
+            modalAction = 'cancel';
+            modal.hide();
           });
         }
       
@@ -358,7 +378,7 @@
               }
               showModifierModal(menuId, groups, function onConfirm(selectedIds) {
                 addToCartAjax(addUrl, menuId, qty, selectedIds, note, $btn);
-              });
+              }, $btn);
             }).fail(function (xhr) {
               console.error('Failed to load modifiers:', xhr.status, xhr.responseText);
               // Graceful fallback: add without options
