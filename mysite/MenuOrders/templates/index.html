@@ -124,7 +124,7 @@
         // function to refresh pill count
         async function refreshCartQtyOnly() {
             try {
-                const res = await fetch("{% url 'cart_count'}?t=" + Date.now(), {
+                const res = await fetch("/cart/count/?t=" + Date.now(), {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin', 
                 });
