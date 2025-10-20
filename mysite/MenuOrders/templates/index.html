@@ -150,8 +150,7 @@
         function inputForLabel($label) {
           const forId = $label.attr('for');
           return forId ? $(`#${forId}.modifier-option[type=radio]`) : $();
-        }
-
+}
         function computeModalState(groups) {
           const requiredGroups = groups.filter(g => !!(g.required));
           const isGloballyOptional = requiredGroups.length === 0;
@@ -272,45 +271,47 @@
             refreshFooter(groups);
           });
 
-          // 1)  pre-click state 
+          // 1) Remember pre-click state for BOTH radio and its label.
+          //    Use pointerdown + mousedown + touchstart to cover Safari quirks on inputs.
           $(document)
-            .off('pointerdown.modifierToggle')
-            .on('pointerdown.modifierToggle', '.modifier-option[type=radio], .form-check-label', function (e) {
-              let $radio = $(this);
-              if ($radio.is('.form-check-label')) {
-                $radio = inputForLabel($radio);
-              }
-              if ($radio.length) {
-                $radio.data('wasChecked', $radio[0].checked);
-              }
-            });
+            .off('pointerdown.modifierToggle mousedown.modifierToggle touchstart.modifierToggle')
+            .on('pointerdown.modifierToggle mousedown.modifierToggle touchstart.modifierToggle',
+                '.modifier-option[type=radio], .form-check-label',
+                function (e) {
+                  let $radio = $(this);
+                  if ($radio.is('.form-check-label')) $radio = inputForLabel($radio);
+                  if ($radio.length) $radio.data('wasChecked', $radio[0].checked);
+                });
 
-          // 2) allow clear if optional and was already checked
+          // 2a) Clicking the RADIO itself: if optional + was already checked, clear it.
           $(document)
             .off('click.modifierToggleInput')
             .on('click.modifierToggleInput', '.modifier-option[type=radio]', function (e) {
               const $opt = $(this);
               if (!isGroupRequired($opt) && $opt.data('wasChecked')) {
-                // clear to "none"
-                this.checked = false;
-                $opt.trigger('change');
-                e.preventDefault(); // stop the browser from re-checking it
+                // Clear to "none"
+                $opt.prop('checked', false).trigger('change');
+                // Block the browser from re-checking it and any other listeners from toggling it back
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
               }
             });
 
-          // 3) click on labels:
+          // 2b) Clicking the LABEL: mirror the same behavior.
           $(document)
             .off('click.modifierToggleLabel')
             .on('click.modifierToggleLabel', '.form-check-label', function (e) {
               const $opt = inputForLabel($(this));
               if ($opt.length && !isGroupRequired($opt) && $opt.data('wasChecked')) {
-                $opt[0].checked = false;
-                $opt.trigger('change');
+                $opt.prop('checked', false).trigger('change');
                 e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
               }
             });
 
-          // 3) keyboard support 
+          // 3) Keyboard: Space on focused radio should also clear if optional
           $(document)
             .off('keydown.modifierToggleKB')
             .on('keydown.modifierToggleKB', '.modifier-option[type=radio]', function (e) {
@@ -318,8 +319,8 @@
                 const $opt = $(this);
                 if (!isGroupRequired($opt) && this.checked) {
                   e.preventDefault();
-                  this.checked = false;
-                  $opt.trigger('change');
+                  e.stopImmediatePropagation();
+                  $(this).prop('checked', false).trigger('change');
                 }
               }
             });
