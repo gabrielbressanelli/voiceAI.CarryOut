@@ -442,7 +442,7 @@
                 if (json?.ok) await refreshCartSummary();
                 await refreshCartQtyOnly();
                 sessionStorage.setItem('keepOffcanvasOpen', 'true');
-                location.reload();
+                //location.reload();
             }).fail(xhr => console.error('UPDATE error', xhr.status, xhr.responseText));
             });
       
