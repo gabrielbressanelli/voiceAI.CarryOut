@@ -354,7 +354,7 @@
           const n = Math.max(0, Number(qty) || 0); // coerce & clamp
           el.textContent = n;
           // optional niceties:
-          el.classList.toggle('invisible', n <= 0);
+          //el.classList.toggle('invisible', n <= 0);
           el.setAttribute('aria-label', `Cart items: ${n}`);
         }
       
