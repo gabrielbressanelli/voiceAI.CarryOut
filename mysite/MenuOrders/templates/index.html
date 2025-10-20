@@ -142,15 +142,6 @@
         }
         const csrftoken = getCookie('csrftoken');
 
-        function isGroupRequired($opt) {
-          const gId  = $opt.data('groupId');
-          const $grp = $(`.modifier-group[data-group-id="${gId}"]`);
-          return $grp.data('required') === '1';
-        }
-        function inputForLabel($label) {
-          const forId = $label.attr('for');
-          return forId ? $(`#${forId}.modifier-option[type=radio]`) : $();
-}
         function computeModalState(groups) {
           const requiredGroups = groups.filter(g => !!(g.required));
           const isGloballyOptional = requiredGroups.length === 0;
@@ -209,7 +200,8 @@
             const opts      = Array.isArray(group.options) ? group.options : [];
 
             const single    = (maxChoice === 1);
-            const inputType = single ? 'radio' : 'checkbox';
+            const singleOpt = single && !required;
+            const inputType = singleOpt ? 'checkbox' : (single ? 'radio': 'checkbox');
             const nameAttr  = `group_${gId}`;
             const hasDefault = opts.some(o => !!o.is_default);
 
@@ -253,77 +245,33 @@
 
           // Enforce limits and refresh UI on any change
           $(document).off('change.modifier').on('change.modifier', '.modifier-option', function () {
-            const $opt   = $(this);
-            const gId    = $opt.data('groupId');
-            const $grp   = $(`.modifier-group[data-group-id="${gId}"]`);
-            const max    = Number($grp.data('maxChoices')) || 0;
-            const $all   = $grp.find('.modifier-option');
+            const $opt  = $(this);
+            const gId   = $opt.data('groupId');
+            const $grp  = $(`.modifier-group[data-group-id="${gId}"]`);
+            const max   = Number($grp.data('maxChoices')) || 0;
+            const $all  = $grp.find('.modifier-option');
+            const mode  = $grp.data('behavior'); // 'single-opt' | 'single-req' | 'multi'
 
-            if (max === 1) {
-              if ($opt.is(':checked')) $all.not($opt).prop('checked', false);
+            if (mode === 'single-opt') {
+              // Optional single: using checkboxes; allow zero, but keep at most one checked
+              if ($opt.is(':checked')) {
+                $all.not($opt).prop('checked', false);
+              }
+            } else if (mode === 'single-req') {
+              // Required single: radios already enforce exclusivity; nothing extra
+              // (If you rendered radios, the browser handles it.)
             } else if (max > 0) {
+              // Multi-select with a cap
               const $checked = $all.filter(':checked');
               if ($checked.length > max) {
                 $opt.prop('checked', false);
                 window.toastr?.info?.(`Choose up to ${max}.`);
               }
             }
+
             refreshFooter(groups);
           });
 
-          // 1) Remember pre-click state for BOTH radio and its label.
-          //    Use pointerdown + mousedown + touchstart to cover Safari quirks on inputs.
-          $(document)
-            .off('pointerdown.modifierToggle mousedown.modifierToggle touchstart.modifierToggle')
-            .on('pointerdown.modifierToggle mousedown.modifierToggle touchstart.modifierToggle',
-                '.modifier-option[type=radio], .form-check-label',
-                function (e) {
-                  let $radio = $(this);
-                  if ($radio.is('.form-check-label')) $radio = inputForLabel($radio);
-                  if ($radio.length) $radio.data('wasChecked', $radio[0].checked);
-                });
-
-          // 2a) Clicking the RADIO itself: if optional + was already checked, clear it.
-          $(document)
-            .off('click.modifierToggleInput')
-            .on('click.modifierToggleInput', '.modifier-option[type=radio]', function (e) {
-              const $opt = $(this);
-              if (!isGroupRequired($opt) && $opt.data('wasChecked')) {
-                // Clear to "none"
-                $opt.prop('checked', false).trigger('change');
-                // Block the browser from re-checking it and any other listeners from toggling it back
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                return false;
-              }
-            });
-
-          // 2b) Clicking the LABEL: mirror the same behavior.
-          $(document)
-            .off('click.modifierToggleLabel')
-            .on('click.modifierToggleLabel', '.form-check-label', function (e) {
-              const $opt = inputForLabel($(this));
-              if ($opt.length && !isGroupRequired($opt) && $opt.data('wasChecked')) {
-                $opt.prop('checked', false).trigger('change');
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                return false;
-              }
-            });
-
-          // 3) Keyboard: Space on focused radio should also clear if optional
-          $(document)
-            .off('keydown.modifierToggleKB')
-            .on('keydown.modifierToggleKB', '.modifier-option[type=radio]', function (e) {
-              if (e.code === 'Space' || e.key === ' ') {
-                const $opt = $(this);
-                if (!isGroupRequired($opt) && this.checked) {
-                  e.preventDefault();
-                  e.stopImmediatePropagation();
-                  $(this).prop('checked', false).trigger('change');
-                }
-              }
-            });
           // Show the modal
           const modalEl = document.getElementById('modifierModal');
           const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -334,7 +282,7 @@
           //re-enable originating button on cancel or close 
           const onHidden = () => {
             if (modalAction === 'cancel' ){
-              $btn?.prop('disabled', False);
+              $btn?.prop('disabled', false);
             }
             modalEl.removeEventListener('hidden.bs.modal', onHidden);
           };
