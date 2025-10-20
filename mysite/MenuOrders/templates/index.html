@@ -212,7 +212,8 @@
                     const price = Number(opt.price_delta ?? opt.price ?? 0);
                     const plus  = price ? ` (+$${price.toFixed(2)})` : '';
                     const deflt = !!opt.is_default;
-                    const check = single && !hasDefault && i === 0 ? 'checked' : (deflt ? 'checked' : '');
+                    const shouldCheck = required && (deflt || (single && !hasDefault && i === 0));
+                    const check = shouldCheck ? 'checked': '';
                     return `
                       <div class="form-check">
                         <input class="form-check-input modifier-option"
