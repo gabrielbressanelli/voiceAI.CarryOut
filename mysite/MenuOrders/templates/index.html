@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title> Menu Webpage </title>
+        <title> OneSixty Main Carryout </title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -142,6 +142,16 @@
         }
         const csrftoken = getCookie('csrftoken');
 
+        function isGroupRequired($opt) {
+          const gId  = $opt.data('groupId');
+          const $grp = $(`.modifier-group[data-group-id="${gId}"]`);
+          return $grp.data('required') === '1';
+        }
+        function inputForLabel($label) {
+          const forId = $label.attr('for');
+          return forId ? $(`#${forId}.modifier-option[type=radio]`) : $();
+        }
+
         function computeModalState(groups) {
           const requiredGroups = groups.filter(g => !!(g.required));
           const isGloballyOptional = requiredGroups.length === 0;
@@ -205,8 +215,7 @@
             const hasDefault = opts.some(o => !!o.is_default);
 
             const html = `
-              <div class="mb-4 modifier-group" data-group-id="${gId}" data-max-choices="${maxChoice}"
-               data-required="${required ? '1' : '0'}"> 
+              <div class="mb-4 modifier-group" data-group-id="${gId}" data-max-choices="${maxChoice}" data-required="${required ? '1' : '0'}"> 
                 <h6>${gName}${required ? '<span class="text-danger">*</span>' : ''}</h6>
                 <div>
                   ${opts.map((opt, i) => {
@@ -263,29 +272,57 @@
             refreshFooter(groups);
           });
 
+          // 1)  pre-click state 
           $(document)
-          .off('mousedown.modifierToggle')
-          .on('mousedown.modifierToggle', '.modifier-option[type=radio]', function () {
-            // Remember prior state before the click toggles it
-            $(this).data('wasChecked', this.checked);
-          });
+            .off('pointerdown.modifierToggle')
+            .on('pointerdown.modifierToggle', '.modifier-option[type=radio], .form-check-label', function (e) {
+              let $radio = $(this);
+              if ($radio.is('.form-check-label')) {
+                $radio = inputForLabel($radio);
+              }
+              if ($radio.length) {
+                $radio.data('wasChecked', $radio[0].checked);
+              }
+            });
 
-        $(document)
-          .off('click.modifierToggle')
-          .on('click.modifierToggle', '.modifier-option[type=radio]', function (e) {
-            const $opt = $(this);
-            const gId  = $opt.data('groupId');
-            const $grp = $(`.modifier-group[data-group-id="${gId}"]`);
-            const isRequired = $grp.data('required') === '1';
+          // 2) allow clear if optional and was already checked
+          $(document)
+            .off('click.modifierToggleInput')
+            .on('click.modifierToggleInput', '.modifier-option[type=radio]', function (e) {
+              const $opt = $(this);
+              if (!isGroupRequired($opt) && $opt.data('wasChecked')) {
+                // clear to "none"
+                this.checked = false;
+                $opt.trigger('change');
+                e.preventDefault(); // stop the browser from re-checking it
+              }
+            });
 
-            // If it was checked, and the group is OPTIONAL, clear it (go back to "none")
-            if (!isRequired && $opt.data('wasChecked')) {
-              this.checked = false;
-              $opt.trigger('change');   // keep footer state in sync
-              e.preventDefault();       // prevent browser from re-checking it
-            }
-          });
+          // 3) click on labels:
+          $(document)
+            .off('click.modifierToggleLabel')
+            .on('click.modifierToggleLabel', '.form-check-label', function (e) {
+              const $opt = inputForLabel($(this));
+              if ($opt.length && !isGroupRequired($opt) && $opt.data('wasChecked')) {
+                $opt[0].checked = false;
+                $opt.trigger('change');
+                e.preventDefault();
+              }
+            });
 
+          // 3) keyboard support 
+          $(document)
+            .off('keydown.modifierToggleKB')
+            .on('keydown.modifierToggleKB', '.modifier-option[type=radio]', function (e) {
+              if (e.code === 'Space' || e.key === ' ') {
+                const $opt = $(this);
+                if (!isGroupRequired($opt) && this.checked) {
+                  e.preventDefault();
+                  this.checked = false;
+                  $opt.trigger('change');
+                }
+              }
+            });
           // Show the modal
           const modalEl = document.getElementById('modifierModal');
           const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
