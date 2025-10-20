@@ -205,7 +205,8 @@
             const hasDefault = opts.some(o => !!o.is_default);
 
             const html = `
-              <div class="mb-4 modifier-group" data-group-id="${gId}" data-max-choices="${maxChoice}">
+              <div class="mb-4 modifier-group" data-group-id="${gId}" data-max-choices="${maxChoice}"
+               data-required="${required ? '1' : '0'}"> 
                 <h6>${gName}${required ? '<span class="text-danger">*</span>' : ''}</h6>
                 <div>
                   ${opts.map((opt, i) => {
@@ -260,6 +261,29 @@
               }
             }
             refreshFooter(groups);
+          });
+
+          $(document)
+          .off('mousedown.modifierToggle')
+          .on('mousedown.modifierToggle', '.modifier-option[type=radio]', function () {
+            // Remember prior state before the click toggles it
+            $(this).data('wasChecked', this.checked);
+          });
+
+        $(document)
+          .off('click.modifierToggle')
+          .on('click.modifierToggle', '.modifier-option[type=radio]', function (e) {
+            const $opt = $(this);
+            const gId  = $opt.data('groupId');
+            const $grp = $(`.modifier-group[data-group-id="${gId}"]`);
+            const isRequired = $grp.data('required') === '1';
+
+            // If it was checked, and the group is OPTIONAL, clear it (go back to "none")
+            if (!isRequired && $opt.data('wasChecked')) {
+              this.checked = false;
+              $opt.trigger('change');   // keep footer state in sync
+              e.preventDefault();       // prevent browser from re-checking it
+            }
           });
 
           // Show the modal
