@@ -287,7 +287,7 @@
             modalEl.removeEventListener('hidden.bs.modal', onHidden);
           };
 
-          modalEl.removeEventListener('hidden.bs.modal', onHidden);
+          modalEl.addEventListener('hidden.bs.modal', onHidden);
           modal.show();
 
           // Initial footer state
@@ -312,6 +312,7 @@
           $('#modifierSkipBtn').off('click.mod').on('click.mod', function () {
             const { isGloballyOptional } = computeModalState(groups);
             if (!isGloballyOptional) return; // safety
+            modalAction = 'confirm';
             modal.hide();
             onConfirm([]); // explicit “no add-ons”
           });
