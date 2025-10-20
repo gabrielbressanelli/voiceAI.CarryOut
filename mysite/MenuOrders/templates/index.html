@@ -435,7 +435,7 @@
             $.ajax({
                 type: 'POST',
                 url: "{% url 'cart:cart_update' %}",
-                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                headers: { 'X-CSRFToken': csrftoken},
                 dataType: 'json',
                 data: { action: 'post', line_index: idx, item_qty: newQty },
             }).done(async (json) => {
