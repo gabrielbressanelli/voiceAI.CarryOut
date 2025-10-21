@@ -306,6 +306,7 @@ def items_from_snapshot(snapshot_json: str):
     menu_map = {m.id: m for m in Menu.objects.filter(id__in=ids)}
 
     items = []
+    print_items = []
     total = Decimal("0.00")
     for L in snap:
         qty = int(L.get("qty", 0))
@@ -315,6 +316,12 @@ def items_from_snapshot(snapshot_json: str):
         note = L.get("note", "")
         total += unit * qty
 
+        if opts:
+            optional = "; ".join(
+                f"{i.get("name", '')}" 
+                for i in opts
+            )
+
 
         if opts:
             mod_text = "; ".join(
@@ -323,18 +330,25 @@ def items_from_snapshot(snapshot_json: str):
             )
 
             disp_name = f"{name} ({mod_text})"
+            print_name = f"{name} {optional}"
         else:
             disp_name = name
+            print_name = name
 
         if note:
             disp_name = f"{disp_name} [Note: {note}]"
         items.append({"name": disp_name, "qty":qty})
-    return items, total
+        print_items.append({"name": print_name, "qty":qty})
+    return items, total, print_items
 
 
 
 def order_summary_string(items):
     return "; ".join(f"{it['qty']}x {it['name']}" for it in items)
+
+
+
+
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -380,8 +394,9 @@ def stripe_webhook(request):
                 return HttpResponse(status=400)
         
         # 2) Rebuild items and summary
-        items, _total = items_from_snapshot(cart_snapshot)
+        items, _total, print_items = items_from_snapshot(cart_snapshot)
         summary= order_summary_string(items)
+        print_summary = order_summary_string(print_items)
 
         # 3) Customer Name
         cust_name = (session.get("customer_details") or {}).get("name") or "Guest"
@@ -401,7 +416,7 @@ def stripe_webhook(request):
                     json={
                         "type":"Web Carryout",
                         "customerName": cust_name,
-                        "order_summary": summary,
+                        "order_summary": print_summary,
                         "orderNumber": order_number,
                     },
                     timeout=8,
