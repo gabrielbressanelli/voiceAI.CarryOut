@@ -1,18 +1,20 @@
 # **160 Main Carryout - Django Web Application**
 
-Welcome to the repository for 160 Main Carryout, a Django-based web application that enables customers to place carryout food orders online, with integrated PayPal payment processing and automated order notifications.
+Welcome to the repository for 160 Main Carryout, a Django-based web application that enables customers to place carryout food orders online, with integrated Stripe payment processing and automated order notifications directly printed at the Restaurant Kitchen thorugh another JavaScript application.
 
 ## **Features:**
 
 - Online Ordering: Menu management and shopping cart functionality.
 
-- PayPal Integration: Secure payments via PayPal Checkout.
+- Stripe Integration: Secure payments via Stripe Checkout.
 
-- Instant Payment Notifications (IPN): Automatic order confirmation when payment is received.
-
-- Admin Dashboard: Manage orders, customers, and payments through Django Admin.
+- Admin Dashboard: Manage orders and database thorugh the Django Admin.
 
 - Custom Domain Deployment: Live at 160maincarryout.com.
+
+- Django application Run on Railway with automatic builds, environment variables, and database connections.
+
+- Cloudflare protection and optimization that handles DNS, SSL, caching, and security at the domain level.
 
 ## **Technologies Used**
 
@@ -22,7 +24,7 @@ Django 5.1.3
 
 PostgreSQL (hosted via Railway)
 
-PayPal Standard IPN (django-paypal)
+Stripe SDK
 
 Railway.app (deployment platform)
 
@@ -63,17 +65,30 @@ python manage.py runserver
 ```
 Access the app at http://127.0.0.1:8000/.
 
-## **PayPal Setup Notes**
+## **Stripe Set Up**
 
-- Set up a PayPal Sandbox business account.
+- Create a Stripe Account.
 
-- Enable Instant Payment Notifications (IPN).
+- Get API keys: STRIPE_PUBLISHABLE KEY and STRIPE_SECRET_KEY
 
-- In PayPal settings, set the IPN URL to:
+- Install Stripe SDK:
+```bash
+pip install stripe
+```
 
-- https://yourdomain.com/paypal/ipn/
-
-- Update PAYPAL_RECEIVER_EMAIL in your Django settings.
+- Integrate Stripe Checkout Session (example):
+```bash
+import stripe
+stripe.api_key = STRIPE_SECRET_KEY
+session = stripe.checkout.Session.create(
+    payment_method_types=['card'],
+    mode='payment',
+    line_items=[{"price_data": {...}, "quantity": 1}],
+    success_url='https://yourapp.com/success',
+    cancel_url='https://yourapp.com/cancel',
+)
+```
+- Test on Sandbox before going live (e.g. 4242 4242 4242 4242) to simulate card transactions.
 
 ## **Deployment Notes (Railway)**
 
@@ -93,5 +108,5 @@ Website: 160maincarryout.com
 
 Email: [gsbressanellil@outlook.com]
 
-#### **Check a live version of the website at:**
+#### **Check the live version of the website at:**
 https://160maincarryout.com
