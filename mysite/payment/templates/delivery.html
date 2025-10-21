@@ -225,24 +225,6 @@
         }
       });
 
-      // ---------- Optional: keep offcanvas open after refreshes ----------
-      document.addEventListener('DOMContentLoaded', async () => {
-        // Hydrate pill & offcanvas contents on page load
-        await Promise.all([refreshCartQtyOnly(), refreshCartSummary()]);
-
-        // Reopen offcanvas if previous op asked to keep it open
-        if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
-          sessionStorage.removeItem('keepOffcanvasOpen');
-          const oc = new bootstrap.Offcanvas('#offcanvasRight');
-          oc.show();
-        }
-      });
-
-      document.addEventListener('DOMContentLoaded', async () => {
-      await refreshCartSummary();   // fill off-canvas with current cart
-      syncDeliveryFromOffcanvas();  // mirror into delivery summary
-      refreshCartQtyOnly();         // set the pill
-    });
     </script>
 
 </html>
