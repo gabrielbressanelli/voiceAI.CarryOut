@@ -40,7 +40,7 @@ PRINT_SERVICE_TOKEN= os.environ.get("order_printing_secret_key", "")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', '160maincarryout.com', 'voiceaicarryout-production.up.railway.app']
 CSRF_TRUSTED_ORIGINS = [

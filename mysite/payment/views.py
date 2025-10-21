@@ -318,7 +318,7 @@ def items_from_snapshot(snapshot_json: str):
 
         if opts:
             optional = "; ".join(
-                f"{i.get("name", '')}" 
+                f"{i.get('name', '')}" 
                 for i in opts
             )
 
