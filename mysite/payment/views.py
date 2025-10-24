@@ -225,114 +225,135 @@ def _is_free_delta(val) -> bool:
     return _norm_delta(val) == Decimal("0.00")
 
 def create_checkout_session(request):
-    # get cart from session
-    cart = Cart(request)
-    if len(cart) == 0:
-        return JsonResponse({"error":"Cart is empty"}, status=400)
-    
-    # Building item lookup
-    item_ids = []
-    for L in cart.lines:
+    try:
+        cart = Cart(request)
+        if len(cart) == 0:
+            return JsonResponse({"error": "Cart is empty"}, status=400)
+
+        # Build DB map (INT keys)
+        item_ids = []
+        for L in cart.lines:
+            try:
+                mid = int(L.get("menu_id", 0))
+                item_ids.append(mid)
+            except (TypeError, ValueError):
+                pass
+        menu_map = {int(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
+
+        line_items = []
+        snapshot = []
+
+        for L in cart.lines:
+            # --- menu id ---
+            try:
+                mid = int(L.get("menu_id"))
+            except (TypeError, ValueError):
+                log.error("Skipping line with bad menu_id: %s", L)
+                continue
+            m = menu_map.get(mid)
+
+            # --- base name ---
+            base_name = (
+                L.get("menu_name")
+                or (getattr(m, "item", None) if m else None)
+                or (getattr(m, "name", None) if m else None)
+                or "Item"
+            )
+
+            # --- options / modifiers ---
+            opts = L.get("options") or []
+            if not isinstance(opts, list):
+                log.warning("Coercing non-list 'options' to list: %s", opts)
+                opts = []
+            mods = "; ".join(
+                (
+                    f"{o.get('group','')}: {o.get('name','')}"
+                    if _is_free_delta(o.get('price_delta'))
+                    else f"{o.get('group','')} (+${_norm_delta(o.get('price_delta'))})"
+                ).strip()
+                for o in opts
+            )
+            display_name = base_name + (f" - {mods}" if mods else "")
+
+            # --- price ---
+            try:
+                unit_price = Decimal(str(L.get("unit_price")))
+            except Exception:
+                unit_price = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
+
+            # Validate Stripe constraints early to avoid 500s
+            if unit_price <= Decimal("0"):
+                log.error("Invalid unit_price (<=0) mid=%s line=%s", mid, L)
+                return JsonResponse({"error": "Invalid item price"}, status=400)
+            if unit_price < Decimal("0.50"):
+                log.error("Stripe min amount violation (<$0.50) mid=%s price=%s", mid, unit_price)
+                return JsonResponse({"error": "Minimum charge is $0.50"}, status=400)
+
+            # --- quantity ---
+            try:
+                qty = int(L.get("qty", 1))
+            except (TypeError, ValueError):
+                qty = 0
+            if qty < 1:
+                log.error("Invalid quantity mid=%s line=%s", mid, L)
+                return JsonResponse({"error": "Invalid item quantity"}, status=400)
+
+            # --- line item for Stripe ---
+            line_items.append({
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {"name": display_name},
+                    "unit_amount": int((unit_price * 100).quantize(Decimal("1"))),
+                },
+                "quantity": qty,
+            })
+
+            # --- snapshot for webhook ---
+            snapshot.append({
+                "menu_id": mid,
+                "menu_name": base_name,
+                "qty": qty,
+                "unit_price": str(unit_price),
+                "options": opts,
+                "note": L.get("note", ""),
+            })
+
+        if not line_items:
+            return JsonResponse({"error": "No valid items in cart"}, status=400)
+
+        success_url = request.build_absolute_uri(
+            reverse("checkout_success") + "?session_id={CHECKOUT_SESSION_ID}"
+        )
+        cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
+
+        # Helpful debug if needed:
+        log.info("Session.create payload: items=%s snapshot=%s", line_items, snapshot)
+
         try:
-            item_ids.append(int(L.get("menu_id", 0)))
-        except (TypeError, ValueError):
-            pass
-    menu_map = {int(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
+            session = stripe.checkout.Session.create(
+                mode='payment',
+                line_items=line_items,
+                success_url=success_url,
+                cancel_url=cancel_url,
+                automatic_tax={"enabled": True},
+                allow_promotion_codes=True,
+                payment_intent_data={
+                    "metadata": {
+                        "source": "django_session_cart",
+                        "cart_snapshot": json.dumps(snapshot)
+                    }
+                },
+            )
+        except stripe.error.StripeError as e:
+            # Surface as 502 instead of a blank 500, and log details
+            log.exception("Stripe error creating Checkout Session: %s", e)
+            return JsonResponse({"error": "Payment provider error"}, status=502)
 
-    # Stripe Line Items
-    line_items = []
-    for L in cart.lines:
-        mid = int(L.get("menu_id"))
-        m = menu_map.get(mid)
+        return JsonResponse({"checkout_url": session.url})
 
-        base_name = (
-            L.get("menu_name")
-            or (getattr(m, "item", None) if m else None)
-            or (getattr(m, "name", None) if m else None)
-            or "Item"
-        )
-
-        opts = L.get("options") or []
-        mods = "; ".join(
-            (
-                f"{o.get('group', '')}: {o.get('name', '')}" 
-                if _is_free_delta(o.get('price_delta'))
-                else f"{o.get('group', '')} (+${_norm_delta(o.get('price_delta'))})"
-            ).strip()
-            for o in opts
-        )
-        
-        display_name = base_name + (f" - {mods}" if mods else "") 
-
-        # Line price  (cart -> DB -> 0)
-        try: 
-            unit_price = Decimal(str(L.get("unit_price")))
-        except Exception:
-            unit_price = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
-
-        line_items.append({
-            "price_data": {
-                "currency": "usd",
-                "product_data": {"name": display_name},
-                "unit_amount": int(unit_price*100),
-            },
-            "quantity": int(L.get("qty", 1)),
-        })
-        
-    
-    if not line_items:
-        return JsonResponse({"error": "No valid items in cart"}, status=400)
-    
-    # Success and Cancel URL's
-    success_url = request.build_absolute_uri(reverse("checkout_success") + "?session_id={CHECKOUT_SESSION_ID}")
-    cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
-
-    #Pass Complete Snapshot to be used
-    snapshot = []
-    for L in cart.lines:
-        mid = int(L.get("menu_id"))
-        m = menu_map.get(mid)
-
-        base_name = (
-            L.get("menu_name")
-            or (getattr(m, "item", None) if m else None)
-            or (getattr(m, "name", None) if m else None)
-            or "Item"
-        )
-        
-        try: 
-            unit_price = Decimal(str(L.get("unit_price")))
-        except Exception:
-            unit_price = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
-
-        snapshot.append({
-            "menu_id": mid,
-            "menu_name": base_name,
-            "qty": int(L.get("qty", 1)),
-            "unit_price": str(unit_price),
-            "options": L.get("options", []),
-        })
-
-
-    # Create the Checkout Session (No Shipping)
-    session = stripe.checkout.Session.create(
-        mode='payment',
-        line_items=line_items,
-        success_url=success_url,
-        cancel_url=cancel_url,
-        automatic_tax={"enabled":True},
-        allow_promotion_codes=True,
-
-        payment_intent_data={
-            "metadata":{
-                "source":"django_session_cart",
-                # Important: Store a snapshot for the webhook can reconcile
-                "cart_snapshot":json.dumps(snapshot)
-            }
-        },
-    )
-
-    return JsonResponse({"checkout_url": session.url})
+    except Exception:
+        log.exception("Unhandled error in create_checkout_session")
+        return JsonResponse({"error": "Internal error"}, status=500)
         
 def checkout_success(request):
     return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
