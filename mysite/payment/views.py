@@ -215,145 +215,132 @@ def delivery_form(request):
 
 
 
+# ---------- helpers ----------
 def _norm_delta(val) -> Decimal:
     try:
         return Decimal(str(val)).quantize(Decimal("0.00"))
     except (InvalidOperation, TypeError, ValueError):
         return Decimal("0.00")
-    
+
 def _is_free_delta(val) -> bool:
     return _norm_delta(val) == Decimal("0.00")
 
+def _compact_from_description(desc: str) -> tuple[str, str]:
+    """
+    Fallback parser: turn "Base - Group: Name; Group (+$12.00)" into ("Base", "Name")
+    Returns (base, joined_option_names_no_groups_no_prices)
+    """
+    if not desc:
+        return ("Item", "")
+    parts = desc.split(" - ", 1)
+    base = parts[0].strip()
+    if len(parts) == 1:
+        return (base, "")
+    tail = parts[1]
+    pieces = [p.strip() for p in tail.split(";")]
+    names = []
+    for p in pieces:
+        # drop "(+$...)" suffix if present
+        before_price = p.split("(+$", 1)[0].strip()
+        # drop "Group: " prefix if present
+        name_only = before_price.split(": ", 1)[-1].strip()
+        if name_only:
+            names.append(name_only)
+    return (base, " ".join(names))
+
+
+# ---------- create checkout session ----------
 def create_checkout_session(request):
-    try:
-        cart = Cart(request)
-        if len(cart) == 0:
-            return JsonResponse({"error": "Cart is empty"}, status=400)
+    cart = Cart(request)
+    if len(cart) == 0:
+        return JsonResponse({"error": "Cart is empty"}, status=400)
 
-        # Build DB map (INT keys)
-        item_ids = []
-        for L in cart.lines:
-            try:
-                mid = int(L.get("menu_id", 0))
-                item_ids.append(mid)
-            except (TypeError, ValueError):
-                pass
-        menu_map = {int(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
-
-        line_items = []
-        snapshot = []
-
-        for L in cart.lines:
-            # --- menu id ---
-            try:
-                mid = int(L.get("menu_id"))
-            except (TypeError, ValueError):
-                log.error("Skipping line with bad menu_id: %s", L)
-                continue
-            m = menu_map.get(mid)
-
-            # --- base name ---
-            base_name = (
-                L.get("menu_name")
-                or (getattr(m, "item", None) if m else None)
-                or (getattr(m, "name", None) if m else None)
-                or "Item"
-            )
-
-            # --- options / modifiers ---
-            opts = L.get("options") or []
-            if not isinstance(opts, list):
-                log.warning("Coercing non-list 'options' to list: %s", opts)
-                opts = []
-            mods = "; ".join(
-                (
-                    f"{o.get('group','')}: {o.get('name','')}"
-                    if _is_free_delta(o.get('price_delta'))
-                    else f"{o.get('group','')} (+${_norm_delta(o.get('price_delta'))})"
-                ).strip()
-                for o in opts
-            )
-            display_name = base_name + (f" - {mods}" if mods else "")
-
-            # --- price ---
-            try:
-                unit_price = Decimal(str(L.get("unit_price")))
-            except Exception:
-                unit_price = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
-
-            # Validate Stripe constraints early to avoid 500s
-            if unit_price <= Decimal("0"):
-                log.error("Invalid unit_price (<=0) mid=%s line=%s", mid, L)
-                return JsonResponse({"error": "Invalid item price"}, status=400)
-            if unit_price < Decimal("0.50"):
-                log.error("Stripe min amount violation (<$0.50) mid=%s price=%s", mid, unit_price)
-                return JsonResponse({"error": "Minimum charge is $0.50"}, status=400)
-
-            # --- quantity ---
-            try:
-                qty = int(L.get("qty", 1))
-            except (TypeError, ValueError):
-                qty = 0
-            if qty < 1:
-                log.error("Invalid quantity mid=%s line=%s", mid, L)
-                return JsonResponse({"error": "Invalid item quantity"}, status=400)
-
-            # --- line item for Stripe ---
-            line_items.append({
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {"name": display_name},
-                    "unit_amount": int((unit_price * 100).quantize(Decimal("1"))),
-                },
-                "quantity": qty,
-            })
-
-            # --- snapshot for webhook ---
-            snapshot.append({
-                "menu_id": mid,
-                "menu_name": base_name,
-                "qty": qty,
-                "unit_price": str(unit_price),
-                "options": opts,
-                "note": L.get("note", ""),
-            })
-
-        if not line_items:
-            return JsonResponse({"error": "No valid items in cart"}, status=400)
-
-        success_url = request.build_absolute_uri(
-            reverse("checkout_success") + "?session_id={CHECKOUT_SESSION_ID}"
-        )
-        cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
-
-        # Helpful debug if needed:
-        log.info("Session.create payload: items=%s snapshot=%s", line_items, snapshot)
-
+    # Build DB map for safe fallbacks
+    item_ids = []
+    for L in cart.lines:
         try:
-            session = stripe.checkout.Session.create(
-                mode='payment',
-                line_items=line_items,
-                success_url=success_url,
-                cancel_url=cancel_url,
-                automatic_tax={"enabled": True},
-                allow_promotion_codes=True,
-                payment_intent_data={
-                    "metadata": {
-                        "source": "django_session_cart",
-                        "cart_snapshot": json.dumps(snapshot)
-                    }
+            item_ids.append(int(L.get("menu_id", 0)))
+        except (TypeError, ValueError):
+            pass
+    menu_map = {int(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
+
+    line_items = []
+    for L in cart.lines:
+        # base name (cart -> DB -> "Item")
+        mid = int(L.get("menu_id"))
+        m = menu_map.get(mid)
+        base_name = (
+            L.get("menu_name")
+            or (getattr(m, "item", None) if m else None)
+            or (getattr(m, "name", None) if m else None)
+            or "Item"
+        )
+
+        # modifiers (for Stripe display WITH groups/prices)
+        opts = L.get("options") or []
+        if not isinstance(opts, list):
+            opts = []
+        mods = "; ".join(
+            (
+                f"{o.get('group','')}: {o.get('name','')}"
+                if _is_free_delta(o.get("price_delta"))
+                else f"{o.get('group','')} (+${_norm_delta(o.get('price_delta'))})"
+            ).strip()
+            for o in opts
+        )
+        display_name = base_name + (f" - {mods}" if mods else "")
+
+        # COMPACT name (for printer): base + option names only
+        compact_opts = " ".join(o.get("name", "") for o in opts if o.get("name")).strip()
+        compact_name = f"{base_name} {compact_opts}".strip()
+
+        # price (cart -> DB) and qty
+        try:
+            unit_price = Decimal(str(L.get("unit_price")))
+        except Exception:
+            unit_price = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
+        qty = int(L.get("qty", 1))
+
+        # (Optional) Validate minimums to avoid Stripe errors
+        if unit_price <= Decimal("0"):
+            return JsonResponse({"error": "Invalid item price"}, status=400)
+        if qty < 1:
+            return JsonResponse({"error": "Invalid quantity"}, status=400)
+
+        line_items.append({
+            "price_data": {
+                "currency": "usd",
+                "product_data": {
+                    "name": display_name,                 # what Stripe shows
+                    "metadata": {"compact_name": compact_name},  # what we print later
                 },
-            )
-        except stripe.error.StripeError as e:
-            # Surface as 502 instead of a blank 500, and log details
-            log.exception("Stripe error creating Checkout Session: %s", e)
-            return JsonResponse({"error": "Payment provider error"}, status=502)
+                "unit_amount": int((unit_price * 100).quantize(Decimal("1"))),
+            },
+            "quantity": qty,
+        })
 
-        return JsonResponse({"checkout_url": session.url})
+    if not line_items:
+        return JsonResponse({"error": "No valid items in cart"}, status=400)
 
-    except Exception:
-        log.exception("Unhandled error in create_checkout_session")
-        return JsonResponse({"error": "Internal error"}, status=500)
+    success_url = request.build_absolute_uri(
+        reverse("checkout_success") + "?session_id={CHECKOUT_SESSION_ID}"
+    )
+    cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            line_items=line_items,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            automatic_tax={"enabled": True},
+            allow_promotion_codes=True,
+        )
+    except Exception as e:
+        log.exception("Stripe Session.create failed: %s", e)
+        return JsonResponse({"error": "Payment provider error"}, status=502)
+
+    return JsonResponse({"checkout_url": session.url})
         
 def checkout_success(request):
     return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
@@ -440,8 +427,8 @@ def order_summary_lines(print_items):
 
 
 
-def order_summary_string(print_items):
-    return "; ".join(order_summary_lines(print_items))
+def _order_summary_string(print_items):
+    return "; ".join(f"{it['qty']}x {it['name']}".strip() for it in print_items)
 
 
 
@@ -450,82 +437,84 @@ def order_summary_string(print_items):
 @csrf_exempt
 def stripe_webhook(request):
     sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")
-
-    # --- Step 5: log signature failures precisely ---
     try:
         event = stripe.Webhook.construct_event(
             payload=request.body,
             sig_header=sig,
             secret=settings.STRIPE_WEBHOOK_SECRET,
         )
-    except stripe.error.SignatureVerificationError as e:
-        log.error("Signature verify FAILED: %s", e)   # tells you wrong/stale whsec or mode mismatch
-        return HttpResponse(status=400)
-    except ValueError as e:
-        log.error("Invalid payload JSON: %s", e)
-        return HttpResponse(status=400)
     except Exception as e:
-        log.error("Generic webhook error: %s", e)
+        log.warning("Webhook signature/parse failed: %s", e)
         return HttpResponse(status=400)
 
     etype = event.get("type")
-    log.info("Stripe event: %s", etype)
-
     if etype in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
         session = event["data"]["object"]
-        payment_status = session.get("payment_status")
-        log.info("payment_status=%s session_id=%s", payment_status, session.get("id"))
-
-        if payment_status != "paid":
-            log.info("Not paid yet; acknowledging without printing.")
+        if session.get("payment_status") != "paid":
             return HttpResponse(status=200)
 
-        # 1) Grab PaymentIntent so we can read MetaData
-        pi_id = session.get("payment_intent")
-        cart_snapshot = None
-        if pi_id:
-            try: 
-                pi = stripe.PaymentIntent.retrieve(pi_id)
-                cart_snapshot = pi.metadata.get("cart_snapshot")
-            except stripe.error.StripeError:
-                return HttpResponse(status=400)
-        
-        # 2) Rebuild items and summary
-        items, _total, print_items = items_from_snapshot(cart_snapshot)
-        summary= order_summary_string(items)
-        print_summary = order_summary_string(print_items)
+        # Pull line items with product expanded (to access product.metadata.compact_name)
+        try:
+            cs = stripe.checkout.Session.retrieve(
+                session["id"],
+                expand=["line_items.data.price.product"]
+            )
+        except Exception as e:
+            log.exception("Failed to retrieve Session with line_items: %s", e)
+            return HttpResponse(status=400)
 
-        # 3) Customer Name
+        print_items = []
+        for i in cs["line_items"]["data"]:
+            qty = int(i.get("quantity") or 0)
+            if qty <= 0:
+                continue
+
+            # Prefer our compact name stored in product metadata
+            compact = None
+            price = i.get("price") or {}
+            product = price.get("product")
+            if isinstance(product, dict):
+                meta = product.get("metadata") or {}
+                compact = meta.get("compact_name")
+
+            if compact:
+                line_name = compact
+            else:
+                # Fallback: strip group/price from Stripe's description
+                desc = i.get("description") or ""
+                base, names = _compact_from_description(desc)
+                line_name = f"{base} {names}".strip()
+
+            print_items.append({"name": line_name, "qty": qty})
+
+        print_summary = _order_summary_string(print_items)
+
         cust_name = (session.get("customer_details") or {}).get("name") or "Guest"
-
-        # 4) Order number based on session id last 6 chars
         order_number = f"CHK-{(session.get('id') or '')[-6:] or 'UNKNOWN'}"
 
-        # 5) Send to printer
         if settings.PRINT_SERVICE_URL and settings.PRINT_SERVICE_TOKEN:
             try:
                 resp = requests.post(
                     settings.PRINT_SERVICE_URL,
                     headers={
-                        "Authorization": f'Bearer {settings.PRINT_SERVICE_TOKEN}',
+                        "Authorization": f"Bearer {settings.PRINT_SERVICE_TOKEN}",
                         "Content-Type": "application/json",
                     },
                     json={
-                        "type":"Web Carryout",
+                        "type": "Web Carryout",
                         "customerName": cust_name,
                         "order_summary": print_summary,
                         "orderNumber": order_number,
                     },
                     timeout=8,
                 )
-            except requests.RequestException:
+                if not (200 <= resp.status_code < 300):
+                    log.error("Printer service non-2xx: %s %s", resp.status_code, resp.text)
+                    return HttpResponse(status=500)
+            except requests.RequestException as e:
+                log.exception("Printer service error: %s", e)
                 return HttpResponse(status=500)
-            
-            if not (200 <= resp.status_code < 300):
-                return HttpResponse(status=500)
-
 
     return HttpResponse(status=200)
-
 
 
