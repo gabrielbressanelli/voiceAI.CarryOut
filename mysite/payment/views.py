@@ -7,7 +7,7 @@ from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
 from django.conf import settings
 import stripe, requests, logging, os, environ, json, uuid
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -215,8 +215,14 @@ def delivery_form(request):
 
 
 
-def _money_to_cents(amount: Decimal) -> int:
-    return int((amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) * 100))
+def _norm_delta(val) -> Decimal:
+    try:
+        return Decimal(str(val)).quantize(Decimal("0.00"))
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal("0.00")
+    
+def _is_free_delta(val) -> bool:
+    return _norm_delta(val) == Decimal("0.00")
 
 def create_checkout_session(request):
     # get cart from session
@@ -231,23 +237,46 @@ def create_checkout_session(request):
             item_ids.append(int(L.get("menu_id", 0)))
         except (TypeError, ValueError):
             pass
-    menu_map = {str(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
+    menu_map = {int(m.id): m for m in Menu.objects.filter(id__in=item_ids)}
 
     # Stripe Line Items
     line_items = []
     for L in cart.lines:
-        mods = "; ".join(
-            ([f"{o['group']}: {o['name']}" if o['price_delta']=="0.00" else f"{o['group']} (+${o['price_delta']})" for o in L["options"]]) 
-            or []
+        mid = int(L.get("menu_id"))
+        m = menu_map.get(mid)
+
+        base_name = (
+            L.get("menu_name")
+            or (getattr(m, "item", None) if m else None)
+            or (getattr(m, "name", None) if m else None)
+            or "Item"
         )
-        display_name = L["menu_name"] + (f"- {mods}" if mods else "") 
+
+        opts = L.get("options") or []
+        mods = "; ".join(
+            (
+                f"{o.get('group', '')}: {o.get('name', '')}" 
+                if _is_free_delta(o.get('price_delta'))
+                else f"{o.get('group', '')} (+${_norm_delta(o.get('price_delta'))})"
+            ).strip()
+            for o in opts
+        )
+        
+        display_name = base_name + (f" - {mods}" if mods else "") 
+
+        # Line price  (cart -> DB -> 0)
+        try: 
+            unit_price = Decimal(str(L.get("unit_price")))
+        except Exception:
+            unit_price = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
+
         line_items.append({
             "price_data": {
                 "currency": "usd",
                 "product_data": {"name": display_name},
-                "unit_amount": int(Decimal(L["unit_price"]) * 100),
+                "unit_amount": int(unit_price*100),
             },
-            "quantity": int(L["qty"]),
+            "quantity": int(L.get("qty", 1)),
         })
         
     
@@ -257,6 +286,33 @@ def create_checkout_session(request):
     # Success and Cancel URL's
     success_url = request.build_absolute_uri(reverse("checkout_success") + "?session_id={CHECKOUT_SESSION_ID}")
     cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
+
+    #Pass Complete Snapshot to be used
+    snapshot = []
+    for L in cart.lines:
+        mid = int(L.get("menu_id"))
+        m = menu_map.get(mid)
+
+        base_name = (
+            L.get("menu_name")
+            or (getattr(m, "item", None) if m else None)
+            or (getattr(m, "name", None) if m else None)
+            or "Item"
+        )
+        
+        try: 
+            unit_price = Decimal(str(L.get("unit_price")))
+        except Exception:
+            unit_price = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
+
+        snapshot.append({
+            "menu_id": mid,
+            "menu_name": base_name,
+            "qty": int(L.get("qty", 1)),
+            "unit_price": str(unit_price),
+            "options": L.get("options", []),
+        })
+
 
     # Create the Checkout Session (No Shipping)
     session = stripe.checkout.Session.create(
@@ -271,14 +327,7 @@ def create_checkout_session(request):
             "metadata":{
                 "source":"django_session_cart",
                 # Important: Store a snapshot for the webhook can reconcile
-                "cart_snapshot":json.dumps([
-                    {
-                        "menu_id": int(L["menu_id"]),
-                        "qty": int(L.get("qty", 1))
-                                       
-                    } 
-                    for L in cart.lines
-                ])
+                "cart_snapshot":json.dumps(snapshot)
             }
         },
     )
@@ -302,49 +351,76 @@ def items_from_snapshot(snapshot_json: str):
     except json.JSONDecodeError:
         snap = []
 
-    ids = [int(r["menu_id"]) for r in snap if "menu_id" in r]
+    ids = []
+    for r in snap:
+        try:
+            ids.append(int(r["menu_id"]))
+        except Exception:
+            pass
     menu_map = {m.id: m for m in Menu.objects.filter(id__in=ids)}
 
     items = []
     print_items = []
     total = Decimal("0.00")
-    for L in snap:
-        qty = int(L.get("qty", 0))
-        name = L.get("menu_name") or "Item"
-        unit = Decimal(str(L.get("unit_price", "0.00")))
-        opts = L.get("options") or []
-        note = L.get("note", "")
-        total += unit * qty
+    for r in snap:
+        try: 
+            qty = int(r.get("qty", 0))
+        except Exception:
+            qty = 0
+        if qty <= 0:
+            continue
 
-        if opts:
-            optional = "; ".join(
-                f"{i.get('name', '')}" 
-                for i in opts
-            )
+        m = menu_map.get(int(r.get("menu_id", 0)))
+        name = (
+            r.get("menu_name")
+            or (getattr(m, "item", None) if m else None)
+            or (getattr(m, "name", None) if m else None)
+            or "Item"
+        )
+
+        try:
+            unit = Decimal(str(r.get("unit_price"))) if r.get("unit_price") is not None else None
+        except Exception:
+            unit = None
+        if unit is None:
+            unit = Decimal(str(getattr(m, "price", "0.00"))) if m else Decimal("0.00")
+
+        opts = r.get("options") or []
+
+        total += unit * qty
 
 
         if opts:
             mod_text = "; ".join(
-                f"{o.get('group', '')}: {o.get('name', '')}" + (f" (+${o.get('price_delta')})" if o.get("price_delta") not in (None, "0.00", "0") else "" )
+                f"{(o.get('group') or '') + (': ' if o.get('group') else '')}{o.get('name','')}"
+                + (f" (+${_norm_delta(o.get('price_delta'))})" if not _is_free_delta(o.get('price_delta')) else "")
                 for o in opts
             )
 
             disp_name = f"{name} ({mod_text})"
-            print_name = f"{name} {optional}"
+
         else:
             disp_name = name
+
+        # printer (compact)
+        if opts:
+            compact_opts = " ".join(o.get("name", "") for o in opts if o.get("name")).strip()
+            print_name = f"{name} {compact_opts}".strip()
+        else:
             print_name = name
 
-        if note:
-            disp_name = f"{disp_name} [Note: {note}]"
         items.append({"name": disp_name, "qty":qty})
         print_items.append({"name": print_name, "qty":qty})
+
     return items, total, print_items
 
+def order_summary_lines(print_items):
+    return [f"{it['qty']}x {it['name']}".strip() for it in print_items]
 
 
-def order_summary_string(items):
-    return "; ".join(f"{it['qty']}x {it['name']}" for it in items)
+
+def order_summary_string(print_items):
+    return "; ".join(order_summary_lines(print_items))
 
 
 
