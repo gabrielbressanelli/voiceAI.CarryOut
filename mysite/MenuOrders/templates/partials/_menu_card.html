@@ -12,7 +12,20 @@
 <div class="card mb-3 card-spacing" style="max-width: 540px;">
   <div class="row g-0">
     <div class="col-sm-4">
-      <img src="https://images.160maincarryout.com/cdn-cgi/image/width=640,quality=75,format=auto,fit=cover{{ item.picture.url }}" class="fixed-size-img card-img-top" alt="{{ item.item }}">
+      <img
+        src="https://images.160maincarryout.com/cdn-cgi/image/width=640,quality=75,format=auto,fit=cover{{ item.picture.url }}"
+        srcset="
+          https://images.160maincarryout.com/cdn-cgi/image/width=320,quality=75,format=auto,fit=cover{{ item.picture.url }} 320w,
+          https://images.160maincarryout.com/cdn-cgi/image/width=480,quality=75,format=auto,fit=cover{{ item.picture.url }} 480w,
+          https://images.160maincarryout.com/cdn-cgi/image/width=640,quality=75,format=auto,fit=cover{{ item.picture.url }} 640w,
+          https://images.160maincarryout.com/cdn-cgi/image/width=960,quality=75,format=auto,fit=cover{{ item.picture.url }} 960w
+        "
+        sizes="(max-width: 576px) 90vw, (max-width: 992px) 40vw, 320px"
+        loading="lazy"
+        decoding="async"
+        alt="{{ item.item }}"
+        class="fixed-size-img card-img-top"
+      />
     </div>
     <div class="col-sm-8">
       <div class="card-body">
