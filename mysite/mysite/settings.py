@@ -190,6 +190,6 @@ AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "public, max-age=31536000, immutable"
 }
 
-MEDIA_URL = "https://pub-517b7204fd094747910a8e2406f331b6.r2.dev/"
+MEDIA_URL = "https://images.160maincarryout.com/"
 
 
