@@ -27,7 +27,7 @@
         <div class="row g-0">
           <div class="col-md-4">
             {% if line.picture_url %}
-              <img src="{{ line.picture_url|cut:/menu_pics}}" class="img-fluid rounded-start canvas-images" alt="">
+              <img src="{{ line.picture_url|cut:'/menu_pics'}}" class="img-fluid rounded-start canvas-images" alt="">
             {% else %}
               <div class="d-flex align-items-center justify-content-center bg-light canvas-images rounded-start">
                 <span class="text-muted">No image</span>
