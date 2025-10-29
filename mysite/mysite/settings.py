@@ -158,13 +158,20 @@ STATIC_URL = 'static/'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Use S3Boto3 as DEFAULT storage (for uploaded media)
+STORAGES = {
+    "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+    # keep whitenoise for staticfiles; you're already using it above
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 
 # Paypal Settings
 
@@ -174,23 +181,29 @@ PAYPAL_TEST = True
 PAYPAL_RECEIVER_EMAIL = 'business@GSBcodingtest.com' # Business sandbox email
 
 #Boto3 set up for bucket storage on cloudflare 
-
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
 AWS_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")  # e.g. menu-images
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")         # https://56e4...r2.cloudflarestorage.com
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "auto")
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_ADDRESSING_STYLE = "path"
-AWS_S3_FILE_OVERWRITE = True
+AWS_S3_SIGNATURE_VERSION = "s3v4"
 
+# Use virtual style with custom domain
+AWS_S3_ADDRESSING_STYLE = "virtual"
+AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_QUERYSTRING_AUTH = False
-AWS_S3_OBJECT_PARAMETERS = {
-    "CacheControl": "public, max-age=31536000, immutable"
-}
+AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "public, max-age=31536000, immutable"}
 
-MEDIA_URL = ""
+# Your Cloudflare/R2 custom domain (make sure it's exactly this in DNS/R2 UI)
+AWS_S3_CUSTOM_DOMAIN = "images.160maincarryout.com"
+
+AWS_LOCATION = "menu_pics"
+
+# Build media URLs from the custom domain (no trailing slash issues)
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
+
 
 
