@@ -200,7 +200,6 @@ AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "public, max-age=31536000, immutable
 # Your Cloudflare/R2 custom domain (make sure it's exactly this in DNS/R2 UI)
 AWS_S3_CUSTOM_DOMAIN = "images.160maincarryout.com"
 
-AWS_LOCATION = "menu_pics"
 
 # Build media URLs from the custom domain (no trailing slash issues)
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
