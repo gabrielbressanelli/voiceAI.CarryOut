@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-import stripe.error
 from .forms import ShippingForm, PaymentForm
 from cart.cart import Cart
 from MenuOrders.models import Menu
