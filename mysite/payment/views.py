@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+import stripe.error
 from .forms import ShippingForm, PaymentForm
 from cart.cart import Cart
 from MenuOrders.models import Menu
@@ -341,9 +342,32 @@ def create_checkout_session(request):
         return JsonResponse({"error": "Payment provider error"}, status=502)
 
     return JsonResponse({"checkout_url": session.url})
+
+def retrive_from_stripe(request, session_id):
+    session_id = request.GET.get("session_id")
+
+
+
         
 def checkout_success(request):
-    return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
+    cart = Cart(request)
+    session_id = request.GET.get("session_id")
+    if session_id == None:
+        return redirect("/")
+    
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    try:
+        checkout_session = stripe.checkout.Session.retrieve(session_id)
+    
+    except stripe.error.StripeError:
+        return redirect("/")
+
+    if checkout_session.get("payment_status") == 'paid':
+            cart.clear()
+            return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
+    else:
+            return HttpResponse("We were not able to verify your payment")
 
 def checkout_cancel(request):
     return redirect("/payment/delivery/") 
@@ -436,6 +460,7 @@ def _order_summary_string(print_items):
 
 @csrf_exempt
 def stripe_webhook(request):
+    cart = Cart()
     sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")
     try:
         event = stripe.Webhook.construct_event(
@@ -514,7 +539,6 @@ def stripe_webhook(request):
             except requests.RequestException as e:
                 log.exception("Printer service error: %s", e)
                 return HttpResponse(status=500)
-
     return HttpResponse(status=200)
 
 

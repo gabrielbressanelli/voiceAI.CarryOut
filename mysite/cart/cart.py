@@ -127,8 +127,8 @@ class Cart():
             self._save()
 
     def clear(self):
-        self.session[CART_SESSION_KEY] = []
-        self.session.modified = True
+        self.lines.clear()
+        self._save()
 
 
         
