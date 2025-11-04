@@ -351,10 +351,11 @@ def retrive_from_stripe(request, session_id):
 def checkout_success(request):
     cart = Cart(request)
     session_id = request.GET.get("session_id")
-    if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
-        log.warning(f"{session_id}")
-        return redirect("/")
-    
+
+    if not session_id.startswith("cs_"):
+        log.warning("checkout_success: bad/missing session_id = %r", session_id)
+        return HttpResponse("Thanks — we’re confirming your order.", status=200)
+
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
     try:
