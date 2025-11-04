@@ -7,7 +7,6 @@ from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
 from django.conf import settings
 import stripe, requests, logging, os, environ, json, uuid
-from stripe.error import StripeError, InvalidRequestError, CardError
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
