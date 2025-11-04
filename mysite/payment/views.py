@@ -349,6 +349,8 @@ def retrive_from_stripe(request, session_id):
 
         
 def checkout_success(request):
+    log.info("SUCCESS hit: full_uri=%s host=%s path=%s query=%s", request.build_absolute_uri(), request.get_host(), request.path, request.META.get("QUERY_STRING"))
+    log.info("session_id raw=%r", request.GET.get("session_id"))
     cart = Cart(request)
     session_id = request.GET.get("session_id")
 
