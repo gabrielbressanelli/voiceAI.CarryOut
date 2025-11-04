@@ -363,12 +363,9 @@ def checkout_success(request):
             expand=["payment_intent", "customer"]
             )
     
-    except InvalidRequestError:
-        return HttpResponse("Invalid or expired checkout session.", status=400)
-    except CardError as e:
-        return HttpResponse(f"Card error: {e.user_message or e.code}", status=402)
-    except StripeError:
-        return HttpResponse("Payment service temporarily unavailable.", status=503)
+    except Exception as e:
+        log.warning("error: %s", e)
+        return redirect("/")
 
     if checkout_session.get("payment_status") == 'paid':
             cart.clear()
