@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import ShippingForm, PaymentForm
-from stripe.error import StripeError
 from cart.cart import Cart
 from MenuOrders.models import Menu
 from .models import ShippingAddress, Order, OrderItem
@@ -360,7 +359,7 @@ def checkout_success(request):
     try:
         checkout_session = stripe.checkout.Session.retrieve(session_id)
     
-    except stripe.error.StripeError:
+    except Exception as e:
         return redirect("/")
 
     if checkout_session.get("payment_status") == 'paid':
