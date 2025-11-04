@@ -349,13 +349,20 @@ def retrive_from_stripe(request, session_id):
 
         
 def checkout_success(request):
-    log.info("SUCCESS hit: full_uri=%s host=%s path=%s query=%s", request.build_absolute_uri(), request.get_host(), request.path, request.META.get("QUERY_STRING"))
-    log.info("session_id raw=%r", request.GET.get("session_id"))
-    cart = Cart(request)
-    session_id = request.GET.get("session_id")
+    log.info(
+        "SUCCESS hit: full_uri=%s host=%s path=%s query=%s",
+        request.build_absolute_uri(), request.get_host(), request.path,
+        request.META.get("QUERY_STRING")
+    )
+    raw_sid = request.GET.get("session_id")  # may be None
+    log.info("session_id raw=%r", raw_sid)
 
+    cart = Cart(request)
+    session_id = raw_sid or ""  # normalize
+
+    # Guard: only proceed with real Checkout Session ids
     if not session_id.startswith("cs_"):
-        log.warning("checkout_success: bad/missing session_id = %r", session_id)
+        log.warning("checkout_success: bad/missing session_id=%r", session_id)
         return HttpResponse("Thanks — we’re confirming your order.", status=200)
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -363,22 +370,34 @@ def checkout_success(request):
     try:
         checkout_session = stripe.checkout.Session.retrieve(
             session_id,
-            expand=["payment_intent", "customer"]
-            )
-    
+            expand=["payment_intent", "customer_details"]  # 'customer_details' is directly useful
+        )
     except Exception as e:
-        # Log but don't bounce home
         log.warning("Stripe retrieve failed for %s: %s", session_id, e)
         return HttpResponse(
-            "Thanks — we’re confirming your order with the payment provider.",
+            "Thanks — we are confirming your order with the payment provider.",
             status=200
         )
 
-    if checkout_session.get("payment_status") == 'paid' or checkout_session.get("status") == "complete":
-            cart.clear()
-            return HttpResponse("Thanks, Payment successful. Your Order is being prepared.", status=200)
+    log.info(
+        "RETRIEVED id=%s status=%s payment_status=%s",
+        checkout_session.get("id"),
+        checkout_session.get("status"),
+        checkout_session.get("payment_status"),
+    )
 
-    return HttpResponse("We were not able to verify your payment")
+    is_paid = (
+        checkout_session.get("payment_status") == "paid"
+        or checkout_session.get("status") == "complete"
+    )
+    if is_paid:
+        cart.clear()
+        return HttpResponse(
+            "Thanks, Payment successful. Your Order is being prepared.",
+            status=200
+        )
+
+    return HttpResponse("We were not able to verify your payment", status=200)
 
 def checkout_cancel(request):
     return redirect("/payment/delivery/") 
