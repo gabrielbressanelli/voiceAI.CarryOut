@@ -427,7 +427,7 @@ def checkout_success(request):
         "currency": currency, 
     }
 
-    return render(request, "payment/payment_success.html", context)
+    return render(request, "payment_success.html", context)
 
 
 def checkout_cancel(request):
