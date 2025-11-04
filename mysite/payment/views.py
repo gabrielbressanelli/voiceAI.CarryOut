@@ -362,7 +362,7 @@ def checkout_success(request):
     # Guard: only proceed with real Checkout Session ids
     if not session_id.startswith("cs_"):
         log.warning("checkout_success: bad/missing session_id=%r", session_id)
-        return HttpResponse("Thanks — we’re confirming your order.", status=200)
+        return redirect("/")
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -389,14 +389,46 @@ def checkout_success(request):
         checkout_session.get("payment_status") == "paid"
         or checkout_session.get("status") == "complete"
     )
-    if is_paid:
-        cart.clear()
-        return HttpResponse(
-            "Thanks, Payment successful. Your Order is being prepared.",
-            status=200
-        )
+    if not is_paid:
+        return HttpResponse("We were not able to verify your payment, if you were charged in your card your order will be ready in 35 minutes.", status=200)
+    
+    cart.clear()
 
-    return HttpResponse("We were not able to verify your payment", status=200)
+    try:
+
+        line_items = stripe.checkout.Session.list_line_items(
+            session_id, expand=["data.price.product"]
+        )
+    except Exception as e:
+        log.warning("list_line_items failed for %s: %s", session_id, e)
+        line_items = {"data":[]}
+
+    items_for_ui = []
+
+    for li in line_items.get("data", []):
+        qty  = int(li.get("quantity") or 0)
+        product = (li.get("price") or {}).get("product") or {}
+        compact_name = (product.get("metadata") or {}).get("compact_name") or li.get("description") or "Item"
+        subtotal = (li.get("amount_subtotal") or 0)/ 100.0
+        items_for_ui.append({
+            "name": compact_name,
+            "quantity": qty,
+            "subtotal": f"{subtotal:.2f}"
+        })
+    amount_total = (checkout_session.get("amount_total") or 0 )/ 100.0
+    currency = (checkout_session.get("currency") or "usd").upper()
+    customer_name = (checkout_session.get("customer_details") or {}).get('name') or "Guest"
+
+    context = {
+        "order_number": f"CHK-{(checkout_session.get('id') or '')[-6:]}",
+        "customer_name": customer_name,
+        "items": items_for_ui,
+        "total": f"{amount_total:.2f}",
+        "currency": currency, 
+    }
+
+    return render(request, "payment/payment_success.html", context)
+
 
 def checkout_cancel(request):
     return redirect("/payment/delivery/") 
