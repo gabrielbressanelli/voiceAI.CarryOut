@@ -322,9 +322,8 @@ def create_checkout_session(request):
     if not line_items:
         return JsonResponse({"error": "No valid items in cart"}, status=400)
 
-    success_url = request.build_absolute_uri(
-        reverse("checkout_success") + "?session_id={CHECKOUT_SESSION_ID}"
-    )
+    success_url = request.build_absolute_uri(reverse("checkout_success"))
+    success_url = f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
 
     try:
@@ -490,7 +489,6 @@ def _order_summary_string(print_items):
 
 @csrf_exempt
 def stripe_webhook(request):
-    cart = Cart()
     sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")
     try:
         event = stripe.Webhook.construct_event(
