@@ -352,6 +352,7 @@ def checkout_success(request):
     cart = Cart(request)
     session_id = request.GET.get("session_id")
     if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
+        log.warning(f"{session_id}")
         return redirect("/")
     
     stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -363,12 +364,16 @@ def checkout_success(request):
             )
     
     except Exception as e:
-        log.warning("error: %s", e)
-        return redirect("/")
+        # Log but don't bounce home
+        log.warning("Stripe retrieve failed for %s: %s", session_id, e)
+        return HttpResponse(
+            "Thanks — we’re confirming your order with the payment provider.",
+            status=200
+        )
 
-    if checkout_session.get("payment_status") == 'paid':
+    if checkout_session.get("payment_status") == 'paid' or checkout_session.get("status") == "complete":
             cart.clear()
-            return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
+            return HttpResponse("Thanks, Payment successful. Your Order is being prepared.", status=200)
 
     return HttpResponse("We were not able to verify your payment")
 
