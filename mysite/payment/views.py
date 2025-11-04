@@ -431,7 +431,7 @@ def checkout_success(request):
 
 
 def checkout_cancel(request):
-    return redirect("/payment/delivery/") 
+    return redirect("/payment/delivery") 
 
 def items_from_snapshot(snapshot_json: str):
     """
