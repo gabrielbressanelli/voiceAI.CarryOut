@@ -7,6 +7,7 @@ from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
 from django.conf import settings
 import stripe, requests, logging, os, environ, json, uuid
+from stripe.error import StripeError, InvalidRequestError, CardError
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -351,22 +352,29 @@ def retrive_from_stripe(request, session_id):
 def checkout_success(request):
     cart = Cart(request)
     session_id = request.GET.get("session_id")
-    if session_id == None:
+    if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
         return redirect("/")
     
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
     try:
-        checkout_session = stripe.checkout.Session.retrieve(session_id)
+        checkout_session = stripe.checkout.Session.retrieve(
+            session_id,
+            expand=["payment_intent", "customer"]
+            )
     
-    except Exception as e:
-        return redirect("/")
+    except InvalidRequestError:
+        return HttpResponse("Invalid or expired checkout session.", status=400)
+    except CardError as e:
+        return HttpResponse(f"Card error: {e.user_message or e.code}", status=402)
+    except StripeError:
+        return HttpResponse("Payment service temporarily unavailable.", status=503)
 
     if checkout_session.get("payment_status") == 'paid':
             cart.clear()
             return HttpResponse("Thanks, Payment successful. Your Order is being prepared.")
-    else:
-            return HttpResponse("We were not able to verify your payment")
+
+    return HttpResponse("We were not able to verify your payment")
 
 def checkout_cancel(request):
     return redirect("/payment/delivery/") 
