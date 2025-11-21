@@ -10,6 +10,8 @@ import stripe, requests, logging, os, environ, json, uuid
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from .integrations.doordash_client import create_DD_quote, create_JWT
 
 
 
@@ -515,10 +517,41 @@ def order_summary_lines(print_items):
 def _order_summary_string(print_items):
     return "; ".join(f"{it['qty']}x {it['name']}".strip() for it in print_items)
 
+#Creating DoorDash quote
+@require_POST 
+def doordash_quote_view(request):
+    cart = Cart()
+    try:
+        body = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
+    dropoff_address = body.get("dropoff_address")
+    dropoff_business_name = body.get("dropoff_business_name", "Customer")
+    dropoff_phone_number = body.get("dropoff_phone_number")
+    order_value = cart.cart_total()
+
+    if not dropoff_address or not dropoff_phone_number or not order_value:
+        return JsonResponse({"ok": False, "error": "Missing required fields"}, status=400)
+    
+    try:
+        token = create_JWT()
+    except Exception as e:
+        return JsonResponse({"ok": False, 'error': f"Could not create Doordash JTW: {str(e)}"}, status = 500,)
+    
+    result = create_DD_quote(token, dropoff_address, dropoff_business_name, dropoff_phone_number, order_value)
+
+    if result['ok']:
+        return JsonResponse(
+            {
+                "ok": True,
+                "quote":result['data']
+            },
+            status=200,
+        )
+    return JsonResponse({"ok":False, "error":result["error"]}, statuts=result['status'] or 502)
 
 
-
-
+# Creating Stripe Webhook
 @csrf_exempt
 def stripe_webhook(request):
     sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")

@@ -43,7 +43,7 @@ PRINT_SERVICE_TOKEN= os.environ.get("order_printing_secret_key", "")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', '160maincarryout.com', 'voiceaicarryout-production.up.railway.app', 'development.160maincarryout.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '160maincarryout.com', 'voiceaicarryout-production.up.railway.app', 'development.160maincarryout.com']
 CSRF_TRUSTED_ORIGINS = [
     'https://160maincarryout.com',
     'https://voiceaicarryout-production.up.railway.app',
@@ -168,21 +168,27 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Use S3Boto3 as DEFAULT storage (for uploaded media)
-STORAGES = {
-    "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
-    # keep whitenoise for staticfiles; you're already using it above
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
-}
-
-# Paypal Settings
+if DEBUG:
+    # Dev: simpler static storage (no manifest to break when collectstatic isn't run)
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": STATICFILES_STORAGE},
+    }
+else:
+    # Prod: R2/S3 for media, manifest for static
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STORAGES = {
+        "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        "staticfiles": {"BACKEND": STATICFILES_STORAGE},
+    }
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 # Set sandbox to true
 PAYPAL_TEST = True
 
 PAYPAL_RECEIVER_EMAIL = 'business@GSBcodingtest.com' # Business sandbox email
 
-#Boto3 set up for bucket storage on cloudflare 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AWS_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
