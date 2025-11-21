@@ -95,9 +95,3 @@ def create_DD_quote(token):
         'error': f'Doordash returned HTTP {status}: {error_payload}'
     }
 
-
-
-
-
-quote = create_DD_quote(create_JWT())
-print(quote)
