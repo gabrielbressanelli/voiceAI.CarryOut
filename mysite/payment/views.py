@@ -618,7 +618,7 @@ def stripe_webhook(request):
                 "orderNumber": order_number,
             }
 
-            log.info(
+            log.error(
                 "Print payload preview: order=%s name_len=%s summary_len=%s",
                 order_number,
                 len(cust_name or ""),
