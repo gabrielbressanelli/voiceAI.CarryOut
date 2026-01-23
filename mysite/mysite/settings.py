@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os, environ
+import stripe
 from dotenv import load_dotenv
 
 
@@ -227,3 +228,5 @@ LOGGING = {
 
 
 
+# stripe key
+stripe.api_key = STRIPE_SECRET_KEY
