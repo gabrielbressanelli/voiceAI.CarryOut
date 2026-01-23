@@ -611,6 +611,20 @@ def stripe_webhook(request):
         order_number = f"CHK-{(session.get('id') or '')[-6:] or 'UNKNOWN'}"
 
         if settings.PRINT_SERVICE_URL and settings.PRINT_SERVICE_TOKEN:
+            payload = {
+                "type": "Web Carryout",
+                "customerName": cust_name,
+                "order_summary": print_summary,
+                "orderNumber": order_number,
+            }
+
+            log.info(
+                "Print payload preview: order=%s name_len=%s summary_len=%s",
+                order_number,
+                len(cust_name or ""),
+                len(print_summary or ""),
+            )
+
             try:
                 resp = requests.post(
                     settings.PRINT_SERVICE_URL,
@@ -618,12 +632,7 @@ def stripe_webhook(request):
                         "Authorization": f"Bearer {settings.PRINT_SERVICE_TOKEN}",
                         "Content-Type": "application/json",
                     },
-                    json={
-                        "type": "Web Carryout",
-                        "customerName": cust_name,
-                        "order_summary": print_summary,
-                        "orderNumber": order_number,
-                    },
+                    json=payload,
                     timeout=8,
                 )
                 if not (200 <= resp.status_code < 300):
