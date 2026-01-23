@@ -633,7 +633,7 @@ def stripe_webhook(request):
                         "Content-Type": "application/json",
                     },
                     json=payload,
-                    timeout=8,
+                    timeout=(8, 25),
                 )
                 if not (200 <= resp.status_code < 300):
                     log.error("Printer service non-2xx: %s %s", resp.status_code, resp.text)
