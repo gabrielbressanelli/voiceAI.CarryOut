@@ -211,5 +211,19 @@ AWS_S3_CUSTOM_DOMAIN = "images.160maincarryout.com"
 # Build media URLs from the custom domain (no trailing slash issues)
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
+
 
 
