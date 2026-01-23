@@ -33,7 +33,7 @@ load_dotenv()
 
 DB_PASSWORD_YO = os.environ.get('DB_PASSWORD_YO', '')
 PRINT_SERVICE_URL = os.environ.get("PRINT_SERVICE_URL", "")
-PRINT_SERVICE_TOKEN= os.environ.get("order_printing_secret_key", "")
+PRINT_SERVICE_TOKEN= os.environ.get("PRINT_SERVICE_TOKEN", "")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
