@@ -19,24 +19,131 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <style>
-            .fixed-size-img {
-                width: 100%; /* Make it fill the width of the card */
-                height: 200px; /* Set a fixed height */
-                object-fit: cover; /* Crop the image to fit the box */
-            }
-            .card-spacing {
-                margin-right: 30px; /* Add extra spacing between the cards */
-            } 
+        .fixed-size-img {
+          width: 100%;
+          height: 200px;
+          object-fit: cover;
+        }
+        .card-spacing {
+          margin-right: 30px;
+        }
 
-            .nav-under-modal {
-              z-index: 900 !important;
-            }
+        .nav-under-modal {
+          z-index: 900 !important;
+        }
 
+        :root{
+          --nav-h: 104px;  /* will be overridden by JS */
+          --cats-h: 56px;
+        }
 
-            br {
-              scroll-margin-top: 100px;
-            }
+        /* Mobile cats fixed under fixed navbar */
+        .mobile-cats{
+          position: fixed;
+          top: calc(env(safe-area-inset-top, 0px) + var(--nav-h));
+          left: 0;
+          right: 0;
+          height: var(--cats-h);
+          z-index: 1070;
 
+          /* glass */
+          background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.55));
+          -webkit-backdrop-filter: saturate(180%) blur(14px);
+          backdrop-filter: saturate(180%) blur(14px);
+
+          /* REMOVE the top seam */
+          border-top: none;
+          margin-top: -1px;
+
+          border-bottom: 1px solid rgba(255,255,255,0.55);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 8px 20px rgba(0,0,0,0.06);
+
+          overflow-x: auto;
+          white-space: nowrap;
+          -webkit-overflow-scrolling: touch;
+
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 0 12px;
+
+          /* ✅ hidden by default (only shows on scroll) */
+          opacity: 0;
+          transform: translateY(-8px);
+          pointer-events: none;
+          transition: opacity .22s ease, transform .22s ease;
+        }
+
+        /* ✅ becomes visible when scrolled */
+        .mobile-cats.show{
+          opacity: 1;
+          transform: translateY(0);
+          pointer-events: auto;
+        }
+
+        .cat-link{
+          display: inline-flex;
+          align-items: center;
+          padding: 10px 16px;
+          border-radius: 999px;
+
+          font-size: 14px;
+          font-weight: 600;
+          letter-spacing: 0.2px;
+          color: rgba(17, 24, 39, 0.92);
+          text-decoration: none;
+
+          /* "inside" pill look (soft filled, inner depth) */
+          background: rgba(255, 255, 255, 0.72);
+          border: 1px solid rgba(255, 255, 255, 0.55);
+
+          box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.65) inset,
+            0 -1px 0 rgba(0, 0, 0, 0.04) inset,
+            0 6px 14px rgba(0, 0, 0, 0.06);
+
+          -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+
+          transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
+        }
+
+        .cat-link:active{
+          transform: scale(0.97);
+          background: rgba(255, 255, 255, 0.82);
+          box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.75) inset,
+            0 -1px 0 rgba(0, 0, 0, 0.06) inset,
+            0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .mobile-cats::-webkit-scrollbar{ display:none; }
+
+        /* ✅ Mobile spacing: only reserve cats height when they are showing */
+        @media (max-width: 991.98px){
+          body{
+            padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h));
+          }
+
+          body.cats-visible{
+            padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h) + var(--cats-h));
+          }
+
+          html{
+            scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h) + 12px);
+          }
+
+          html.cats-visible{
+            scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h) + var(--cats-h) + 12px);
+          }
+        }
+
+        /* Desktop */
+        @media (min-width: 992px){
+          html{
+            scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h) + 12px);
+          }
+        }
 
         </style>
 
@@ -44,6 +151,15 @@
 
     <body>
         {% include 'navbar.html' %}
+        <!-- Mobile Category Bar -->
+        <div class="mobile-cats d-lg-none">
+          <a class="cat-link" href="#Appetizer">Appetizers</a>
+          <a class="cat-link" href="#Pasta">Pasta</a>
+          <a class="cat-link" href="#Grill">Grill</a>
+          <a class="cat-link" href="#Saute">Saute</a>
+          <a class="cat-link" href="#Seafood">Seafood</a>
+          <a class="cat-link" href="#Dessert">Dessert</a>
+        </div>
       
         <div class="container">
           {% if messages %}
@@ -62,45 +178,45 @@
             {% endfor %}
           </div>
       
-          <br id="Pasta">
+          <br>
       
-          <h2>Pasta</h2>
+          <h2 id="Pasta">Pasta</h2>
           <div class="row">
             {% for item in pasta %}
               {% include "partials/_menu_card.html" %}
             {% endfor %}
           </div>
       
-          <br id="Grill">
+          <br>
       
-          <h2>Grill</h2>
+          <h2 id="Grill">Grill</h2>
           <div class="row">
             {% for item in grill %}
               {% include "partials/_menu_card.html" %}
             {% endfor %}
           </div>
       
-          <br id="Saute">
+          <br>
 
-          <h2>Saute</h2>
+          <h2 id="Saute">Saute</h2>
           <div class="row">
             {% for item in saute %}
               {% include "partials/_menu_card.html" %}
             {% endfor %}
           </div>
       
-          <br id="Seafood">
+          <br>
       
-          <h2>Seafood</h2>
+          <h2 id="Seafood">Seafood</h2>
           <div class="row">
             {% for item in seafood %}
               {% include "partials/_menu_card.html" %}
             {% endfor %}
           </div>
       
-          <br id="Dessert">
+          <br>
       
-          <h2>Dessert</h2>
+          <h2 id="Dessert">Dessert</h2>
           <div class="row">
             {% for item in dessert %}
               {% include "partials/_menu_card.html" %}
@@ -363,6 +479,27 @@
           //el.classList.toggle('invisible', n <= 0);
           el.setAttribute('aria-label', `Cart items: ${n}`);
         }
+
+        function syncNavHeight(){
+          const nav = document.querySelector('.navbar.fixed-top');
+          if(!nav) return;
+          document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+        }
+        window.addEventListener('load', syncNavHeight);
+        window.addEventListener('resize', syncNavHeight);
+
+        const mobileCats = document.querySelector('.mobile-cats');
+
+        function handleCatsVisibility() {
+          if (window.scrollY > 40) {
+            mobileCats.classList.add('show');
+          } else {
+            mobileCats.classList.remove('show');
+          }
+        }
+
+        window.addEventListener('scroll', handleCatsVisibility, { passive: true });
+        handleCatsVisibility();
       
         // --- Main bind block (single source of truth)
         $(document).ready(function () {
