@@ -74,7 +74,7 @@
           transition: opacity .22s ease, transform .22s ease;
         }
 
-        /* ✅ becomes visible when scrolled */
+        /* becomes visible when scrolled */
         .mobile-cats.show{
           opacity: 1;
           transform: translateY(0);
@@ -119,7 +119,7 @@
 
         .mobile-cats::-webkit-scrollbar{ display:none; }
 
-        /* ✅ Mobile spacing: only reserve cats height when they are showing */
+        /* Mobile spacing: only reserve cats height when they are showing */
         @media (max-width: 991.98px){
           body{
             padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h));
@@ -130,11 +130,11 @@
           }
 
           html{
-            scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h) + 12px);
+            scroll-padding-top: 165px;
           }
 
           html.cats-visible{
-            scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h) + var(--cats-h) + 12px);
+            scroll-padding-top: 165px;
           }
         }
 
