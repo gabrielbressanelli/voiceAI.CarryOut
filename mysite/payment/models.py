@@ -1,5 +1,6 @@
 from django.db import models
 from MenuOrders.models import Menu
+from django.utils import timezone
 
 class ShippingAddress(models.Model):
     full_name = models.CharField(max_length= 255)
@@ -20,8 +21,10 @@ class ShippingAddress(models.Model):
 
 # Create Order Model
 class Order(models.Model):
+    # Customer
     full_name = models.CharField(max_length= 255)
-    email = models.EmailField(max_length=254)
+    email = models.EmailField(max_length=254, blank=True, null=True)
+    phone = models.CharField(max_length=32, blank=True, null=True)
     shipping_address = models.TextField(max_length=15000, null=True, blank=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
     date_ordered = models.DateTimeField(auto_now_add=True)

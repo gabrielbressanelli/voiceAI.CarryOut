@@ -63,8 +63,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'MenuOrders',
-    'cart',
     'payment',
+    'restaurant',
+    'cart',
     'whitenoise.runserver_nostatic',
     'paypal.standard.ipn',
     'storages',
@@ -144,7 +145,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Detroit'
 
 USE_I18N = True
 
