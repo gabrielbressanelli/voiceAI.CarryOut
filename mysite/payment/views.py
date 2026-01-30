@@ -391,11 +391,11 @@ def checkout_success(request):
     is_paid = (
         checkout_session.get("payment_status") == "paid"
         or checkout_session.get("status") == "complete"
-    )
+        )
+    
     if not is_paid:
         return HttpResponse("We were not able to verify your payment, if you were charged in your card your order will be ready in 35 minutes.", status=200)
     
-    cart.clear()
 
     try:
 
@@ -407,6 +407,7 @@ def checkout_success(request):
         line_items = {"data":[]}
 
     items_for_ui = []
+    print_items = []
 
     for li in line_items.get("data", []):
         qty  = int(li.get("quantity") or 0)
@@ -418,9 +419,27 @@ def checkout_success(request):
             "quantity": qty,
             "subtotal": f"{subtotal:.2f}"
         })
+
+        print_items.append({"name": compact_name, "qty":qty})
+
     amount_total = (checkout_session.get("amount_total") or 0 )/ 100.0
     currency = (checkout_session.get("currency") or "usd").upper()
     customer_name = (checkout_session.get("customer_details") or {}).get('name') or "Guest"
+
+    with transaction.atomic():
+    # This is where I will fallback write to the Order model
+        order, created = Order.objects.update_or_create(
+            stripe_session_id=checkout_session.get("id"),
+            defaults={
+                "full_name": customer_name,
+                "email": (checkout_session.get("customer_details") or {}).get("email"),
+                "phone": (checkout_session.get("customer_details") or {}).get('phone'),
+                "amount_paid": amount_total,
+                "order_summary": _order_summary_string(print_items),
+                "paid": True,
+            }
+        )
+    cart.clear()
 
     context = {
         "order_number": f"CHK-{(checkout_session.get('id') or '')[-6:]}",
@@ -616,8 +635,8 @@ def stripe_webhook(request):
         ).quantize(Decimal("0.01"))
 
         customer_details = session.get("customer_details") or {}
-        with transaction.atomic():
 
+        with transaction.atomic():
             order, created = Order.objects.update_or_create(
                 stripe_session_id=session.get("id"),
                 defaults={
