@@ -6,6 +6,7 @@ from MenuOrders.models import Menu
 from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
 from django.conf import settings
+from django.db import transaction
 import stripe, requests, logging, os, environ, json, uuid
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from django.http import JsonResponse, HttpResponse
@@ -610,7 +611,26 @@ def stripe_webhook(request):
         cust_name = (session.get("customer_details") or {}).get("name") or "Guest"
         order_number = f"CHK-{(session.get('id') or '')[-6:] or 'UNKNOWN'}"
 
-        if settings.PRINT_SERVICE_URL and settings.PRINT_SERVICE_TOKEN:
+        amount_paid = (
+            Decimal(session.get("amount_total") or 0) / Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+        customer_details = session.get("customer_details") or {}
+        with transaction.atomic():
+
+            order, created = Order.objects.update_or_create(
+                stripe_session_id=session.get("id"),
+                defaults={
+                    "full_name":cust_name,
+                    "email":customer_details.get("email"),
+                    "phone":customer_details.get('phone'),
+                    "amount_paid":amount_paid,
+                    "order_summary":print_summary,
+                    "paid": True,
+                }
+            )
+
+        if created and settings.PRINT_SERVICE_URL and settings.PRINT_SERVICE_TOKEN:
             payload = {
                 "type": "Web Carryout",
                 "customerName": cust_name,

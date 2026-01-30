@@ -21,20 +21,29 @@ class ShippingAddress(models.Model):
 
 # Create Order Model
 class Order(models.Model):
+    # Stripe dedupe key (prevents duplicates from retries)
+    stripe_session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+
     # Customer
     full_name = models.CharField(max_length= 255)
     email = models.EmailField(max_length=254, blank=True, null=True)
     phone = models.CharField(max_length=32, blank=True, null=True)
-    shipping_address = models.TextField(max_length=15000, null=True, blank=True)
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
-    date_ordered = models.DateTimeField(auto_now_add=True)
 
-    # PayPal Invoice and Paid t/f (boolean)
-    invoice = models.CharField(max_length=250, null=True, blank=True)
+    #totals
+    amount_paid= models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    #snapshot for dashboard
+    order_summary = models.TextField(blank=True, default='')
+
+    # Status
     paid = models.BooleanField(default=False)
+
+    shipping_address = models.TextField(max_length=15000, null=True, blank=True)
+
+    date_ordered = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f'Order - {str(self.id)}'
+        return f'Order - User:{self.full_name}, amount paid:{self.amount_paid}, id:{str(self.stripe_session_id)}'
 
 # Create Order.item.model
 class OrderItem(models.Model):
