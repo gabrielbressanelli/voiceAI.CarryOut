@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 class WeeklyHours(models.Model):
     """
     Base weekly schedule.
-    day_of_week: 0=Mon ... 6=Sun (matches Python datetime.weekday()).
+    day_of_the_week: 0=Mon ... 6=Sun (matches Python datetime.weekday()).
     """
     day_of_the_week = models.PositiveSmallIntegerField(unique=True)
 
@@ -54,7 +54,7 @@ class HoursOverride(models.Model):
         if self.is_closed:
             return
         if not self.open_time or not self.close_time:
-            raise ValidationError("open_time or close_time needed when is_closed is set to False.")
+            raise ValidationError("open_time or close_time required when is_closed is set to False.")
         if self.open_time >= self.close_time:
             raise ValidationError("open_time needs to be before closing time.")
         

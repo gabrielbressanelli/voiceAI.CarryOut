@@ -47,6 +47,13 @@ def get_hours_for_date(d: date) -> HoursResult:
 
     if not week_hours or week_hours.is_closed:
         return HoursResult(is_closed=True, open_time=None, close_time=None, source='weekly')
+    
+    return HoursResult(
+        is_closed=False,
+        open_time=week_hours.open_time,
+        close_time=week_hours.close_time,
+        source='weekly',
+    )
 
 def is_open_at(dt_local: datetime) -> bool:
     hrs = get_hours_for_date(dt_local.date())
@@ -63,7 +70,7 @@ def next_open_datetime(dt_local:datetime, search_days: int = 14) -> Optional[dat
     
     # If before today's opening time and today is not closed -> set today open_time
 
-    today_hrs = get_hours_for_date(dt_local.time())
+    today_hrs = get_hours_for_date(dt_local.date())
     if not today_hrs.is_closed and today_hrs.open_time and today_hrs.close_time:
         today_open=dt_local.replace(
             hour=today_hrs.open_time.hour,

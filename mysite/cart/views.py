@@ -5,7 +5,12 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from django.contrib import messages 
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+
+# Import hours rules to check if store is open
+from restaurant.services.hours import is_open_at, next_open_datetime, get_hours_for_date, local_now
+
 
 def _dec(val, default="0.00"):
     try:
@@ -55,10 +60,37 @@ def cart_summary(request):
     totals_dec = totals_dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     totals_display = f"{totals_dec:.2f}"
 
+    now_local = local_now()
+    store_is_open = is_open_at(now_local)
+
+    next_open_local = None
+    if not store_is_open:
+        next_open_local = next_open_datetime(now_local)
+
+    def format_opening_time_next(dt):
+        if not dt:
+            return None
+        # Today at 4:00PM / "Tomorrow at 4:00PM"
+        d0 = now_local.date()
+        d1 = dt.date()
+        if d1 == d0:
+            prefix = "Today"
+        elif d1 == (d0 + timezone.timedelta(days=1)):
+            prefix = "Tomorrow"
+        else: 
+            prefix = dt.strftime("%a")
+        return f"{prefix} at {dt.strftime('%-I:%M %p')}"
+
     return render(
         request,
         "cart/cart_summary.html",
-        {"lines": lines_for_ui, "totals":totals_dec, "totals_display":totals_display}
+        {
+            "lines": lines_for_ui, 
+            "totals":totals_dec, 
+            "totals_display":totals_display,
+            "store_is_open": store_is_open,
+            "next_open_text": format_opening_time_next(next_open_local) if next_open_local else None,
+        }
     )
 
 @require_POST
