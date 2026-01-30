@@ -310,6 +310,49 @@
         function refreshFooter(groups) {
           applyFooterUI(computeModalState(groups));
         }
+
+        function setAddBtnState($btn, state, extraText) {
+          if (!$btn.data('origHtml')) {
+            $btn.data('origHtml', $btn.html());
+          }
+
+          $btn.removeClass('is-loading is-success');
+
+          if (state === 'idle') {
+            $btn.html($btn.data('origHtml'));
+            $btn.prop('disabled', false).removeClass('is-loading');
+            return;
+          } 
+          
+          if (state === 'loading') {
+            $btn
+            .addClass('is-loading')
+            .prop ('disabled', true)
+            .html(`<span class="btn-spinner me-2"></span> Adding...`);
+            return;
+          } 
+          
+          if (state === 'success') {
+            $btn
+            .removeClass('is-loading')
+            .addClass('is-success')
+            .prop ('disabled', true)
+            .html(`✓ Added`);
+            return;
+          }
+
+          if (state === 'error') {
+            $btn
+            .prop ('disabled', false)
+            .html(extraText || 'Try Again');
+            return;
+          }
+        }
+
+        function flashSuccessThenReset($btn, ms = 650) {
+          setAddBtnState($btn, 'success');
+          setTimeout(() => setAddBtnState($btn,'idle'), ms);
+        }
       
         // --- Modal builder
         function showModifierModal(menuId, groups, onConfirm, $btn) {
@@ -406,7 +449,7 @@
           //re-enable originating button on cancel or close 
           const onHidden = () => {
             if (modalAction === 'cancel' ){
-              $btn?.prop('disabled', false);
+              setAddBtnState($btn, 'idle');
             }
             modalEl.removeEventListener('hidden.bs.modal', onHidden);
           };
@@ -509,8 +552,9 @@
           // ADD to cart (delegated)
           $(document).on('click', '.add-cart', function (e) {
             e.preventDefault();
-      
             const $btn   = $(this);
+            setAddBtnState($btn, 'loading');
+    
             const menuId = $btn.data('item-id');
             const addUrl = $btn.data('cart-add-url');
             const modsUrl = $btn.data('modifiers-url') || `/${menuId}/modifiers/`;
@@ -518,6 +562,7 @@
       
             if (!menuId || !addUrl) {
               console.error('Missing item id or add url');
+              setAddBtnState($btn, 'idle');
               return;
             }
       
@@ -544,6 +589,7 @@
           });
       
           function addToCartAjax(addUrl, menuId, qty, selectedOptionIds, note, $btn) {
+            setAddBtnState($btn, 'loading');
             $.ajax({
               type: 'POST',
               url: addUrl,
@@ -559,6 +605,8 @@
               if (json?.ok) {
                 if (typeof json.cart_qty !== 'undefined') setCartQty(json.cart_qty);
                 await refreshCartSummary();
+
+                flashSuccessThenReset($btn);
                 window.toastr?.success?.('Item added to cart!');
                 //location.reload();
               } else {
@@ -566,9 +614,10 @@
               }
             }).fail(function (xhr) {
               console.error('ADD error', xhr.status, xhr.responseText);
+              setAddBtnState($btn, 'error', 'Try again');
               window.toastr?.error?.('Add to cart failed.');
             }).always(function () {
-              $btn.prop('disabled', false);
+              // nothing for now so it does not go back to idle before added.
             });
           }
       

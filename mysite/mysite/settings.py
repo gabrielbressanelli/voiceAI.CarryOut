@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os, environ
+import stripe
 from dotenv import load_dotenv
 
 
@@ -62,8 +63,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'MenuOrders',
-    'cart',
     'payment',
+    'restaurant',
+    'cart',
     'whitenoise.runserver_nostatic',
     'paypal.standard.ipn',
     'storages',
@@ -143,7 +145,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Detroit'
 
 USE_I18N = True
 
@@ -226,4 +228,5 @@ LOGGING = {
 }
 
 
-
+# stripe key
+stripe.api_key = STRIPE_SECRET_KEY

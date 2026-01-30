@@ -1,12 +1,51 @@
 {# expects an `item` in context #}
 <style>
+  .add-cart {
+    transition: backgorund-color 0.2s ease, border-color 0.2s ease;
+  }
+
+
+  .add-cart.is-loading {
+    pointer-events: none;
+    opacity: 0.9;
+    background-color:  #9ca3af !important;
+    border-color: #9ca3af !important;
+    color: #ffffff;
+    cursor: not-allowed;
+  }
+
+  .add-cart.is-success {
+    background-color: #22c55e !important;
+    border-color: #22c55e !important;
+    opacity: 1;
+    color: #ffffff;
+  }
+
+  .add-cart .btn-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: -0.125rem;
+    animation: btnSpin 0.7s linear infinite;
+  }
+  @keyframes btnSpin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   @media (max-width: 480px) {
   .card-img-top,
   .fixed-size-img,
   .canvas-images {
     height: 420px;
+    }
   }
-}
+
+
 </style>
 
 <div class="card mb-3 card-spacing" style="max-width: 540px;">
