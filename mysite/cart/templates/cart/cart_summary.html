@@ -40,13 +40,14 @@
 
     .opt-chip {
       display: inline-block;
-      background-color: #e0e7ff;
-      color: #3730a3;
+      background-color: #F3F4F2;   /* soft warm gray */
+      color: #4B4F45;              /* readable, calm text */
       padding: 4px 8px;
-      border-radius: 12px;
+      border-radius: 10px;         /* slightly less bubbly */
       font-size: 0.875rem;
       margin-right: 6px;
       margin-bottom: 4px;
+      border: 1px solid #D6D7D3;   /* subtle definition */
     }
 
     .checkout-btn:disabled {
@@ -74,7 +75,7 @@
         <span class="store-status-text">
           <strong> We're currently closed.</strong>
           {% if next_open_text %}
-            Online ordering opens <strong>{{ next_open_text }}</strong>.
+            Onlinerdering opens <strong>{{ next_open_text }}</strong>.
             {% else %}
               Online ordering is currently unavailable.
           {% endif %}
