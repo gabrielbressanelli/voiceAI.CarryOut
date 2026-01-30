@@ -14,7 +14,9 @@ venv/
 env/
 
 # Environment variables
-.env/
+.env
+**/.env
+.env.*
 
 # OS
 .DS_Store
