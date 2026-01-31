@@ -427,7 +427,7 @@ def checkout_success(request):
     customer_name = (checkout_session.get("customer_details") or {}).get('name') or "Guest"
 
     with transaction.atomic():
-    # This is where I will fallback write to the Order model
+        # This is where I will fallback write to the Order model
         order, created = Order.objects.update_or_create(
             stripe_session_id=checkout_session.get("id"),
             defaults={
