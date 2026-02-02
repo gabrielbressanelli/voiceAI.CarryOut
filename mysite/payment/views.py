@@ -327,9 +327,9 @@ def create_checkout_session(request):
     if not line_items:
         return JsonResponse({"error": "No valid items in cart"}, status=400)
 
-    success_url = request.build_absolute_uri(reverse("checkout_success"))
+    success_url = request.build_absolute_uri(reverse("payment:checkout_success"))
     success_url = f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = request.build_absolute_uri(reverse("checkout_cancel"))
+    cancel_url = request.build_absolute_uri(reverse("payment:checkout_cancel"))
 
     try:
         session = stripe.checkout.Session.create(
