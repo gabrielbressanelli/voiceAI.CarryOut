@@ -339,6 +339,7 @@ def create_checkout_session(request):
             cancel_url=cancel_url,
             automatic_tax={"enabled": True},
             allow_promotion_codes=True,
+            phone_number_collection={"enabled": True},
         )
     except Exception as e:
         log.exception("Stripe Session.create failed: %s", e)
