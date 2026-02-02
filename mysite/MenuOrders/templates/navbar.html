@@ -129,12 +129,29 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
           </div>
           <div class="offcanvas-body" id="cart_summary_container">
-            {% include 'cart/cart_summary.html' %}
+            <div class="text-muted">Loading cart...</div>
           </div>
         </div>
       </body>
 
       <script>
+        async function loadCartOffcanvas() {
+          try {
+            const res = await fetch("{% url 'cart:cart_summary' %}?t=" + Date.now(), {
+              method: "GET",
+              headers: { "X-Requested-With": "XMLHttpRequest" },
+              credentials: "same-origin",
+            });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const html = await res.text();
+            const target = document.getElementById("cart_summary_container");
+            if (target) target.innerHTML = html;
+          } catch (e) {
+            console.error("Failed to load cart offcanvas:", e);
+            const target = document.getElementById("cart_summary_container");
+            if (target) target.innerHTML = "<div class='text-danger'>Failed to load cart.</div>";
+          }
+        }
         const nav = document.querySelector('.glass-nav');
         const onScroll = () => nav?.classList.toggle('scrolled', window.scrollY > 8);
         window.addEventListener('scroll', onScroll, { passive: true });
@@ -149,6 +166,17 @@
           document.addEventListener('hidden.bs.modal', () => {
             nav?.classList.remove('nav-under-modal');
           });
+
+          document.addEventListener("DOMContentLoaded", () => {
+          // Load once so cart is correct on every page
+          loadCartOffcanvas();
+
+          // Refresh every time user opens the cart
+          const offcanvasEl = document.getElementById("offcanvasRight");
+          if (offcanvasEl) {
+            offcanvasEl.addEventListener("show.bs.offcanvas", loadCartOffcanvas);
+          }
+        });
       </script>
       
 </html>

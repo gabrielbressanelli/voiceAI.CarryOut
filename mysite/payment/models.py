@@ -44,9 +44,14 @@ class Order(models.Model):
 
     is_picked_up = models.BooleanField(default=False)
 
+
     class Meta():
+        verbose_name_plural = "Orders"
+        # Filtering by last ordered
         ordering = ['-date_ordered']
         indexes = [models.Index(fields=['-date_ordered']),]
+
+    
         
     
     def __str__(self):

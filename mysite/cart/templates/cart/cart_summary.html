@@ -65,7 +65,7 @@
 </style>
 
 <div class="cart_summary_container">
-  <div class="offcanvas-body">
+
 
     {% if lines %}
 
@@ -75,7 +75,7 @@
         <span class="store-status-text">
           <strong> We're currently closed.</strong>
           {% if next_open_text %}
-            Onlinerdering opens <strong>{{ next_open_text }}</strong>.
+            Online ordering opens <strong>{{ next_open_text }}</strong>.
             {% else %}
               Online ordering is currently unavailable.
           {% endif %}
@@ -167,19 +167,11 @@
     <p>Looks pretty empty over here if you are actually hungry...</p>
   {% endif %}
 
-  </div>
+
 </div>
 
 <script>
 
 // Keep offcanvas open after reload
-document.addEventListener('DOMContentLoaded', function() {
-  if (sessionStorage.getItem('keepOffcanvasOpen') === 'true') {
-    const offcanvasElement = document.getElementById('offcanvasRight');
-    if (offcanvasElement) {
-      offcanvasElement.classList.add('show');
-    }
-    sessionStorage.removeItem('keepOffcanvasOpen');
-  }
-});
+
 </script>
