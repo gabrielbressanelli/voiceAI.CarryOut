@@ -230,3 +230,7 @@ LOGGING = {
 
 # stripe key
 stripe.api_key = STRIPE_SECRET_KEY
+
+
+# Random endpoint for carryout dashboard
+CARRYOUT_DASHBOARD_SLUG=os.getenv("CARRYOUT_DASHBOARD_SLUG", "")

@@ -1,8 +1,390 @@
-<html>
-    <head>
-    <title>Carryout Dashboard</title>
-        <body>
-            Hello World!
-        </body>
-    </head>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carryout Dashboard</title>
+
+  <link rel="stylesheet" href="{% static 'payment/css/carryout_dashboard.css' %}?v=1.1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+
+<body>
+  <!-- Header -->
+  <div class="header">
+    <!-- Back to HostHub (change URL as needed) -->
+    <a href="https://hosthub.160maincarryout.com" class="back-button" title="Back to HostHub">←</a>
+
+    <h1>Carryout Dashboard</h1>
+
+    <div class="header-buttons">
+      <a class="header-btn home-btn" href="https://hosthub.160maincarryout.com">HostHub</a>
+      <!-- <a class="header-btn logout-btn" href="/test/logout/">Logout</a> -->
+    </div>
+  </div>
+
+  <div class="main-container">
+
+    <!-- Tabs -->
+    <nav class="tab-navigation" id="filtersNav">
+        <!-- Date quick buttons -->
+        <a class="tab-btn {% if active_range == 'today' %}active{% endif %}"
+           href="?range=today{% if handled %}&handled=1{% endif %}">
+          Today
+        </a>
+      
+        <a class="tab-btn {% if active_range == 'yesterday' %}active{% endif %}"
+           href="?range=yesterday{% if handled %}&handled=1{% endif %}">
+          Yesterday
+        </a>
+      
+        <a class="tab-btn {% if active_range == 'last7' %}active{% endif %}"
+           href="?range=last7{% if handled %}&handled=1{% endif %}">
+          Last 7 Days
+        </a>
+      
+        <a class="tab-btn {% if active_range == 'all' %}active{% endif %}"
+           href="?range=all{% if handled %}&handled=1{% endif %}">
+          All
+        </a>
+      
+        <div class="spacer"></div>
+      
+        {# Custom date button (label becomes chosen date) #}
+        <button
+          type="button"
+          class="tab-btn {% if active_range == 'custom' %}active{% endif %}"
+          id="customDateBtn"
+        >
+          {% if active_range == 'custom' and custom_date %}
+            {{ custom_date }}
+          {% else %}
+            Select date
+          {% endif %}
+        </button>
+        
+        <input
+          type="date"
+          id="customDateInput"
+          class="date-input-hidden"
+          value="{% if active_range == 'custom' and custom_date %}{{ custom_date }}{% endif %}"
+          aria-label="Select a date"
+        />
+      
+        <!-- Handled toggle -->
+        <!-- {% if handled %}
+          <a class="tab-btn active handled-btn"
+             href="?range={{ active_range }}{% if active_range == 'custom' and custom_date %}&custom_date={{ custom_date }}{% endif %}">
+            Handled
+          </a>
+        {% else %}
+          <a class="tab-btn handled-btn"
+             href="?range={{ active_range }}{% if active_range == 'custom' and custom_date %}&custom_date={{ custom_date }}{% endif %}&handled=1">
+            Handled
+          </a>
+        {% endif %} -->
+      </nav>
+      
+      
+
+    <div class="content-grid">
+      <!-- Left: Orders list -->
+      <section class="message-list" aria-label="Orders list" id="orderList">
+        {% for o in orders %}
+          <article
+            class="message-item {% if forloop.first %}selected{% endif %}"
+            data-order-id="{{ o.id }}"
+            data-name="{{ o.full_name|default:'' }}"
+            data-phone="{{ o.phone|default:'' }}"
+            data-email="{{ o.email|default:'' }}"
+            data-total="{{ o.amount_paid }}"
+            data-paid="{{ o.paid }}"
+            data-date="{{ o.date_ordered|date:'M d, Y g:i A' }}"
+            data-iso="{{ o.date_ordered|date:'c' }}"
+            data-summary="{{ o.order_summary|default:'' }}"
+            data-address="{{ o.shipping_address|default:'' }}"
+            onclick="selectOrder(this)"
+          >
+            <div class="message-header">
+             <!--  <input type="checkbox"
+                     class="checkbox"
+                     title="Mark as picked up"
+                     onclick="event.stopPropagation();"
+                     onchange="togglePickedUpFromList(this)"> -->
+              <span class="message-status">
+                {% if o.full_name %}{{ o.full_name }}{% else %}Guest{% endif %}
+              </span>
+              <time class="message-time" datetime="{{ o.date_ordered|date:'c' }}">
+                {{ o.date_ordered|date:"M d, Y g:i A" }}
+              </time>
+            </div>
+
+            <!-- <div class="message-category">Carryout</div> -->
+
+            <p class="message-content">
+              {{ o.order_summary|default:"No summary available"|truncatewords:18 }}
+            </p>
+
+            <div class="message-footer">
+              <span class="total-pill">${{ o.amount_paid }}</span>
+              {% if o.paid %}
+                <span class="status-pill paid">Paid</span>
+              {% else %}
+                <span class="status-pill unpaid">Unpaid</span>
+              {% endif %}
+            </div>
+          </article>
+          {% empty %}
+          <article class="message-item">
+            <p class="message-content">
+              {% if handled %}
+                No handled carryout orders found.
+              {% else %}
+                No open carryout orders found.
+              {% endif %}
+            </p>
+          </article>
+        {% endfor %}
+      </section>
+
+      <!-- Right: Details panel -->
+      <aside class="details-panel" aria-label="Order details" id="detailsPanel">
+        <h2 class="panel-title" id="panelTitle">Select an Order</h2>
+
+        <div class="customer-info" id="customerInfo" style="display:none;">
+          <div class="customer-name" id="customerName"></div>
+          <div class="customer-phone" id="customerPhone"></div>
+          <div class="customer-email" id="customerEmail"></div>
+
+          <!-- <div class="mark-handled">
+            <input type="checkbox" class="checkbox" id="pickedUpToggle" onchange="togglePickedUpFromDetails(this.checked)">
+            <label for="pickedUpToggle">Mark as picked up</label>
+          </div>
+        </div> -->
+
+        <section class="details-section" id="orderInfoSection" style="display:none;">
+          <h3>Order Info</h3>
+          <ul class="details-list" id="orderInfoList"></ul>
+        </section>
+
+        <section class="details-section" id="orderDetailsSection" style="display:none;">
+          <h3>Order Details</h3>
+          <ul class="details-list" id="orderDetailsList"></ul>
+        </section>
+
+        <div class="request-box" id="summaryBox" style="display:none;">
+          <details open>
+            <summary>Order Summary</summary>
+            <div id="summaryContent"></div>
+          </details>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // ========== utilities ==========
+    function formatPhoneNumber(phone) {
+      if (!phone) return 'No phone';
+      const digits = phone.replace(/\+/g, '').replace(/\D/g, '');
+      if (digits.length === 11 && digits.startsWith('1')) {
+        return `(${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
+      } else if (digits.length === 10) {
+        return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+      }
+      return phone;
+    }
+  
+    function parseSummary(summary) {
+      if (!summary) return [];
+      return summary.split(';').map(s => s.trim()).filter(Boolean);
+    }
+  
+    function getCSRFToken() {
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      return meta ? meta.getAttribute('content') : '';
+    }
+  
+    // ========== custom date button ==========
+    function openNativeDatePicker(inputEl) {
+      if (inputEl && typeof inputEl.showPicker === 'function') {
+        inputEl.showPicker();
+      } else {
+        inputEl.focus();
+        inputEl.click();
+      }
+    }
+
+    function getPickupTimeFromISO(isoString, minutesToAdd = 35) {
+        if (!isoString) return '-';
+
+        const date = new Date(isoString);
+        if (isNaN(date.getTime())) return '-';
+
+        date.setMinutes(date.getMinutes() + minutesToAdd);
+
+        // Format like "4:35 PM"
+        return date.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    }
+  
+    function goToCustomDate(dateValue) {
+      if (!dateValue) return;
+  
+      const params = new URLSearchParams(window.location.search);
+      params.set('range', 'custom');
+      params.set('custom_date', dateValue);
+  
+      window.location.href = `?${params.toString()}`;
+    }
+  
+    // ========== selection ==========
+    let selectedOrderId = null;
+  
+    function selectOrder(el) {
+      document.querySelectorAll('.message-item').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+  
+      const order = {
+        id: el.dataset.orderId,
+        name: el.dataset.name || 'Guest',
+        phone: el.dataset.phone || '',
+        email: el.dataset.email || '',
+        total: el.dataset.total || '',
+        paid: el.dataset.paid === 'True' || el.dataset.paid === 'true',
+        date: el.dataset.date || '',
+        summary: el.dataset.summary || '',
+        address: el.dataset.address || ''
+      };
+  
+      selectedOrderId = order.id;
+  
+      document.getElementById('panelTitle').textContent = 'Carryout Order';
+  
+      document.getElementById('customerInfo').style.display = 'block';
+      document.getElementById('customerName').textContent = order.name;
+      document.getElementById('customerPhone').textContent = order.phone ? formatPhoneNumber(order.phone) : 'No phone';
+      document.getElementById('customerEmail').textContent = order.email ? order.email : '';
+  
+      const pickedToggle = document.getElementById('pickedUpToggle');
+      if (pickedToggle) {
+        pickedToggle.checked = false; // open page default; handled page can adjust later
+        pickedToggle.dataset.orderId = order.id;
+      }
+  
+      // Order info list
+      const infoList = document.getElementById('orderInfoList');
+      infoList.innerHTML = '';
+  
+      const info = [
+        { label: 'Status', value: order.paid ? 'Paid' : 'Unpaid' },
+        { label: 'Total', value: order.total ? `$${order.total}` : '—' },
+        { label: 'Ordered at', value: order.date || '—' },
+        {label: "Pick up Time", value: getPickupTimeFromISO(el.dataset.iso, 35) || '-'},
+      ];
+  
+      info.forEach(d => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${d.label}:</strong> ${d.value}`;
+        infoList.appendChild(li);
+      });
+  
+      document.getElementById('orderInfoSection').style.display = 'block';
+  
+      // Address
+      const detailsList = document.getElementById('orderDetailsList');
+      detailsList.innerHTML = '';
+  
+      if (order.address) {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>Address:</strong> ${order.address}`;
+        detailsList.appendChild(li);
+      }
+  
+      document.getElementById('orderDetailsSection').style.display =
+        detailsList.children.length ? 'block' : 'none';
+  
+      // Summary box
+      const items = parseSummary(order.summary);
+      const summaryBox = document.getElementById('summaryBox');
+      const summaryContent = document.getElementById('summaryContent');
+  
+      if (items.length) {
+        summaryContent.innerHTML = '';
+        const ul = document.createElement('ul');
+        ul.className = 'summary-bullets';
+        items.forEach(it => {
+          const li = document.createElement('li');
+          li.textContent = it;
+          ul.appendChild(li);
+        });
+        summaryContent.appendChild(ul);
+        summaryBox.style.display = 'block';
+      } else {
+        summaryBox.style.display = 'none';
+      }
+    }
+  
+    // ========== search (optional) ==========
+    function filterOrders() {
+      const input = document.getElementById('searchInput');
+      if (!input) return;
+  
+      const q = (input.value || '').toLowerCase().trim();
+      document.querySelectorAll('.message-item[data-order-id]').forEach(card => {
+        const hay = [card.dataset.name, card.dataset.phone, card.dataset.summary].join(' ').toLowerCase();
+        card.style.display = hay.includes(q) ? '' : 'none';
+      });
+    }
+  
+    // ========== picked up actions (UI-only for now) ==========
+    function togglePickedUpFromList(checkboxEl) {
+      const card = checkboxEl.closest('.message-item');
+      if (!card) return;
+  
+      if (checkboxEl.checked) {
+        card.style.opacity = '0.5';
+        card.style.pointerEvents = 'none';
+        setTimeout(() => card.remove(), 250);
+      }
+    }
+  
+    function togglePickedUpFromDetails(checked) {
+      if (!selectedOrderId) return;
+  
+      if (checked) {
+        const card = document.querySelector(`.message-item[data-order-id="${selectedOrderId}"]`);
+        if (card) {
+          card.style.opacity = '0.5';
+          card.style.pointerEvents = 'none';
+          setTimeout(() => card.remove(), 250);
+        }
+      }
+    }
+  
+    // ========== init ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      // Select first order
+      const first = document.querySelector('.message-item[data-order-id]');
+      if (first) selectOrder(first);
+  
+      // Custom date button wiring
+      const btn = document.getElementById('customDateBtn');
+      const input = document.getElementById('customDateInput');
+  
+      if (btn && input) {
+        btn.addEventListener('click', () => openNativeDatePicker(input));
+        input.addEventListener('change', (e) => goToCustomDate(e.target.value));
+      }
+  
+      // If you add a search input, wire it here:
+      const search = document.getElementById('searchInput');
+      if (search) search.addEventListener('input', filterOrders);
+    });
+  </script>
+  
+</body>
 </html>

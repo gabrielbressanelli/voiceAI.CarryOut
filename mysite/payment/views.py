@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import ShippingForm, PaymentForm
 from cart.cart import Cart
+from cart.views import cart_summary, _dec
 from MenuOrders.models import Menu
 from .models import ShippingAddress, Order, OrderItem
 from django.urls import reverse
@@ -211,7 +212,8 @@ def delivery_form(request):
 
     context = {
         "lines": lines_for_ui,
-        "totals": cart.cart_total()
+        "totals": cart.cart_total(),
+        
     }
 
     return render(request, "delivery.html", context)

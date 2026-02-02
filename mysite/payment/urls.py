@@ -1,5 +1,8 @@
 from django.urls import path, include
 from . import views, views_dashboard
+from django.conf import settings
+
+app_name = "payment"
 
 
 urlpatterns = [
@@ -13,6 +16,6 @@ urlpatterns = [
     path("success/", views.checkout_success, name="checkout_success"),
     path("cancel/", views.checkout_cancel, name="checkout_cancel"),
     path("webhook/", views.stripe_webhook, name="stripe_webhook"),
-    path('dashboard/carryout_dashboard/',views_dashboard.carryout_dashboard,name='carryout_dashboard'),
+    path(f'dashboard/carryout_dashboard/{settings.CARRYOUT_DASHBOARD_SLUG}/',views_dashboard.carryout_dashboard,name='carryout_dashboard'),
 
 ]
