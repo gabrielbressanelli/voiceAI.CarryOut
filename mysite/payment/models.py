@@ -41,6 +41,13 @@ class Order(models.Model):
     shipping_address = models.TextField(max_length=15000, null=True, blank=True)
 
     date_ordered = models.DateTimeField(auto_now_add=True)
+
+    is_picked_up = models.BooleanField(default=False)
+
+    class Meta():
+        ordering = ['-date_ordered']
+        indexes = [models.Index(fields=['-date_ordered']),]
+        
     
     def __str__(self):
         return f'Order - User:{self.full_name}, amount paid:{self.amount_paid}, id:{str(self.stripe_session_id)}'
