@@ -155,7 +155,7 @@
       <h5>Total: $ {{ totals_display|default:totals }}</h5>
       <div class="checkout-wrapper text-end mt-3">
       {% if store_is_open %}
-        <a href="{% url 'delivery' %}" class="btn btn-success checkout-btn">Checkout</a>
+        <a href="{% url 'payment:delivery' %}" class="btn btn-success checkout-btn">Checkout</a>
       {% else %}
         <button type="button" class="btn btn-success checkout-btn" disabled aria-disabled="true">
           Closed
