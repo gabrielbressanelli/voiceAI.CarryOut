@@ -52,19 +52,19 @@
   <div class="row g-0">
     <div class="col-sm-4">
       <img
-        src="https://images.160maincarryout.com/cdn-cgi/image/width=640,quality=75,format=jpeg,metadata=none,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }}"
-        srcset="
-          https://images.160maincarryout.com/cdn-cgi/image/width=320,quality=75,format=jpeg,metadata=none,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 320w,
-          https://images.160maincarryout.com/cdn-cgi/image/width=480,quality=75,format=jpeg,metadata=none,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 480w,
-          https://images.160maincarryout.com/cdn-cgi/image/width=640,quality=75,format=jpeg,metadata=none,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 640w,
-          https://images.160maincarryout.com/cdn-cgi/image/width=960,quality=75,format=jpeg,metadata=none,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 960w
-        "
-        sizes="(max-width: 576px) 90vw, (max-width: 992px) 40vw, 320px"
-        loading="lazy"
-        decoding="async"
-        alt="{{ item.item }}"
-        class="fixed-size-img card-img-top"
-      />
+      src="/cdn-cgi/image/width=640,quality=75,format=jpeg,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }}"
+      srcset="
+        /cdn-cgi/image/width=320,quality=75,format=jpeg,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 320w,
+        /cdn-cgi/image/width=480,quality=75,format=jpeg,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 480w,
+        /cdn-cgi/image/width=640,quality=75,format=jpeg,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 640w,
+        /cdn-cgi/image/width=960,quality=75,format=jpeg,fit=cover{{ item.picture.url|cut:'https://images.160maincarryout.com' }} 960w
+      "
+      sizes="(max-width: 576px) 90vw, (max-width: 992px) 40vw, 320px"
+      loading="lazy"
+      decoding="async"
+      alt="{{ item.item }}"
+      class="fixed-size-img card-img-top"
+    />
     </div>
     <div class="col-sm-8">
       <div class="card-body">
