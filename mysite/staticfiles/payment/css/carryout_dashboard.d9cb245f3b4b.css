@@ -437,10 +437,22 @@ body {
 }
 
 .modal-card input[type="date"] {
-  width: 90%;
+  width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid rgba(0,0,0,0.12);
   background: #fff;
   font-size: 14px;
+}
+
+#customDateModal {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0,0,0,0.5) !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647 !important;
 }

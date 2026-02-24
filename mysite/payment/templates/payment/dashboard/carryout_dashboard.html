@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carryout Dashboard</title>
 
-  <link rel="stylesheet" href="{% static 'payment/css/carryout_dashboard.css' %}?v=1.1">
+  <link rel="stylesheet" href="{% static 'payment/css/carryout_dashboard.css' %}?v=2.0">
+
   <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 
@@ -46,32 +47,33 @@
       
         <a class="tab-btn {% if active_range == 'all' %}active{% endif %}"
            href="?range=all{% if handled %}&handled=1{% endif %}">
-          All
+          All Time
+
         </a>
-      
-        <div class="spacer"></div>
-      
-        {# Custom date button (label becomes chosen date) #}
         <button
-          type="button"
-          class="tab-btn {% if active_range == 'custom' %}active{% endif %}"
-          id="customDateBtn"
+        type="button"
+        class="tab-btn icon {% if active_range == 'custom' %}active{% endif %}"
+        onclick="openCustomDate(); return false;"
+        aria-label="Pick a custom date"
+        title="Pick a custom date"
         >
-          {% if active_range == 'custom' and custom_date %}
-            {{ custom_date }}
-          {% else %}
-            Select date
-          {% endif %}
+        {% if active_range == 'custom' and custom_date %}
+          {{ custom_date }}
+        {% else %}              
+          <svg width="18"height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" 
+            stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" 
+            stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> 
+            <path d="M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 
+            21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 
+            20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 
+            4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 
+            3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z" stroke="#000000" stroke-width="2" 
+            stroke-linecap="round"></path> 
+            </g>
+          </svg>
+        {% endif %}
         </button>
-        
-        <input
-          type="date"
-          id="customDateInput"
-          class="date-input-hidden"
-          value="{% if active_range == 'custom' and custom_date %}{{ custom_date }}{% endif %}"
-          aria-label="Select a date"
-        />
-      
+
         <!-- Handled toggle -->
         <!-- {% if handled %}
           <a class="tab-btn active handled-btn"
@@ -85,7 +87,38 @@
           </a>
         {% endif %} -->
       </nav>
-      
+        <!-- Custom Date Modal (simple) -->
+        <div id="customDateModal" class="modal-backdrop" style="display:none;">
+          <div class="modal-card">
+            <div class="modal-title">Pick a date</div>
+
+            <form method="get">
+              <!-- keep your other filters -->
+              {% if active_host_status %}
+                <input type="hidden" name="host_status" value="{{ active_host_status }}">
+              {% endif %}
+              {% if active_category %}
+                <input type="hidden" name="category" value="{{ active_category }}">
+              {% endif %}
+
+              <!-- required for custom -->
+              <input type="hidden" name="range" value="custom">
+
+              <!-- the picked day -->
+              <input
+                type="date"
+                name="custom_date"
+                value="{{ custom_date|default:'' }}"
+                required
+              >
+
+              <div class="modal-actions">
+                <button type="button" class="btn" onclick="closeCustomDate()">Cancel</button>
+                <button type="submit" class="btn primary">Apply</button>
+              </div>
+            </form>
+          </div>
+        </div>
       
 
     <div class="content-grid">
@@ -207,15 +240,18 @@
     }
   
     // ========== custom date button ==========
-    function openNativeDatePicker(inputEl) {
-      if (inputEl && typeof inputEl.showPicker === 'function') {
-        inputEl.showPicker();
-      } else {
-        inputEl.focus();
-        inputEl.click();
-      }
+    function openCustomDate() {
+      document.getElementById("customDateModal").style.display = "flex";
+    }
+    function closeCustomDate() {
+      document.getElementById("customDateModal").style.display = 'none';
     }
 
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById("customDateModal");
+      if (!modal || modal.style.display !== 'flex') return;
+      if (e.target === modal) closeCustomDate();
+    });
     function getPickupTimeFromISO(isoString, minutesToAdd = 35) {
         if (!isoString) return '-';
 
