@@ -17,13 +17,24 @@ body {
     justify-content: center;
   }
   
-  .back-button{
+  .back-button {
     position: absolute;
     left: 2rem;
-    top: 0;
-    bottom: 0;
-    margin: auto 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
     height: 36px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.10);
+    border: none;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    text-decoration: none;
   }
   
   .back-button:hover {
