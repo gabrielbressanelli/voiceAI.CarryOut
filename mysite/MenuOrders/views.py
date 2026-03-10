@@ -9,6 +9,7 @@ from django.contrib import messages
 def index(request):
     menu = Menu.objects.all()
     appetizer = Menu.objects.filter(food_type='appetizer')
+    salad = Menu.objects.filter(food_type='salad')
     pasta = Menu.objects.filter(food_type='pasta')
     grill = Menu.objects.filter(food_type='grill')
     saute = Menu.objects.filter(food_type="saute")
@@ -25,6 +26,7 @@ def index(request):
     context = {
         'menu': menu,
         'appetizer': appetizer,
+        'salad': salad,
         'pasta': pasta,
         'grill': grill,
         'saute': saute,
