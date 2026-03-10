@@ -156,6 +156,7 @@
         <!-- Mobile Category Bar -->
         <div class="mobile-cats d-lg-none">
           <a class="cat-link" href="#Appetizer">Appetizers</a>
+          <a class="cat-link" href="#Salad">Salads</a>
           <a class="cat-link" href="#Pasta">Pasta</a>
           <a class="cat-link" href="#Grill">Grill</a>
           <a class="cat-link" href="#Saute">Saute</a>
@@ -176,6 +177,15 @@
           <h2 id="Appetizer">Appetizers</h2>
           <div class="row">
             {% for item in appetizer %}
+              {% include "partials/_menu_card.html" %}
+            {% endfor %}
+          </div>
+      
+          <br>
+
+          <h2 id="Salad">Salads</h2>
+          <div class="row">
+            {% for item in salad %}
               {% include "partials/_menu_card.html" %}
             {% endfor %}
           </div>
