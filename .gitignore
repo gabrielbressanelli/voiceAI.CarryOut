@@ -1,0 +1,23 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django
+*.log
+db.sqlite3
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+**/.env
+.env.*
+
+# OS
+.DS_Store__pycache__/
+*.pyc

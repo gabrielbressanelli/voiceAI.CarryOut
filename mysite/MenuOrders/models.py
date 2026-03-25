@@ -5,6 +5,7 @@ from decimal import Decimal
 class Menu(models.Model):
     FOOD_TYPE_CHOICES = [
         ('appetizer', 'Appetizer'),
+        ('salad', 'Salad'),
         ('pasta', 'Pasta'),
         ('saute', 'Saute'),
         ('grill', 'Grill'),
