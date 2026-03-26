@@ -24,6 +24,9 @@ class Order(models.Model):
     # Stripe dedupe key (prevents duplicates from retries)
     stripe_session_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
 
+    # Cross-ref metadata attatched to stripe paymentlink for AI voice orders
+    order_ref = models.CharField(max_length=100, unique=True, null=True, blank=True)
+
     # Customer
     full_name = models.CharField(max_length= 255)
     email = models.EmailField(max_length=254, blank=True, null=True)
