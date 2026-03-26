@@ -234,3 +234,6 @@ stripe.api_key = STRIPE_SECRET_KEY
 
 # Random endpoint for carryout dashboard
 CARRYOUT_DASHBOARD_SLUG=os.getenv("CARRYOUT_DASHBOARD_SLUG", "")
+
+# Random key for Voice AI Host Order creation
+VOICE_ORDER_API_TOKEN=os.getenv("VOICE_ORDER_API_TOKEN", '')
