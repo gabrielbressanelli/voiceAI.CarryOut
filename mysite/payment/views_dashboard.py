@@ -16,10 +16,9 @@ def carryout_dashboard(request):
     custom_date = request.GET.get('custom_date')
 
     # Base queryset: paid orders only (recommended for a staff dashboard)
-    qs = Order.objects.filter(paid=True)
-
+    qs = Order.objects.all()
     # Status filter
-    qs = qs.filter(is_picked_up=handled)
+    # qs = qs.filter(is_picked_up=handled)
 
     # Date filter (local date boundaries)
     now_local = timezone.localtime(timezone.now())
