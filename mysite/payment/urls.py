@@ -17,5 +17,5 @@ urlpatterns = [
     path("cancel/", views.checkout_cancel, name="checkout_cancel"),
     path("webhook/", views.stripe_webhook, name="stripe_webhook"),
     path(f'dashboard/carryout_dashboard/{settings.CARRYOUT_DASHBOARD_SLUG}/',views_dashboard.carryout_dashboard,name='carryout_dashboard'),
-
+    path('test/voice-ai-order', views_dashboard.create_voice_AI_order, name='create_voice_ai_order'),
 ]
