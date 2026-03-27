@@ -591,8 +591,35 @@ def stripe_webhook(request):
     etype = event.get("type")
     if etype in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
         session = event["data"]["object"]
+
         if session.get("payment_status") != "paid":
             return HttpResponse(status=200)
+        
+        metadata = session.get("metadata") or {}
+        order_ref = metadata.get("order_ref")
+
+        # ------------------
+        # AI HOST ORDER FLOW
+        # ------------------
+        if order_ref:
+            try:
+                with transaction.atomic():
+                    order = Order.objects.get(order_ref=order_ref)
+
+                    order.paid = True
+                    order.stripe_session_id = session.get('id')
+
+                    order.save()
+                return HttpResponse(status=200)
+            except Order.DoesNotExist:
+                log.warning("AI HOST order not found for order_ref=%s", order_ref)
+                return HttpResponse(status=200)
+        
+        # -------------------
+        # WEBSITE ORDER FLOW
+        # -------------------
+            
+
 
         # Pull line items with product expanded (to access product.metadata.compact_name)
         try:
