@@ -19,5 +19,6 @@ env/
 .env.*
 
 # OS
+.DS_Store
 .DS_Store__pycache__/
 *.pyc
