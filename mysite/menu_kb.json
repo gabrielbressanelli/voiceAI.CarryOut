@@ -1,0 +1,1147 @@
+[
+  {
+    "id": 7,
+    "item": "Antipasto Italiano",
+    "aliases": ["antipasto", "Italian antipasto", "charcuterie board", "antipasto platter", "antipasto for two"],
+    "category": "Appetizer",
+    "price": "26.00",
+    "description": "Charcuterie, cheeses, roasted peppers and caponata. Serves two.",
+    "modifier_groups": []
+  },
+  {
+    "id": 4,
+    "item": "Calamari",
+    "aliases": ["fried calamari", "squid", "calamari rings", "fried squid", "crispy calamari"],
+    "category": "Appetizer",
+    "price": "18.00",
+    "description": "Tossed with capers and bell peppers. UPGRADE \"Fritto Misto\" (6) fried shrimp",
+    "modifier_groups": [
+      {
+        "name": "Upgrade Calamari",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 26,
+            "name": "Fritto Mistto",
+            "price_delta": "10.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "item": "Caprese",
+    "aliases": ["caprese salad", "tomato mozzarella", "tomato and mozzarella", "fresh mozzarella salad", "mozzarella caprese"],
+    "category": "Appetizer",
+    "price": "18.00",
+    "description": "Vine ripe tomato, fresh mozzarella, basil infused pesto.",
+    "modifier_groups": []
+  },
+  {
+    "id": 3,
+    "item": "Crab Cakes",
+    "aliases": ["crab cake", "jumbo crab cakes", "lump crab cakes", "crab patties", "Italian crab cakes"],
+    "category": "Appetizer",
+    "price": "22.00",
+    "description": "Jumbo lump crab, panko crust, topped with an Italian cocktail sauce.",
+    "modifier_groups": []
+  },
+  {
+    "id": 23,
+    "item": "Fried Burrata",
+    "aliases": ["burrata", "fried burrata cheese", "crispy burrata", "breaded burrata", "burrata fritto"],
+    "category": "Appetizer",
+    "price": "18.00",
+    "description": "Breaded, fried, and served with tomato basil sauce.",
+    "modifier_groups": []
+  },
+  {
+    "id": 2,
+    "item": "Grilled Shrimp",
+    "aliases": ["shrimp appetizer", "chargrilled shrimp", "breaded shrimp", "shrimp starter", "grilled prawns"],
+    "category": "Appetizer",
+    "price": "20.00",
+    "description": "Breaded, chargrilled, topped with a lemon cream sauce.",
+    "modifier_groups": []
+  },
+  {
+    "id": 22,
+    "item": "Octopus Salad",
+    "aliases": ["octopus", "polpo salad", "octopus appetizer", "Sicilian octopus", "polpo"],
+    "category": "Appetizer",
+    "price": "22.00",
+    "description": "Onion, celery, kalamata olives, red & yellow bell peppers, Sicilian lemon marinade.",
+    "modifier_groups": []
+  },
+  {
+    "id": 1,
+    "item": "Sausage & Peppers",
+    "aliases": ["sausage and peppers", "sausage peppers", "Italian sausage and peppers", "sausage with peppers", "peppers and sausage"],
+    "category": "Appetizer",
+    "price": "18.00",
+    "description": "Pan fried hot and sweet peppers, potato and onions",
+    "modifier_groups": []
+  },
+  {
+    "id": 25,
+    "item": "Tenderloin tips arrabbiata",
+    "aliases": ["beef tenderloin tips", "tenderloin arrabbiata", "beef tips arrabbiata", "tenderloin tips spicy", "filet tips arrabbiata"],
+    "category": "Appetizer",
+    "price": "22.00",
+    "description": "Fresh tomato and hot peppers served with crostini.",
+    "modifier_groups": []
+  },
+  {
+    "id": 5,
+    "item": "Tuscan Artichoke",
+    "aliases": ["artichoke", "Tuscan artichokes", "artichoke appetizer", "pan fried artichoke", "artichokes white wine"],
+    "category": "Appetizer",
+    "price": "18.00",
+    "description": "Pan fried with a white wine, lemon, caper sauce.",
+    "modifier_groups": []
+  },
+  {
+    "id": 24,
+    "item": "Zucchini one sixty",
+    "aliases": ["zucchini", "zucchini 160", "zucchini stack", "prosciutto zucchini", "zucchini mozzarella"],
+    "category": "Appetizer",
+    "price": "16.00",
+    "description": "Pan-fried, layered with fresh mozzarella, prosciutto, topped with tomato basil sauce.",
+    "modifier_groups": []
+  },
+  {
+    "id": 33,
+    "item": "Cannoli",
+    "aliases": ["cannolo", "ricotta cannoli", "chocolate chip cannoli", "Italian cannoli", "fresh cannoli"],
+    "category": "Dessert",
+    "price": "6.00",
+    "description": "Daily fresh cannoli filled with whipped ricotta filling and chocolate chips.",
+    "modifier_groups": []
+  },
+  {
+    "id": 20,
+    "item": "Panna Cotta",
+    "aliases": ["panna cotta dessert", "cooked cream", "raspberry panna cotta", "Italian panna cotta", "panna cotta with raspberry"],
+    "category": "Dessert",
+    "price": "5.00",
+    "description": "Sweetened cooked cream topped with a raspberry sauce. Served chilled.",
+    "modifier_groups": []
+  },
+  {
+    "id": 19,
+    "item": "Tiramisu",
+    "aliases": ["tiramisu dessert", "espresso cake", "lady finger dessert", "Italian tiramisu", "mascarpone tiramisu"],
+    "category": "Dessert",
+    "price": "8.00",
+    "description": "Espresso soaked lady fingers layered with marscapone cheese, dusted with cocoa powder.",
+    "modifier_groups": []
+  },
+  {
+    "id": 14,
+    "item": "Chargrilled Quail",
+    "aliases": ["quail", "grilled quail", "quail arugula", "Sicilian quail", "quail citrus"],
+    "category": "Grill",
+    "price": "38.00",
+    "description": "Served with arugula topped with a fresh Sicilian citrus drizzle and shaved parmigiano.",
+    "modifier_groups": []
+  },
+  {
+    "id": 12,
+    "item": "Filet",
+    "aliases": ["filet mignon", "beef filet", "filet steak", "center cut filet", "8oz filet"],
+    "category": "Grill",
+    "price": "54.00",
+    "description": "8oz center cut, chargrilled, served with potato tortino and grilled vegetables.",
+    "modifier_groups": [
+      {
+        "name": "Temperature",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 12,
+            "name": "Well Done",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 13,
+            "name": "Medium Well",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 14,
+            "name": "Medium",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 15,
+            "name": "Medium Rare",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 16,
+            "name": "Rare",
+            "price_delta": "0.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "item": "Lamb Chops",
+    "aliases": ["lamb", "grilled lamb chops", "lamb chop", "Sicilian lamb chops", "chargrilled lamb"],
+    "category": "Grill",
+    "price": "68.00",
+    "description": "Hand-cut chops (4), chargrilled and topped with sicilian marinade, served with grilled mixed vegetables.",
+    "modifier_groups": [
+      {
+        "name": "Temperature",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 12,
+            "name": "Well Done",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 13,
+            "name": "Medium Well",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 14,
+            "name": "Medium",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 15,
+            "name": "Medium Rare",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 16,
+            "name": "Rare",
+            "price_delta": "0.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "item": "Sicilian Style",
+    "aliases": ["Sicilian breaded", "Sicilian chicken", "ammoglio chicken", "breaded Sicilian", "Sicilian grilled"],
+    "category": "Grill",
+    "price": "24.00",
+    "description": "Your choice of meat, breaded, chargrilled served with ammoglio and grilled vegetables.",
+    "modifier_groups": [
+      {
+        "name": "Protein for Sicilian",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 20,
+            "name": "Chicken",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 21,
+            "name": "Veal",
+            "price_delta": "4.00"
+          },
+          {
+            "id": 22,
+            "name": "Steak",
+            "price_delta": "8.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 49,
+    "item": "Build Your Own Pasta",
+    "aliases": ["build your pasta", "custom pasta", "create your pasta", "make your own pasta", "pasta bar"],
+    "category": "Pasta",
+    "price": "16.00",
+    "description": "Choose from any restaurant pasta and sauce to build your favorite dish!",
+    "modifier_groups": [
+      {
+        "name": "Pasta for Build your Own",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 46,
+            "name": "Spaghetti",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 47,
+            "name": "Fettuccine",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 48,
+            "name": "Angel Hair",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 49,
+            "name": "Pappardelle",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 50,
+            "name": "Linguine",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 51,
+            "name": "Penne",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 52,
+            "name": "Gnocchi",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 53,
+            "name": "Ravioli",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 54,
+            "name": "Risotto",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 55,
+            "name": "Mezza Rigatoni",
+            "price_delta": "0.00"
+          }
+        ]
+      },
+      {
+        "name": "Sauce",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 30,
+            "name": "All'Aragosta",
+            "price_delta": "12.00"
+          },
+          {
+            "id": 31,
+            "name": "Al Funghi",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 32,
+            "name": "Tomato Basil",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 33,
+            "name": "Spicy Vodka",
+            "price_delta": "4.00"
+          },
+          {
+            "id": 34,
+            "name": "Palomino",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 35,
+            "name": "Alfredo",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 36,
+            "name": "Bolognese",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 37,
+            "name": "Alle Vongole",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 38,
+            "name": "Primavera",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 39,
+            "name": "Puttanesca",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 40,
+            "name": "Aglio e Olio",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 41,
+            "name": "Arrabiata",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 42,
+            "name": "Al Limoncello",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 43,
+            "name": "Con Filetto",
+            "price_delta": "10.00"
+          },
+          {
+            "id": 44,
+            "name": "Butter and Cheese",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 45,
+            "name": "Pesto",
+            "price_delta": "0.00"
+          }
+        ]
+      },
+      {
+        "name": "Protein",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 3,
+        "options": [
+          {
+            "id": 1,
+            "name": "Chicken",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 2,
+            "name": "Meatballs",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 3,
+            "name": "Fresh Ricotta",
+            "price_delta": "4.00"
+          },
+          {
+            "id": 4,
+            "name": "Sausage",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 5,
+            "name": "Shrimp",
+            "price_delta": "12.00"
+          },
+          {
+            "id": 11,
+            "name": "Beef Tips",
+            "price_delta": "10.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 48,
+    "item": "Chef's Lasagna",
+    "aliases": ["lasagna", "baked lasagna", "Italian lasagna", "meat lasagna", "homemade lasagna"],
+    "category": "Pasta",
+    "price": "26.00",
+    "description": "Bechamel, Parmigiano, homemade meat sauce",
+    "modifier_groups": []
+  },
+  {
+    "id": 45,
+    "item": "Fettuccine Al Limoncello",
+    "aliases": ["lemon fettuccine", "fettuccine limoncello", "fettuccine lemon cream", "limoncello pasta", "lemon pasta"],
+    "category": "Pasta",
+    "price": "24.00",
+    "description": "Parmigiano cream with a hint of lemon zest",
+    "modifier_groups": []
+  },
+  {
+    "id": 46,
+    "item": "Fettuccine Con Filetto",
+    "aliases": ["fettuccine tenderloin", "fettuccine beef tips", "fettuccine wild mushrooms", "filetto pasta", "tenderloin fettuccine"],
+    "category": "Pasta",
+    "price": "34.00",
+    "description": "Tenderloin tips and wild mushrooms in a white wine tomato sauce",
+    "modifier_groups": []
+  },
+  {
+    "id": 47,
+    "item": "Gnocchi di Patate",
+    "aliases": ["gnocchi", "potato gnocchi", "house gnocchi", "gnocchi tomato basil", "homemade gnocchi"],
+    "category": "Pasta",
+    "price": "26.00",
+    "description": "House-made potato gnocchi with tomato basil, oregano, and diced mozzarella cheese",
+    "modifier_groups": []
+  },
+  {
+    "id": 50,
+    "item": "Linguine All'Aragosta",
+    "aliases": ["lobster linguine", "linguine lobster", "lobster pasta", "aragosta linguine", "linguine with lobster"],
+    "category": "Pasta",
+    "price": "40.00",
+    "description": "6oz lobster tail, fresh tomato sauce",
+    "modifier_groups": []
+  },
+  {
+    "id": 51,
+    "item": "Linguine Alle Vongole",
+    "aliases": ["clam linguine", "linguine clams", "white clam sauce linguine", "vongole pasta", "clam pasta"],
+    "category": "Pasta",
+    "price": "28.00",
+    "description": "White win clam sauce",
+    "modifier_groups": []
+  },
+  {
+    "id": 38,
+    "item": "Mezza Rigatoni Spicy Vodka",
+    "aliases": ["vodka rigatoni", "spicy vodka pasta", "rigatoni vodka", "vodka sauce pasta", "pink vodka rigatoni"],
+    "category": "Pasta",
+    "price": "24.00",
+    "description": "Tomato basil, cream, vodka, red pepper flakes",
+    "modifier_groups": [
+      {
+        "name": "Protein",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 3,
+        "options": [
+          {
+            "id": 1,
+            "name": "Chicken",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 2,
+            "name": "Meatballs",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 3,
+            "name": "Fresh Ricotta",
+            "price_delta": "4.00"
+          },
+          {
+            "id": 4,
+            "name": "Sausage",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 5,
+            "name": "Shrimp",
+            "price_delta": "12.00"
+          },
+          {
+            "id": 11,
+            "name": "Beef Tips",
+            "price_delta": "10.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "item": "Mezza Rigatoni Tomato Basil",
+    "aliases": ["rigatoni tomato", "tomato basil rigatoni", "marinara rigatoni", "mezza rigatoni", "rigatoni marinara"],
+    "category": "Pasta",
+    "price": "20.00",
+    "description": "Slow cooked tomato and basil",
+    "modifier_groups": [
+      {
+        "name": "Protein",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 3,
+        "options": [
+          {
+            "id": 1,
+            "name": "Chicken",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 2,
+            "name": "Meatballs",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 3,
+            "name": "Fresh Ricotta",
+            "price_delta": "4.00"
+          },
+          {
+            "id": 4,
+            "name": "Sausage",
+            "price_delta": "8.00"
+          },
+          {
+            "id": 5,
+            "name": "Shrimp",
+            "price_delta": "12.00"
+          },
+          {
+            "id": 11,
+            "name": "Beef Tips",
+            "price_delta": "10.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "item": "Pappardelle Al Funghi",
+    "aliases": ["mushroom pappardelle", "truffle pappardelle", "pappardelle mushroom", "funghi pasta", "truffle mushroom pasta"],
+    "category": "Pasta",
+    "price": "32.00",
+    "description": "Wild mushrooms, Parmigiano cream, truffle oil",
+    "modifier_groups": []
+  },
+  {
+    "id": 40,
+    "item": "Pappardelle Bolognese",
+    "aliases": ["bolognese", "meat sauce pappardelle", "pappardelle meat sauce", "ragu pappardelle", "bolognese pasta"],
+    "category": "Pasta",
+    "price": "24.00",
+    "description": "Three meat ragu",
+    "modifier_groups": []
+  },
+  {
+    "id": 41,
+    "item": "Penne Primavera",
+    "aliases": ["primavera pasta", "vegetable penne", "penne vegetables", "pasta primavera", "veggie penne"],
+    "category": "Pasta",
+    "price": "24.00",
+    "description": "Fresh vegetables, garlic & oil sauce",
+    "modifier_groups": []
+  },
+  {
+    "id": 42,
+    "item": "Penne Puttanesca",
+    "aliases": ["puttanesca", "penne olives capers", "Italian puttanesca", "anchovy pasta", "puttanesca pasta"],
+    "category": "Pasta",
+    "price": "24.00",
+    "description": "Fresh tomato, capers, kalamata olives, anchovy",
+    "modifier_groups": []
+  },
+  {
+    "id": 36,
+    "item": "Ravioli Sicilian Cassatelle",
+    "aliases": ["ravioli", "Sicilian ravioli", "ricotta ravioli", "giant ravioli", "cassatelle"],
+    "category": "Pasta",
+    "price": "28.00",
+    "description": "Giant ricotta ravioli (3), tomato basil sauce",
+    "modifier_groups": []
+  },
+  {
+    "id": 35,
+    "item": "Risotto Al Funghi e Tartufo",
+    "aliases": ["mushroom risotto", "truffle risotto", "funghi risotto", "wild mushroom risotto", "tartufo risotto"],
+    "category": "Pasta",
+    "price": "32.00",
+    "description": "Wild mushrooms, Parmigiano cream, truffle oil",
+    "modifier_groups": []
+  },
+  {
+    "id": 34,
+    "item": "Risotto All'aragosta",
+    "aliases": ["lobster risotto", "aragosta risotto", "risotto lobster", "risotto with lobster", "lobster and risotto"],
+    "category": "Pasta",
+    "price": "44.00",
+    "description": "6oz lobster tail, white wine butter.",
+    "modifier_groups": []
+  },
+  {
+    "id": 43,
+    "item": "Spaghetti Aglio e Olio",
+    "aliases": ["aglio e olio", "garlic oil spaghetti", "garlic pasta", "spaghetti garlic oil", "aglio olio"],
+    "category": "Pasta",
+    "price": "22.00",
+    "description": "22",
+    "modifier_groups": []
+  },
+  {
+    "id": 44,
+    "item": "Spaghetti Arrabbiata",
+    "aliases": ["arrabbiata spaghetti", "spicy tomato spaghetti", "spaghetti spicy tomato", "arrabiata pasta", "spicy spaghetti"],
+    "category": "Pasta",
+    "price": "22.00",
+    "description": "22",
+    "modifier_groups": []
+  },
+  {
+    "id": 21,
+    "item": "Beet Salad",
+    "aliases": ["beet arugula salad", "roasted beet salad", "beet goat cheese salad", "arugula beet salad", "beet and goat cheese"],
+    "category": "Salad",
+    "price": "16.00",
+    "description": "Arugula, greek yogurt, pecan-encrusted goat cheese.",
+    "modifier_groups": []
+  },
+  {
+    "id": 53,
+    "item": "Grilled Chicken & Feta",
+    "aliases": ["chicken feta salad", "grilled chicken salad", "feta salad", "chicken Mediterranean salad", "chicken and feta salad"],
+    "category": "Salad",
+    "price": "22.00",
+    "description": "Mixed greens, red & yellow bell peppers, kalamata olives, tomato, celery, onion, sicilian lemon dressing",
+    "modifier_groups": []
+  },
+  {
+    "id": 52,
+    "item": "Grilled Salmon Arugula",
+    "aliases": ["salmon salad", "grilled salmon salad", "salmon arugula", "arugula salmon salad", "salmon radicchio salad"],
+    "category": "Salad",
+    "price": "24.00",
+    "description": "Radicchio, tomato, sicilian lemon dressing",
+    "modifier_groups": []
+  },
+  {
+    "id": 54,
+    "item": "Side Caesar",
+    "aliases": ["Caesar salad", "Caesar", "side salad Caesar", "romaine Caesar", "Caesar side"],
+    "category": "Salad",
+    "price": "8.00",
+    "description": "Romaine lettuce, house croutons, shaved parmesan, Caesar dressing",
+    "modifier_groups": [
+      {
+        "name": "Upgrade for Side Salad",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 56,
+            "name": "Dinner Portion",
+            "price_delta": "6.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 55,
+    "item": "Side House salad",
+    "aliases": ["house salad", "garden salad", "side salad", "mixed greens salad", "green salad"],
+    "category": "Salad",
+    "price": "6.00",
+    "description": "Mixed greens, cucumber, tomato, onion, chickpeas, Sicilian lemon dressing",
+    "modifier_groups": [
+      {
+        "name": "Upgrade for Side Salad",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 56,
+            "name": "Dinner Portion",
+            "price_delta": "6.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "item": "Arrabbiata",
+    "aliases": ["chicken arrabbiata", "veal arrabbiata", "arrabbiata saute", "spicy arrabbiata", "arrabbiata peppers"],
+    "category": "Saute",
+    "price": "24.00",
+    "description": "Hot and sweet peppers, onion, and fresh tomato in a white wine butter sauce. With your choice of chicken or veal (3) pieces.",
+    "modifier_groups": [
+      {
+        "name": "Protein for Saute",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 17,
+            "name": "Chicken",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 18,
+            "name": "Veal",
+            "price_delta": "4.00"
+          }
+        ]
+      },
+      {
+        "name": "Pasta for Saute",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 6,
+            "name": "Fettuccine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 8,
+            "name": "Linguine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 9,
+            "name": "Angel Hair",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 10,
+            "name": "Spaghetti",
+            "price_delta": "6.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 32,
+    "item": "Limone",
+    "aliases": ["chicken limone", "lemon chicken", "veal limone", "limone saute", "lemon mushroom chicken"],
+    "category": "Saute",
+    "price": "24.00",
+    "description": "Wild mushrooms in a white wine lemon sauce. With your choice of chicken or veal (3) pieces.",
+    "modifier_groups": [
+      {
+        "name": "Protein for Saute",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 17,
+            "name": "Chicken",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 18,
+            "name": "Veal",
+            "price_delta": "4.00"
+          }
+        ]
+      },
+      {
+        "name": "Pasta for Saute",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 6,
+            "name": "Fettuccine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 8,
+            "name": "Linguine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 9,
+            "name": "Angel Hair",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 10,
+            "name": "Spaghetti",
+            "price_delta": "6.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "item": "Marsala",
+    "aliases": ["chicken marsala", "veal marsala", "marsala wine", "mushroom marsala", "marsala saute"],
+    "category": "Saute",
+    "price": "24.00",
+    "description": "Marsala wine sauce with sautéed mushrooms. With your choice of chicken or veal (3) pieces.",
+    "modifier_groups": [
+      {
+        "name": "Protein for Saute",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 17,
+            "name": "Chicken",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 18,
+            "name": "Veal",
+            "price_delta": "4.00"
+          }
+        ]
+      },
+      {
+        "name": "Pasta for Saute",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 6,
+            "name": "Fettuccine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 8,
+            "name": "Linguine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 9,
+            "name": "Angel Hair",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 10,
+            "name": "Spaghetti",
+            "price_delta": "6.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "item": "Milanese",
+    "aliases": ["chicken milanese", "veal milanese", "milanese saute", "breaded milanese", "arugula milanese"],
+    "category": "Saute",
+    "price": "24.00",
+    "description": "Breaded, pan-fried and served with an arugula salad. With your choice of chicken or veal (3) pieces.",
+    "modifier_groups": [
+      {
+        "name": "Protein for Saute",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 17,
+            "name": "Chicken",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 18,
+            "name": "Veal",
+            "price_delta": "4.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "item": "Parms",
+    "aliases": ["chicken parm", "veal parm", "eggplant parm", "chicken parmesan", "parmigiana"],
+    "category": "Saute",
+    "price": "24.00",
+    "description": "Your choice of protein between chicken, veal or eggplant. Breaded, fried, topped with tomato sauce and parm, served with a tomato basil spaghetti.",
+    "modifier_groups": [
+      {
+        "name": "Protein for Parm",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 27,
+            "name": "Chicken",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 28,
+            "name": "Veal",
+            "price_delta": "4.00"
+          },
+          {
+            "id": 29,
+            "name": "Egg Plant",
+            "price_delta": "0.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "item": "Saltimboca",
+    "aliases": ["saltimbocca", "chicken saltimboca", "veal saltimboca", "prosciutto chicken", "sage chicken"],
+    "category": "Saute",
+    "price": "24.00",
+    "description": "Prosciutto di Parma, sage, sauteed spinach in a white wine butter sauce. With your choice of chicken or veal (3) pieces.",
+    "modifier_groups": [
+      {
+        "name": "Protein for Saute",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 17,
+            "name": "Chicken",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 18,
+            "name": "Veal",
+            "price_delta": "4.00"
+          }
+        ]
+      },
+      {
+        "name": "Pasta for Saute",
+        "required": false,
+        "min_choices": 0,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 6,
+            "name": "Fettuccine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 8,
+            "name": "Linguine",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 9,
+            "name": "Angel Hair",
+            "price_delta": "6.00"
+          },
+          {
+            "id": 10,
+            "name": "Spaghetti",
+            "price_delta": "6.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "item": "Branzino",
+    "aliases": ["sea bass", "Mediterranean sea bass", "whole sea bass", "grilled branzino", "branzino fish"],
+    "category": "Seafood",
+    "price": "48.00",
+    "description": "Whole mediterranean sea bass, grilled and served with grilled mixed vegetables and salmoriglio sauce",
+    "modifier_groups": []
+  },
+  {
+    "id": 18,
+    "item": "Pescatore",
+    "aliases": ["seafood stew", "mixed seafood", "seafood pescatore", "seafood linguine", "Italian seafood"],
+    "category": "Seafood",
+    "price": "38.00",
+    "description": "Mixture of fresh seafood, white wine pomodoro sauce.",
+    "modifier_groups": [
+      {
+        "name": "Base for Pescatore",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 23,
+            "name": "Zuppa",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 24,
+            "name": "Linguine",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 25,
+            "name": "Risotto",
+            "price_delta": "0.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "item": "Scallops",
+    "aliases": ["pan seared scallops", "seared scallops", "scallop dish", "citrus scallops", "grilled scallops"],
+    "category": "Seafood",
+    "price": "42.00",
+    "description": "Pan-seared scallops topped with a citrus glaze served with grilled mixed vegetables",
+    "modifier_groups": []
+  },
+  {
+    "id": 17,
+    "item": "Scottish Salmon",
+    "aliases": ["salmon", "Scottish salmon fillet", "champagne salmon", "salmon fillet", "grilled salmon"],
+    "category": "Seafood",
+    "price": "36.00",
+    "description": "Zesty champagne cream sauce served with sautéed spinach.",
+    "modifier_groups": [
+      {
+        "name": "Temperature",
+        "required": true,
+        "min_choices": 1,
+        "max_choices": 1,
+        "options": [
+          {
+            "id": 12,
+            "name": "Well Done",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 13,
+            "name": "Medium Well",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 14,
+            "name": "Medium",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 15,
+            "name": "Medium Rare",
+            "price_delta": "0.00"
+          },
+          {
+            "id": 16,
+            "name": "Rare",
+            "price_delta": "0.00"
+          }
+        ]
+      }
+    ]
+  }
+]

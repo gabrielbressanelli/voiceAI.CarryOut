@@ -1,0 +1,294 @@
+MENU ITEM: Antipasto Italiano
+Category: Appetizer
+Price: $26.00
+Description: Charcuterie, cheeses, roasted peppers and caponata. Serves two.
+
+MENU ITEM: Calamari
+Category: Appetizer
+Price: $18.00
+Description: Tossed with capers and bell peppers. UPGRADE “Fritto Misto” (6) fried shrimp
+Options:
+  - Upgrade Calamari (optional): Fritto Mistto (+$10.00)
+
+MENU ITEM: Caprese
+Category: Appetizer
+Price: $18.00
+Description: Vine ripe tomato, fresh mozzarella, basil infused pesto.
+
+MENU ITEM: Crab Cakes
+Category: Appetizer
+Price: $22.00
+Description: Jumbo lump crab, panko crust, topped with an Italian cocktail sauce.
+
+MENU ITEM: Fried Burrata
+Category: Appetizer
+Price: $18.00
+Description: Breaded, fried, and served with tomato basil sauce.
+
+MENU ITEM: Grilled Shrimp
+Category: Appetizer
+Price: $20.00
+Description: Breaded, chargrilled, topped with a lemon cream sauce.
+
+MENU ITEM: Octopus Salad
+Category: Appetizer
+Price: $22.00
+Description: Onion, celery, kalamata olives, red & yellow bell peppers, Sicilian lemon marinade.
+
+MENU ITEM: Sausage & Peppers
+Category: Appetizer
+Price: $18.00
+Description: Pan fried hot and sweet peppers, potato and onions
+
+MENU ITEM: Tenderloin tips arrabbiata
+Category: Appetizer
+Price: $22.00
+Description: Fresh tomato and hot peppers served with crostini.
+
+MENU ITEM: Tuscan Artichoke
+Category: Appetizer
+Price: $18.00
+Description: Pan fried with a white wine, lemon, caper sauce.
+
+MENU ITEM: Zucchini one sixty
+Category: Appetizer
+Price: $16.00
+Description: Pan-fried, layered with fresh mozzarella, prosciutto, topped with tomato basil sauce.
+
+MENU ITEM: Cannoli
+Category: Dessert
+Price: $6.00
+Description: Daily fresh cannoli filled with whipped ricotta filling and chocolate chips.
+
+MENU ITEM: Panna Cotta
+Category: Dessert
+Price: $5.00
+Description: Sweetened cooked cream topped with a raspberry sauce. Served chilled.
+
+MENU ITEM: Tiramisu
+Category: Dessert
+Price: $8.00
+Description: Espresso soaked lady fingers layered with marscapone cheese, dusted with cocoa powder.
+
+MENU ITEM: Chargrilled Quail
+Category: Grill
+Price: $38.00
+Description: Served with arugula topped with a fresh Sicilian citrus drizzle and shaved parmigiano.
+
+MENU ITEM: Filet
+Category: Grill
+Price: $54.00
+Description: 8oz center cut, chargrilled, served with potato tortino and grilled vegetables.
+Options:
+  - Temperature (required): Well Done, Medium Well, Medium, Medium Rare, Rare
+
+MENU ITEM: Lamb Chops
+Category: Grill
+Price: $68.00
+Description: Hand-cut chops (4), chargrilled and topped with sicilian marinade, served with grilled mixed vegetables.
+Options:
+  - Temperature (required): Well Done, Medium Well, Medium, Medium Rare, Rare
+
+MENU ITEM: Sicilian Style
+Category: Grill
+Price: $24.00
+Description: Your choice of meat, breaded, chargrilled served with ammoglio and grilled vegetables.
+Options:
+  - Protein for Sicilian (required): Chicken, Veal (+$4.00), Steak (+$8.00)
+
+MENU ITEM: Build Your Own Pasta
+Category: Pasta
+Price: $16.00
+Description: Choose from any restaurant pasta and sauce to build your favorite dish!
+Options:
+  - Pasta for Build your Own (required): Spaghetti, Fettuccine, Angel Hair, Pappardelle (+$8.00), Linguine, Penne, Gnocchi, Ravioli, Risotto (+$6.00), Mezza Rigatoni
+  - Sauce (required): All'Aragosta (+$12.00), Al Funghi (+$8.00), Tomato Basil, Spicy Vodka (+$4.00), Palomino, Alfredo, Bolognese, Alle Vongole, Primavera, Puttanesca, Aglio e Olio, Arrabiata, Al Limoncello, Con Filetto (+$10.00), Butter and Cheese, Pesto
+  - Protein (optional): Chicken (+$6.00), Meatballs (+$8.00), Fresh Ricotta (+$4.00), Sausage (+$8.00), Shrimp (+$12.00), Beef Tips (+$10.00)
+
+MENU ITEM: Chef's Lasagna
+Category: Pasta
+Price: $26.00
+Description: Bechamel, Parmigiano, homemade meat sauce
+
+MENU ITEM: Fettuccine Al Limoncello
+Category: Pasta
+Price: $24.00
+Description: Parmigiano cream with a hint of lemon zest
+
+MENU ITEM: Fettuccine Con Filetto
+Category: Pasta
+Price: $34.00
+Description: Tenderloin tips and wild mushrooms in a white wine tomato sauce
+
+MENU ITEM: Gnocchi di Patate
+Category: Pasta
+Price: $26.00
+Description: House-made potato gnocchi with tomato basil, oregano, and diced mozzarella cheese
+
+MENU ITEM: Linguine All'Aragosta
+Category: Pasta
+Price: $40.00
+Description: 6oz lobster tail, fresh tomato sauce
+
+MENU ITEM: Linguine Alle Vongole
+Category: Pasta
+Price: $28.00
+Description: White win clam sauce
+
+MENU ITEM: Mezza Rigatoni Spicy Vodka
+Category: Pasta
+Price: $24.00
+Description: Tomato basil, cream, vodka, red pepper flakes
+Options:
+  - Protein (optional): Chicken (+$6.00), Meatballs (+$8.00), Fresh Ricotta (+$4.00), Sausage (+$8.00), Shrimp (+$12.00), Beef Tips (+$10.00)
+
+MENU ITEM: Mezza Rigatoni Tomato Basil
+Category: Pasta
+Price: $20.00
+Description: Slow cooked tomato and basil
+Options:
+  - Protein (optional): Chicken (+$6.00), Meatballs (+$8.00), Fresh Ricotta (+$4.00), Sausage (+$8.00), Shrimp (+$12.00), Beef Tips (+$10.00)
+
+MENU ITEM: Pappardelle Al Funghi
+Category: Pasta
+Price: $32.00
+Description: Wild mushrooms, Parmigiano cream, truffle oil
+
+MENU ITEM: Pappardelle Bolognese
+Category: Pasta
+Price: $24.00
+Description: Three meat ragu
+
+MENU ITEM: Penne Primavera
+Category: Pasta
+Price: $24.00
+Description: Fresh vegetables, garlic & oil sauce
+
+MENU ITEM: Penne Puttanesca
+Category: Pasta
+Price: $24.00
+Description: Fresh tomato, capers, kalamata olives, anchovy
+
+MENU ITEM: Ravioli Sicilian Cassatelle
+Category: Pasta
+Price: $28.00
+Description: Giant ricotta ravioli (3), tomato basil sauce
+
+MENU ITEM: Risotto Al Funghi e Tartufo
+Category: Pasta
+Price: $32.00
+Description: Wild mushrooms, Parmigiano cream, truffle oil
+
+MENU ITEM: Risotto All'aragosta
+Category: Pasta
+Price: $44.00
+Description: 6oz lobster tail, white wine butter.
+
+MENU ITEM: Spaghetti Aglio e Olio
+Category: Pasta
+Price: $22.00
+Description: 22
+
+MENU ITEM: Spaghetti Arrabbiata
+Category: Pasta
+Price: $22.00
+Description: 22
+
+MENU ITEM: Beet Salad
+Category: Salad
+Price: $16.00
+Description: Arugula, greek yogurt, pecan-encrusted goat cheese.
+
+MENU ITEM: Grilled Chicken & Feta
+Category: Salad
+Price: $22.00
+Description: Mixed greens, red & yellow bell peppers, kalamata olives, tomato, celery, onion, sicilian lemon dressing
+
+MENU ITEM: Grilled Salmon Arugula
+Category: Salad
+Price: $24.00
+Description: Radicchio, tomato, sicilian lemon dressing
+
+MENU ITEM: Side Caesar
+Category: Salad
+Price: $8.00
+Description: Romaine lettuce, house croutons, shaved parmesan, Caesar dressing
+Options:
+  - Upgrade for Side Salad (optional): Dinner Portion (+$6.00)
+
+MENU ITEM: Side House salad
+Category: Salad
+Price: $6.00
+Description: Mixed greens, cucumber, tomato, onion, chickpeas, Sicilian lemon dressing
+Options:
+  - Upgrade for Side Salad (optional): Dinner Portion (+$6.00)
+
+MENU ITEM: Arrabbiata
+Category: Saute
+Price: $24.00
+Description: Hot and sweet peppers, onion, and fresh tomato in a white wine butter sauce. With your choice of chicken or veal (3) pieces.
+Options:
+  - Protein for Saute (required): Chicken, Veal (+$4.00)
+  - Pasta for Saute (optional): Fettuccine (+$6.00), Linguine (+$6.00), Angel Hair (+$6.00), Spaghetti (+$6.00)
+
+MENU ITEM: Limone
+Category: Saute
+Price: $24.00
+Description: Wild mushrooms in a white wine lemon sauce. With your choice of chicken or veal (3) pieces.
+Options:
+  - Protein for Saute (required): Chicken, Veal (+$4.00)
+  - Pasta for Saute (optional): Fettuccine (+$6.00), Linguine (+$6.00), Angel Hair (+$6.00), Spaghetti (+$6.00)
+
+MENU ITEM: Marsala
+Category: Saute
+Price: $24.00
+Description: Marsala wine sauce with sautéed mushrooms. With your choice of chicken or veal (3) pieces.
+Options:
+  - Protein for Saute (required): Chicken, Veal (+$4.00)
+  - Pasta for Saute (optional): Fettuccine (+$6.00), Linguine (+$6.00), Angel Hair (+$6.00), Spaghetti (+$6.00)
+
+MENU ITEM: Milanese
+Category: Saute
+Price: $24.00
+Description: Breaded, pan-fried and served with an arugula salad. With your choice of chicken or veal (3) pieces.
+Options:
+  - Protein for Saute (required): Chicken, Veal (+$4.00)
+
+MENU ITEM: Parms
+Category: Saute
+Price: $24.00
+Description: Your choice of protein between chicken, veal or eggplant. Breaded, fried, topped with tomato sauce and parm, served with a tomato basil spaghetti.
+Options:
+  - Protein for Parm (required): Chicken, Veal (+$4.00), Egg Plant
+
+MENU ITEM: Saltimboca
+Category: Saute
+Price: $24.00
+Description: Prosciutto di Parma, sage, sauteed spinach in a white wine butter sauce. With your choice of chicken or veal (3) pieces.
+Options:
+  - Protein for Saute (required): Chicken, Veal (+$4.00)
+  - Pasta for Saute (optional): Fettuccine (+$6.00), Linguine (+$6.00), Angel Hair (+$6.00), Spaghetti (+$6.00)
+
+MENU ITEM: Branzino
+Category: Seafood
+Price: $48.00
+Description: Whole mediterranean sea bass, grilled and served with grilled mixed vegetables and salmoriglio sauce
+
+MENU ITEM: Pescatore
+Category: Seafood
+Price: $38.00
+Description: Mixture of fresh seafood, white wine pomodoro sauce.
+Options:
+  - Base for Pescatore (required): Zuppa, Linguine, Risotto
+
+MENU ITEM: Scallops
+Category: Seafood
+Price: $42.00
+Description: Pan-seared scallops topped with a citrus glaze served with grilled mixed vegetables
+
+MENU ITEM: Scottish Salmon
+Category: Seafood
+Price: $36.00
+Description: Zesty champagne cream sauce served with sautéed spinach.
+Options:
+  - Temperature (required): Well Done, Medium Well, Medium, Medium Rare, Rare

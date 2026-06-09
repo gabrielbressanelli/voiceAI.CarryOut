@@ -1,8 +1,12 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .models import Menu, MenuModifierGroup, ModifierOption, ModifierGroup
 from cart.cart import Cart
 from django.contrib import messages
+from django.conf import settings
+import json
+import os
 
 
 
@@ -77,3 +81,28 @@ def menu_modifiers(request, menu_id):
     return JsonResponse(payload, safe=False)
 
 
+def _check_bearer_token(request):
+    auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+    try:
+        scheme, token = auth_header.split()
+    except ValueError:
+        return False
+    return scheme == "Bearer" and token == settings.VOICE_ORDER_API_TOKEN
+
+
+@csrf_exempt
+def menu_knowledge_base(request):
+    if not _check_bearer_token(request):
+        return JsonResponse({"message": "Unauthorized"}, status=401)
+
+    if request.method != "GET":
+        return JsonResponse({"error": "GET required"}, status=405)
+
+    kb_path = os.path.join(settings.BASE_DIR, "menu_kb.json")
+    try:
+        with open(kb_path, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return JsonResponse({"error": "Knowledge base file not found"}, status=500)
+
+    return JsonResponse(data, safe=False)
