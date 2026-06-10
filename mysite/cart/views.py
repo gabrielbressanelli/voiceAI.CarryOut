@@ -14,6 +14,7 @@ import base64
 import binascii
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -226,6 +227,37 @@ def _check_bearer_token(request):
     return scheme == "Bearer" and token == settings.VOICE_ORDER_API_TOKEN
 
 
+def _load_menu_kb():
+    kb_path = os.path.join(settings.BASE_DIR, "menu_kb.json")
+    with open(kb_path, "r") as f:
+        return json.load(f)
+
+
+def _resolve_menu_by_name(name, menu_kb):
+    name_norm = (name or "").strip().lower()
+    if not name_norm:
+        return None
+
+    menu = Menu.objects.filter(item__iexact=name_norm).first()
+    if menu:
+        return menu
+
+    for entry in menu_kb:
+        candidates = [entry.get("item", "")] + entry.get("aliases", [])
+        if any(c.strip().lower() == name_norm for c in candidates):
+            return Menu.objects.filter(id=entry["id"]).first()
+
+    return None
+
+
+def _resolve_modifier_option(menu, value):
+    return ModifierOption.objects.filter(
+        group__menumodifiergroup__menu=menu,
+        name__iexact=(value or "").strip(),
+        active=True,
+    ).first()
+
+
 @csrf_exempt
 def cart_import_link(request):
     if not _check_bearer_token(request):
@@ -235,13 +267,45 @@ def cart_import_link(request):
         return JsonResponse({"error": "POST required"}, status=405)
 
     try:
-        order_cart = json.loads(request.body)
+        payload = json.loads(request.body)
+        items = payload.get("items", [])
     except ValueError:
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
 
-    encoded = base64.urlsafe_b64encode(json.dumps(order_cart).encode("utf-8")).decode("utf-8")
+    menu_kb = _load_menu_kb()
+    resolved_items = []
+    warnings = []
+
+    for entry in items:
+        name = entry.get("item", "")
+        menu = _resolve_menu_by_name(name, menu_kb)
+        if not menu:
+            warnings.append(f"Unknown item: {name!r}")
+            continue
+
+        modifiers = []
+        for mod_value in entry.get("modifiers") or []:
+            option = _resolve_modifier_option(menu, mod_value)
+            if option:
+                modifiers.append({"name": option.group.name, "value": option.name})
+            else:
+                warnings.append(f"Unknown modifier {mod_value!r} for item {menu.item!r}")
+
+        resolved_items.append({
+            "id": menu.id,
+            "quantity": entry.get("quantity", 1),
+            "modifiers": modifiers,
+        })
+
+    encoded = base64.urlsafe_b64encode(
+        json.dumps({"items": resolved_items}).encode("utf-8")
+    ).decode("utf-8")
     url = request.build_absolute_uri(reverse("cart:cart_import")) + f"?data={encoded}"
-    return JsonResponse({"url": url})
+
+    response = {"url": url}
+    if warnings:
+        response["warnings"] = warnings
+    return JsonResponse(response)
 
 
 def cart_count(request):
