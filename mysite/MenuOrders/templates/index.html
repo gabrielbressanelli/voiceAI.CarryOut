@@ -521,6 +521,19 @@
         // INITIAL POPULATE
         document.addEventListener('DOMContentLoaded', () => {
             refreshCartSummary();
+
+            // Auto-open cart offcanvas after a cart import (?cart_open=1)
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('cart_open') === '1') {
+                const offcanvasEl = document.getElementById('offcanvasRight');
+                if (offcanvasEl) {
+                    bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
+                }
+                params.delete('cart_open');
+                const newQuery = params.toString();
+                const newUrl = window.location.pathname + (newQuery ? `?${newQuery}` : '');
+                window.history.replaceState({}, '', newUrl);
+            }
         });
       
         function setCartQty(qty) {

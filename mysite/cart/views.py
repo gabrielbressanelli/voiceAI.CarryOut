@@ -1,12 +1,21 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .cart import Cart
-from MenuOrders.models import Menu
+from MenuOrders.models import Menu, ModifierOption
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
-from django.contrib import messages 
+from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 from django.utils import timezone
+from django.conf import settings
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+import base64
+import binascii
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Import hours rules to check if store is open
 from restaurant.services.hours import is_open_at, next_open_datetime, get_hours_for_date, local_now
@@ -164,6 +173,77 @@ def _render_cart_partial(request, cart: Cart) -> str:
             request=request
         )
     
+def import_cart(request):
+    raw_data = request.GET.get("data", "")
+    try:
+        decoded = base64.urlsafe_b64decode(raw_data.encode("utf-8")).decode("utf-8")
+        payload = json.loads(decoded)
+        items = payload.get("items", [])
+    except (binascii.Error, ValueError, UnicodeDecodeError):
+        items = []
+
+    cart = Cart(request)
+    cart.clear()
+
+    for item in items:
+        try:
+            menu = Menu.objects.get(id=item.get("id"))
+        except (Menu.DoesNotExist, TypeError, ValueError):
+            logger.warning("import_cart: skipping unknown menu id %r", item.get("id"))
+            continue
+
+        selected_ids = []
+        for mod in item.get("modifiers", []):
+            option = ModifierOption.objects.filter(
+                group__menumodifiergroup__menu=menu,
+                group__name__iexact=mod.get("name", ""),
+                name__iexact=mod.get("value", ""),
+                active=True,
+            ).first()
+            if option:
+                selected_ids.append(option.id)
+            else:
+                logger.warning(
+                    "import_cart: skipping unmatched modifier %r=%r for menu id %s",
+                    mod.get("name"), mod.get("value"), menu.id,
+                )
+
+        try:
+            cart.add(menu, item.get("quantity", 1), selected_option_ids=selected_ids)
+        except ValueError as e:
+            logger.warning("import_cart: skipping menu id %s: %s", menu.id, e)
+            continue
+
+    return redirect(f"{reverse('index')}?cart_open=1")
+
+
+def _check_bearer_token(request):
+    auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+    try:
+        scheme, token = auth_header.split()
+    except ValueError:
+        return False
+    return scheme == "Bearer" and token == settings.VOICE_ORDER_API_TOKEN
+
+
+@csrf_exempt
+def cart_import_link(request):
+    if not _check_bearer_token(request):
+        return JsonResponse({"message": "Unauthorized"}, status=401)
+
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    try:
+        order_cart = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    encoded = base64.urlsafe_b64encode(json.dumps(order_cart).encode("utf-8")).decode("utf-8")
+    url = request.build_absolute_uri(reverse("cart:cart_import")) + f"?data={encoded}"
+    return JsonResponse({"url": url})
+
+
 def cart_count(request):
     cart = Cart(request)
     return JsonResponse({"cart_qty": len(cart)}, headers={"Cache-control":"no-store"})
