@@ -23,6 +23,7 @@ urlpatterns = [
     path("", include("MenuOrders.urls")),
     path("admin/", admin.site.urls),
     path('cart/',   include ("cart.urls")),
-    path('payment/', include ("payment.urls")), 
+    path('payment/', include ("payment.urls")),
+    path('api/agent/', include("agent_orders.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

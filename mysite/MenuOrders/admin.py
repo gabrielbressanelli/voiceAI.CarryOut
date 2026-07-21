@@ -1,7 +1,17 @@
 from django.contrib import admin
-from .models import Menu, Cart, ModifierGroup, ModifierOption, MenuModifierGroup
+from .models import Menu, Cart, ModifierGroup, ModifierOption, MenuModifierGroup, MenuAlias
 
-admin.site.register(Menu)
+
+class MenuAliasInline(admin.TabularInline):
+    model = MenuAlias
+    extra = 1
+
+
+class MenuAdmin(admin.ModelAdmin):
+    inlines = [MenuAliasInline]
+
+
+admin.site.register(Menu, MenuAdmin)
 admin.site.register(Cart)
 admin.site.register(ModifierGroup)
 admin.site.register(ModifierOption)

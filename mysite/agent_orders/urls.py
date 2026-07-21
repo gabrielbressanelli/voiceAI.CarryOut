@@ -1,0 +1,13 @@
+from django.urls import path
+
+from . import views
+
+app_name = "agent_orders"
+
+urlpatterns = [
+    path("menu/search", views.menu_search, name="menu_search"),
+    path("menu/items/<int:item_id>/", views.menu_item_detail, name="menu_item_detail"),
+    path("cart/items", views.cart_items_create, name="cart_items_create"),
+    path("cart/items/<str:line_id>", views.cart_item_detail, name="cart_item_detail"),
+    path("cart/<str:session_id>", views.cart_detail, name="cart_detail"),
+]

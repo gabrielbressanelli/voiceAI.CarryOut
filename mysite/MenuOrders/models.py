@@ -23,7 +23,19 @@ class Menu(models.Model):
 
     def __str__(self):
         return self.item
-    
+
+
+class MenuAlias(models.Model):
+    """Alternate names/misspellings a caller might use for a menu item, used by the voice-agent search."""
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name="aliases")
+    alias = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ("menu", "alias")
+
+    def __str__(self):
+        return f"{self.alias} -> {self.menu}"
+
 class ModifierGroup(models.Model):
     '''
     Groups like: 'temperature', 'add-on', 'protein', 'sauce'.

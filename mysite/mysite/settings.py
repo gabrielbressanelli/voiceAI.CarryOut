@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'payment',
     'restaurant',
     'cart',
+    'agent_orders',
     'whitenoise.runserver_nostatic',
     'paypal.standard.ipn',
     'storages',

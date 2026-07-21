@@ -1,4 +1,5 @@
-from MenuOrders.models import Menu, MenuModifierGroup, ModifierOption
+from MenuOrders.models import Menu
+from MenuOrders.pricing import validate_and_price
 from decimal import Decimal
 
 CART_SESSION_KEY = 'cart'
@@ -39,40 +40,7 @@ class Cart():
         self._save()
 
     def _validate_and_price(self, menu:Menu, selected_ids: list[int]) -> tuple[Decimal, list[dict]]:
-        mmgs = menu.modifier_group.select_related("group").all().order_by("sort_order")
-        selected = ModifierOption.objects.filter(id__in=selected_ids, group__in=[m.group for m in mmgs], active=True).select_related("group")
-
-        # per group validation
-        by_group: dict[int, list[ModifierOption]] = {}
-        for opt in selected:
-            by_group.setdefault(opt.group_id, []).append(opt)
-        
-        for m in mmgs:
-            req = m.effective_required()
-            mn = m.effective_min()
-            mx = m.effective_max()
-            chosen = by_group.get(m.group_id, [])
-            if req and len(chosen) == 0:
-                raise ValueError(f"Missing required selection: {m.group.name}")
-            if mn and len(chosen) < mn:
-                raise ValueError(f"Select at least {mn} option(s) for {m.group.name}")
-            if mx and len(chosen) > mx:
-                raise ValueError(f'Select at most {mx} option(s) for {m.group.name}')
-            
-        # compute price 
-        base = menu.price
-        addons = sum((opt.price_delta for opt in selected), start=Decimal("0.00"))
-        unit = (base + addons).quantize(Decimal("0.01"))
-        
-        #Snapshot options (names + deltas) so Stripe printer do not need DB
-        options_snapshot = [{
-            "id": opt.id,
-            "name": opt.name,
-            "group": opt.group.name,
-            "price_delta": str(opt.price_delta)
-        } for opt in selected]
-
-        return unit, options_snapshot
+        return validate_and_price(menu, selected_ids)
 
 
 
