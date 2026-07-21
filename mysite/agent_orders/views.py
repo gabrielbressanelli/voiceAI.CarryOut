@@ -104,19 +104,12 @@ def _parse_line_id(line_id: str):
     return int(raw)
 
 
-@require_GET
-def menu_search(request):
-    if not _check_bearer_token(request):
-        return JsonResponse({"message": "Unauthorized"}, status=401)
-
-    query = request.GET.get("q", "")
-    result = search_menu(query)
-
+def _search_result_payload(query, result):
     if result["match_status"] == "matched":
-        return JsonResponse({
+        return {
             "match_status": "matched",
             "item": _build_item_payload(result["item"]),
-        })
+        }
 
     if result["match_status"] == "ambiguous":
         matches = [
@@ -124,14 +117,36 @@ def menu_search(request):
             for menu, score in result["candidates"]
         ]
         names = " or ".join(m["name"] for m in matches[:2])
-        return JsonResponse({
+        return {
             "match_status": "ambiguous",
             "query": query,
             "matches": matches,
             "clarification_question": f"Did you mean the {names}?",
-        })
+        }
 
-    return JsonResponse({"match_status": "no_match", "query": query})
+    return {"match_status": "no_match", "query": query}
+
+
+@require_GET
+def menu_search(request):
+    if not _check_bearer_token(request):
+        return JsonResponse({"message": "Unauthorized"}, status=401)
+
+    raw_query = request.GET.get("q", "")
+    phrases = [p.strip() for p in raw_query.split(",") if p.strip()]
+
+    # Single item: unchanged response shape, so existing callers aren't affected.
+    if len(phrases) <= 1:
+        query = phrases[0] if phrases else raw_query
+        return JsonResponse(_search_result_payload(query, search_menu(query)))
+
+    # Multiple comma-separated items ("marsala, lamb chops, filet"): resolve each
+    # independently and return them as a list, tagged with the phrase it came from.
+    results = [
+        {"query": phrase, **_search_result_payload(phrase, search_menu(phrase))}
+        for phrase in phrases
+    ]
+    return JsonResponse({"query": raw_query, "results": results})
 
 
 @require_GET
