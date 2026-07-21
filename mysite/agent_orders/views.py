@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from MenuOrders.models import Menu
 from MenuOrders.pricing import validate_and_price
 
-from .matching import search_menu
+from .matching import search_menu, search_menu_by_category
 from .models import AgentCallCart, AgentCallCartItem
 
 STALE_CART_MAX_AGE = timedelta(hours=4)
@@ -68,6 +68,7 @@ def _build_item_payload(menu: Menu):
         "name": menu.item,
         "category": menu.get_food_type_display(),
         "base_price": str(menu.price),
+        "description": menu.description,
         "aliases": [a.alias for a in menu.aliases.all()],
         "required_modifiers": required_modifiers,
         "optional_modifiers": optional_modifiers,
@@ -144,6 +145,29 @@ def menu_item_detail(request, item_id):
         return JsonResponse({"error": "Menu item not found"}, status=404)
 
     return JsonResponse({"item": _build_item_payload(menu)})
+
+
+@require_GET
+def menu_categories(request):
+    if not _check_bearer_token(request):
+        return JsonResponse({"message": "Unauthorized"}, status=401)
+
+    query = request.GET.get("q", "")
+    items = search_menu_by_category(query)
+
+    return JsonResponse({
+        "query": query,
+        "items": [
+            {
+                "id": menu.id,
+                "name": menu.item,
+                "category": menu.get_food_type_display(),
+                "base_price": str(menu.price),
+                "description": menu.description,
+            }
+            for menu in items
+        ],
+    })
 
 
 @csrf_exempt

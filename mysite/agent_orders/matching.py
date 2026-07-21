@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rapidfuzz import fuzz, process
 
 from MenuOrders.models import Menu, MenuAlias
@@ -9,6 +10,94 @@ AMBIGUOUS_BAND = 12
 NO_MATCH_BELOW = 60
 
 MAX_AMBIGUOUS_RESULTS = 4
+
+CATEGORY_TOKEN_SCORE_MIN = 80
+
+# food_type value -> its display name, used to fuzzy-match a spoken category word
+# back to one of the 8 fixed categories.
+CATEGORY_DISPLAY_TO_VALUE = {label: value for value, label in Menu.FOOD_TYPE_CHOICES}
+
+# Plurals/typos/colloquialisms that plain fuzzy-matching against the 8 display names
+# won't reliably catch on its own (either the edit distance is borderline - "desert" vs
+# "Dessert" - or the word shares no characters with the category name at all - "drinks"
+# vs "Beverage"). Deliberately does NOT include "steak" under grill: the grill category
+# also has quail and lamb chops, so "steak" isn't a clean synonym for the whole category.
+CATEGORY_SYNONYMS = {
+    "appetizer": ["appetizer", "appetizers", "app", "apps", "starter", "starters"],
+    "salad": ["salad", "salads", "greens"],
+    "pasta": ["pasta", "pastas", "noodles", "noodle"],
+    "saute": ["saute", "sautes", "sauteed", "sauté", "sautéed"],
+    "grill": ["grill", "grilled"],
+    "seafood": ["seafood", "seafoods"],
+    "dessert": ["dessert", "desserts", "desert", "deserts", "sweet", "sweets"],
+    "beverage": ["beverage", "beverages", "drink", "drinks", "soda"],
+}
+
+# Cross-category keyword groups: proteins/ingredients that show up in descriptions
+# but not necessarily under a matching food_type (e.g. clam/lobster pasta dishes are
+# food_type='pasta', not 'seafood' - their description just names the protein).
+CATEGORY_KEYWORDS = {
+    "seafood": [
+        "seafood", "lobster", "aragosta", "clam", "clams", "vongole", "shrimp",
+        "gamberi", "scallop", "scallops", "salmon", "crab", "calamari", "squid",
+        "mussel", "mussels", "fish", "branzino", "shellfish",
+    ],
+}
+
+
+def _keyword_ids(keywords):
+    q = Q()
+    for kw in keywords:
+        q |= Q(item__icontains=kw) | Q(description__icontains=kw)
+    return set(Menu.objects.filter(q).values_list("id", flat=True))
+
+
+def _ids_for_token(token: str) -> set[int]:
+    """All menu ids relevant to a single query word, via explicit category match
+    and/or cross-category keyword expansion."""
+    ids: set[int] = set()
+
+    matched_food_type = None
+    for food_type, synonyms in CATEGORY_SYNONYMS.items():
+        if token in synonyms:
+            matched_food_type = food_type
+            break
+
+    if not matched_food_type:
+        best = process.extractOne(token, list(CATEGORY_DISPLAY_TO_VALUE.keys()), scorer=fuzz.WRatio)
+        if best and best[1] >= CATEGORY_TOKEN_SCORE_MIN:
+            matched_food_type = CATEGORY_DISPLAY_TO_VALUE[best[0]]
+
+    if matched_food_type:
+        ids |= set(Menu.objects.filter(food_type=matched_food_type).values_list("id", flat=True))
+
+    for group_name, keywords in CATEGORY_KEYWORDS.items():
+        if token == group_name or token in keywords or fuzz.ratio(token, group_name) >= 85:
+            ids |= _keyword_ids(keywords)
+
+    return ids
+
+
+def search_menu_by_category(query: str):
+    """Category/keyword browse - e.g. "pasta", "desert", "seafood pasta".
+
+    Each word in the query resolves independently to a set of relevant menu ids
+    (its own category match unioned with any keyword-group hits), and multi-word
+    queries intersect those per-word sets - so "seafood pasta" narrows down to
+    pasta dishes that are actually seafood (clam/lobster pasta), rather than
+    returning every pasta item plus every seafood item.
+    """
+    tokens = [t for t in (query or "").lower().split() if t]
+    token_sets = [s for s in (_ids_for_token(t) for t in tokens) if s]
+
+    if not token_sets:
+        return Menu.objects.none()
+
+    result_ids = token_sets[0]
+    for s in token_sets[1:]:
+        result_ids &= s
+
+    return Menu.objects.filter(id__in=result_ids).order_by("food_type", "item")
 
 
 def _candidates():
