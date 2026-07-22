@@ -104,11 +104,42 @@ def _parse_line_id(line_id: str):
     return int(raw)
 
 
+def _build_your_own_note(preselected):
+    parts = []
+    for p in preselected:
+        group_name = p["group_name"].lower()
+        if "pasta" in group_name:
+            parts.append(f"{p['option_name']} pasta")
+        elif "sauce" in group_name:
+            parts.append(f"{p['option_name']} sauce")
+        else:
+            parts.append(p["option_name"])
+    return (
+        "This isn't a fixed menu item here - it's our Build Your Own Pasta with "
+        + " and ".join(parts) + "."
+    )
+
+
 def _search_result_payload(query, result):
     if result["match_status"] == "matched":
+        item_payload = _build_item_payload(result["item"])
+
+        if result.get("resolution") == "build_your_own":
+            resolved_ids = result["resolved_group_ids"]
+            item_payload["required_modifiers"] = [
+                g for g in item_payload["required_modifiers"] if g["id"] not in resolved_ids
+            ]
+            return {
+                "match_status": "matched",
+                "resolution": "build_your_own",
+                "note": _build_your_own_note(result["preselected"]),
+                "item": item_payload,
+                "preselected_modifiers": result["preselected"],
+            }
+
         return {
             "match_status": "matched",
-            "item": _build_item_payload(result["item"]),
+            "item": item_payload,
         }
 
     if result["match_status"] == "ambiguous":

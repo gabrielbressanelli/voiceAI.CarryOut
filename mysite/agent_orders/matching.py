@@ -111,6 +111,88 @@ def _candidates():
     return pairs
 
 
+# "Build Your Own Pasta" is the one item on the menu that's actually a base item plus
+# required combinatorial modifiers (10 pasta shapes x 15 sauces = 150 combos). A phrase
+# like "fettuccine alfredo" or "spaghetti bolognese" names a *combination*, not anything
+# that exists as a Menu row or alias - so plain name/alias fuzzy matching either can't
+# find it (no_match) or worse, gets fooled into a wrong standalone dish because the
+# sauce word happens to collide with an unrelated item's alias (e.g. "bolognese" matches
+# Pappardelle Bolognese even when the caller said "spaghetti"). An explicit pasta-shape
+# word is a much stronger, more precise signal than a fuzzy alias score, so it's checked
+# first and - when present - always wins, bypassing the standard search entirely.
+BUILD_YOUR_OWN_PASTA_NAME = "Build Your Own Pasta"
+
+
+def _build_your_own_pasta_menu():
+    return Menu.objects.filter(item__iexact=BUILD_YOUR_OWN_PASTA_NAME).first()
+
+
+def _find_option_in_query(query_lower: str, options):
+    """Find the one option (if any) the query is referring to. Options can be
+    multi-word ("Al Funghi", "Butter and Cheese"), so substring containment is
+    checked first; a fuzzy fallback only catches single-word typos."""
+    options = list(options)
+    for opt in options:
+        if opt.name.lower() in query_lower:
+            return opt
+
+    tokens = query_lower.split()
+    best_opt, best_score = None, 0
+    for opt in options:
+        for token in tokens:
+            score = fuzz.ratio(token, opt.name.lower())
+            if score > best_score:
+                best_score, best_opt = score, opt
+    return best_opt if best_score >= 85 else None
+
+
+def resolve_build_your_own(query: str):
+    """If the query names an explicit pasta shape, resolve straight to Build Your
+    Own Pasta with whatever shape/sauce/protein it stated pre-filled. Returns None
+    if there's no Build Your Own item, or no shape word was said at all (in which
+    case the standard search should run instead)."""
+    menu = _build_your_own_pasta_menu()
+    if not menu:
+        return None
+
+    mmgs = list(
+        menu.modifier_group.select_related("group").prefetch_related("group__options")
+    )
+    shape_group = next((m for m in mmgs if "pasta" in m.group.name.lower()), None)
+    sauce_group = next((m for m in mmgs if "sauce" in m.group.name.lower()), None)
+    protein_group = next((m for m in mmgs if "protein" in m.group.name.lower()), None)
+    if not shape_group:
+        return None
+
+    query_lower = query.lower()
+    shape_opt = _find_option_in_query(query_lower, shape_group.group.options.filter(active=True))
+    if not shape_opt:
+        return None
+
+    preselected = []
+    resolved_group_ids = set()
+    for mmg in (shape_group, sauce_group, protein_group):
+        if not mmg:
+            continue
+        opt = shape_opt if mmg is shape_group else _find_option_in_query(
+            query_lower, mmg.group.options.filter(active=True)
+        )
+        if opt:
+            preselected.append({
+                "group_id": mmg.group.id,
+                "group_name": mmg.group.name,
+                "option_id": opt.id,
+                "option_name": opt.name,
+            })
+            resolved_group_ids.add(mmg.group.id)
+
+    return {
+        "menu": menu,
+        "preselected": preselected,
+        "resolved_group_ids": resolved_group_ids,
+    }
+
+
 def search_menu(query: str):
     """Search live against the DB (Menu name + MenuAlias) with fuzzy matching.
 
@@ -124,8 +206,10 @@ def search_menu(query: str):
         return {"match_status": "no_match"}
 
     # An exact (case-insensitive) hit on an item's own name or one of its aliases is
-    # decisive on its own - it shouldn't get diluted into "ambiguous" just because some
-    # unrelated item's alias happens to contain the same words as a substring.
+    # the strongest signal there is - stronger even than the Build Your Own composite
+    # check below. Without checking this first, a real standalone dish whose own name
+    # happens to contain a pasta-shape word ("Linguine Alle Vongole") would get wrongly
+    # rerouted into a build-your-own combo instead of being recognized verbatim.
     exact_ids = set(Menu.objects.filter(item__iexact=query).values_list("id", flat=True))
     exact_ids |= set(
         MenuAlias.objects.filter(alias__iexact=query).values_list("menu_id", flat=True)
@@ -133,6 +217,16 @@ def search_menu(query: str):
     if len(exact_ids) == 1:
         menu = Menu.objects.get(id=next(iter(exact_ids)))
         return {"match_status": "matched", "item": menu, "score": 100.0}
+
+    byo = resolve_build_your_own(query)
+    if byo:
+        return {
+            "match_status": "matched",
+            "resolution": "build_your_own",
+            "item": byo["menu"],
+            "preselected": byo["preselected"],
+            "resolved_group_ids": byo["resolved_group_ids"],
+        }
 
     pairs = _candidates()
     if not pairs:
