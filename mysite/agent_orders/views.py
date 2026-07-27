@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from decimal import ROUND_HALF_UP
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -12,6 +13,7 @@ from MenuOrders.pricing import validate_and_price
 
 from .matching import search_menu, search_menu_by_category
 from .models import AgentCallCart, AgentCallCartItem
+from .order_summary import compute_total_from_summary
 
 STALE_CART_MAX_AGE = timedelta(hours=4)
 
@@ -335,3 +337,20 @@ def cart_detail(request, session_id):
         return JsonResponse({"session_id": session_id, "items": [], "cart": {"subtotal": "0.00"}})
 
     return JsonResponse(_cart_payload(cart))
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def order_summary_total(request):
+    if not _check_bearer_token(request):
+        return JsonResponse({"message": "Unauthorized"}, status=401)
+
+    try:
+        payload = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    total, warnings = compute_total_from_summary(payload.get("order_summary", ""))
+    whole_dollars = int(total.to_integral_value(rounding=ROUND_HALF_UP))
+
+    return JsonResponse({"total_price": whole_dollars, "warnings": warnings})

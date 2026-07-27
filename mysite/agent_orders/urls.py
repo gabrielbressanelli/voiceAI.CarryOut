@@ -11,4 +11,5 @@ urlpatterns = [
     path("cart/items", views.cart_items_create, name="cart_items_create"),
     path("cart/items/<str:line_id>", views.cart_item_detail, name="cart_item_detail"),
     path("cart/<str:session_id>", views.cart_detail, name="cart_detail"),
+    path("order-summary/total", views.order_summary_total, name="order_summary_total"),
 ]
