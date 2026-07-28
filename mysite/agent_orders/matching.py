@@ -42,6 +42,12 @@ CATEGORY_KEYWORDS = {
         "gamberi", "scallop", "scallops", "salmon", "crab", "calamari", "squid",
         "mussel", "mussels", "fish", "branzino", "shellfish",
     ],
+    # "grilled" is a prep-method word, not a promise the dish lives in the 'grill'
+    # food_type - "Grilled Shrimp" is an Appetizer, "Grilled Salmon Arugula" is a
+    # Salad, "Branzino" (Seafood) is grilled as its actual main preparation. Without
+    # this, "grilled shrimp" resolved to empty: "grilled" only matched the 4-item
+    # grill category (via CATEGORY_SYNONYMS), none of which are seafood.
+    "grill": ["grill", "grilled", "chargrilled", "char-grilled"],
 }
 
 
@@ -193,6 +199,18 @@ def resolve_build_your_own(query: str):
     }
 
 
+def _standalone_dishes_for_shape(shape_name: str):
+    """Real standalone dishes named after a pasta shape (every one on this menu
+    starts its own name with its shape, e.g. "Spaghetti Arrabbiata"). Used when a
+    caller names only a shape with no sauce - the standalone dishes are genuine,
+    named menu items and should be offered before defaulting to Build Your Own."""
+    return list(
+        Menu.objects.filter(food_type="pasta", item__istartswith=shape_name)
+        .exclude(item__iexact=BUILD_YOUR_OWN_PASTA_NAME)
+        .order_by("item")
+    )
+
+
 def search_menu(query: str):
     """Search live against the DB (Menu name + MenuAlias) with fuzzy matching.
 
@@ -220,6 +238,22 @@ def search_menu(query: str):
 
     byo = resolve_build_your_own(query)
     if byo:
+        sauce_specified = any("sauce" in p["group_name"].lower() for p in byo["preselected"])
+        if not sauce_specified:
+            shape_name = next(
+                p["option_name"] for p in byo["preselected"] if "pasta" in p["group_name"].lower()
+            )
+            standalone = _standalone_dishes_for_shape(shape_name)
+            if standalone:
+                # A shape with no sauce is genuinely ambiguous between the real,
+                # named dishes of that shape and a fully custom combo - offer the
+                # standalone dishes first, Build Your Own last as the fallback.
+                candidates = [(m, 100.0) for m in standalone] + [(byo["menu"], 100.0)]
+                return {
+                    "match_status": "ambiguous",
+                    "candidates": candidates,
+                    "build_your_own_fallback": True,
+                }
         return {
             "match_status": "matched",
             "resolution": "build_your_own",

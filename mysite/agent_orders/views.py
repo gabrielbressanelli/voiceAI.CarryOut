@@ -149,12 +149,22 @@ def _search_result_payload(query, result):
             {"item_id": menu.id, "name": menu.item, "confidence": round(score / 100, 2)}
             for menu, score in result["candidates"]
         ]
-        names = " or ".join(m["name"] for m in matches[:2])
+
+        if result.get("build_your_own_fallback"):
+            standalone_names = [m["name"] for m in matches[:-1]]
+            clarification_question = (
+                "Did you mean " + " or ".join(standalone_names)
+                + ", or would you like a custom pasta with a different sauce?"
+            )
+        else:
+            names = " or ".join(m["name"] for m in matches[:2])
+            clarification_question = f"Did you mean the {names}?"
+
         return {
             "match_status": "ambiguous",
             "query": query,
             "matches": matches,
-            "clarification_question": f"Did you mean the {names}?",
+            "clarification_question": clarification_question,
         }
 
     return {"match_status": "no_match", "query": query}
