@@ -122,6 +122,28 @@ def _build_your_own_note(preselected):
     )
 
 
+def _build_ambiguous_match(menu, score, preselected_modifiers=None, resolved_group_ids=None):
+    """Candidate entry for an ambiguous result - includes each candidate's own
+    required/optional modifiers so the agent can resolve them straight from this
+    result once the caller picks, without a second search call."""
+    payload = _build_item_payload(menu)
+    if resolved_group_ids:
+        payload["required_modifiers"] = [
+            g for g in payload["required_modifiers"] if g["id"] not in resolved_group_ids
+        ]
+
+    entry = {
+        "item_id": menu.id,
+        "name": menu.item,
+        "confidence": round(score / 100, 2),
+        "required_modifiers": payload["required_modifiers"],
+        "optional_modifiers": payload["optional_modifiers"],
+    }
+    if preselected_modifiers:
+        entry["preselected_modifiers"] = preselected_modifiers
+    return entry
+
+
 def _search_result_payload(query, result):
     if result["match_status"] == "matched":
         item_payload = _build_item_payload(result["item"])
@@ -145,8 +167,14 @@ def _search_result_payload(query, result):
         }
 
     if result["match_status"] == "ambiguous":
+        byo_item_id = result.get("build_your_own_item_id")
         matches = [
-            {"item_id": menu.id, "name": menu.item, "confidence": round(score / 100, 2)}
+            _build_ambiguous_match(
+                menu, score,
+                preselected_modifiers=result.get("build_your_own_preselected"),
+                resolved_group_ids=result.get("build_your_own_resolved_group_ids"),
+            ) if byo_item_id is not None and menu.id == byo_item_id
+            else _build_ambiguous_match(menu, score)
             for menu, score in result["candidates"]
         ]
 

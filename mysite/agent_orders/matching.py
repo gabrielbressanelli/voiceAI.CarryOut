@@ -253,6 +253,9 @@ def search_menu(query: str):
                     "match_status": "ambiguous",
                     "candidates": candidates,
                     "build_your_own_fallback": True,
+                    "build_your_own_item_id": byo["menu"].id,
+                    "build_your_own_preselected": byo["preselected"],
+                    "build_your_own_resolved_group_ids": byo["resolved_group_ids"],
                 }
         return {
             "match_status": "matched",
