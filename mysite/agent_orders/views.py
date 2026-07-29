@@ -72,6 +72,7 @@ def _build_item_payload(menu: Menu):
         "base_price": str(menu.price),
         "description": menu.description,
         "aliases": [a.alias for a in menu.aliases.all()],
+        "dietary_tags": [t.name for t in menu.dietary_tags.all()],
         "required_modifiers": required_modifiers,
         "optional_modifiers": optional_modifiers,
     }
@@ -250,6 +251,7 @@ def menu_categories(request):
                 "category": menu.get_food_type_display(),
                 "base_price": str(menu.price),
                 "description": menu.description,
+                "dietary_tags": [t.name for t in menu.dietary_tags.all()],
             }
             for menu in items
         ],

@@ -1,6 +1,15 @@
 from django.db import models
 from decimal import Decimal
 
+class DietaryTag(models.Model):
+    """Extensible dietary/diet-compatibility tags (Gluten-Free, Vegetarian, ...).
+    Best-effort informational tagging, not an allergen-safety guarantee."""
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 # Model to store the menu
 class Menu(models.Model):
     FOOD_TYPE_CHOICES = [
@@ -19,6 +28,7 @@ class Menu(models.Model):
     picture = models.ImageField(upload_to='menu_pics/')
     description = models.CharField(max_length=150)
     food_type = models.CharField(max_length=150, choices=FOOD_TYPE_CHOICES)
+    dietary_tags = models.ManyToManyField(DietaryTag, blank=True, related_name="menu_items")
 
 
     def __str__(self):

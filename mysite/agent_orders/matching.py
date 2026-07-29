@@ -50,6 +50,22 @@ CATEGORY_KEYWORDS = {
     "grill": ["grill", "grilled", "chargrilled", "char-grilled"],
 }
 
+# Dietary tags: real per-item data curated in Django admin (DietaryTag model),
+# best-effort, not an allergen-safety guarantee. "free" is deliberately not a
+# trigger word on its own (too ambiguous/risky) - "gluten" alone is enough to
+# catch the natural two-word "gluten free" phrasing, since tokens are matched
+# independently and "free" alone will just resolve to nothing and get ignored.
+DIETARY_TAG_SYNONYMS = {
+    "Gluten-Free": ["gluten", "gluten-free", "glutenfree", "gf"],
+    "Vegetarian": ["vegetarian", "vegetarians", "veggie", "veg"],
+}
+
+
+def _dietary_tag_ids(tag_name: str) -> set[int]:
+    return set(
+        Menu.objects.filter(dietary_tags__name__iexact=tag_name).values_list("id", flat=True)
+    )
+
 
 def _keyword_ids(keywords):
     q = Q()
@@ -81,6 +97,10 @@ def _ids_for_token(token: str) -> set[int]:
         if token == group_name or token in keywords or fuzz.ratio(token, group_name) >= 85:
             ids |= _keyword_ids(keywords)
 
+    for tag_name, synonyms in DIETARY_TAG_SYNONYMS.items():
+        if token in synonyms:
+            ids |= _dietary_tag_ids(tag_name)
+
     return ids
 
 
@@ -103,7 +123,11 @@ def search_menu_by_category(query: str):
     for s in token_sets[1:]:
         result_ids &= s
 
-    return Menu.objects.filter(id__in=result_ids).order_by("food_type", "item")
+    return (
+        Menu.objects.filter(id__in=result_ids)
+        .prefetch_related("dietary_tags")
+        .order_by("food_type", "item")
+    )
 
 
 def _candidates():
