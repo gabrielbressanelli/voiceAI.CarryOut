@@ -8,8 +8,11 @@ class MenuAliasInline(admin.TabularInline):
 
 
 class MenuAdmin(admin.ModelAdmin):
+    list_display = ('name', 'price',)
+    ordering = ('name',)
     inlines = [MenuAliasInline]
     filter_horizontal = ["dietary_tags"]
+
 
 
 admin.site.register(Menu, MenuAdmin)
