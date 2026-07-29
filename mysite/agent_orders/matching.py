@@ -235,60 +235,52 @@ def _standalone_dishes_for_shape(shape_name: str):
     )
 
 
-def search_menu(query: str):
-    """Search live against the DB (Menu name + MenuAlias) with fuzzy matching.
+def _item_has_option_named(menu: Menu, name: str) -> bool:
+    """Does this item's own modifier vocabulary (required + optional, e.g.
+    Marsala's optional "pasta for saute" group) include an option with this name?
+    Several non-pasta items (Marsala, Arrabbiata, Milanese...) have their own
+    optional pasta-shape add-on, using the same option names as Build Your Own's
+    shape list - so a shape word isn't exclusively a Build Your Own signal."""
+    name_lower = name.lower()
+    mmgs = menu.modifier_group.select_related("group").prefetch_related("group__options")
+    for mmg in mmgs:
+        for opt in mmg.group.options.filter(active=True):
+            if opt.name.lower() == name_lower:
+                return True
+    return False
 
-    Returns a dict shaped as:
-      {"match_status": "matched", "item": <Menu>, "score": float}
-      {"match_status": "ambiguous", "candidates": [(Menu, score), ...]}
-      {"match_status": "no_match"}
-    """
-    query = (query or "").strip()
-    if not query:
-        return {"match_status": "no_match"}
 
-    # An exact (case-insensitive) hit on an item's own name or one of its aliases is
-    # the strongest signal there is - stronger even than the Build Your Own composite
-    # check below. Without checking this first, a real standalone dish whose own name
-    # happens to contain a pasta-shape word ("Linguine Alle Vongole") would get wrongly
-    # rerouted into a build-your-own combo instead of being recognized verbatim.
-    exact_ids = set(Menu.objects.filter(item__iexact=query).values_list("id", flat=True))
-    exact_ids |= set(
-        MenuAlias.objects.filter(alias__iexact=query).values_list("menu_id", flat=True)
-    )
-    if len(exact_ids) == 1:
-        menu = Menu.objects.get(id=next(iter(exact_ids)))
-        return {"match_status": "matched", "item": menu, "score": 100.0}
+def _format_byo_result(byo: dict):
+    sauce_specified = any("sauce" in p["group_name"].lower() for p in byo["preselected"])
+    if not sauce_specified:
+        shape_name = next(
+            p["option_name"] for p in byo["preselected"] if "pasta" in p["group_name"].lower()
+        )
+        standalone = _standalone_dishes_for_shape(shape_name)
+        if standalone:
+            # A shape with no sauce is genuinely ambiguous between the real,
+            # named dishes of that shape and a fully custom combo - offer the
+            # standalone dishes first, Build Your Own last as the fallback.
+            candidates = [(m, 100.0) for m in standalone] + [(byo["menu"], 100.0)]
+            return {
+                "match_status": "ambiguous",
+                "candidates": candidates,
+                "build_your_own_fallback": True,
+                "build_your_own_item_id": byo["menu"].id,
+                "build_your_own_preselected": byo["preselected"],
+                "build_your_own_resolved_group_ids": byo["resolved_group_ids"],
+            }
+    return {
+        "match_status": "matched",
+        "resolution": "build_your_own",
+        "item": byo["menu"],
+        "preselected": byo["preselected"],
+        "resolved_group_ids": byo["resolved_group_ids"],
+    }
 
-    byo = resolve_build_your_own(query)
-    if byo:
-        sauce_specified = any("sauce" in p["group_name"].lower() for p in byo["preselected"])
-        if not sauce_specified:
-            shape_name = next(
-                p["option_name"] for p in byo["preselected"] if "pasta" in p["group_name"].lower()
-            )
-            standalone = _standalone_dishes_for_shape(shape_name)
-            if standalone:
-                # A shape with no sauce is genuinely ambiguous between the real,
-                # named dishes of that shape and a fully custom combo - offer the
-                # standalone dishes first, Build Your Own last as the fallback.
-                candidates = [(m, 100.0) for m in standalone] + [(byo["menu"], 100.0)]
-                return {
-                    "match_status": "ambiguous",
-                    "candidates": candidates,
-                    "build_your_own_fallback": True,
-                    "build_your_own_item_id": byo["menu"].id,
-                    "build_your_own_preselected": byo["preselected"],
-                    "build_your_own_resolved_group_ids": byo["resolved_group_ids"],
-                }
-        return {
-            "match_status": "matched",
-            "resolution": "build_your_own",
-            "item": byo["menu"],
-            "preselected": byo["preselected"],
-            "resolved_group_ids": byo["resolved_group_ids"],
-        }
 
+def _fuzzy_match(query: str):
+    """Plain name/alias fuzzy search - no Build Your Own awareness."""
     pairs = _candidates()
     if not pairs:
         return {"match_status": "no_match"}
@@ -328,7 +320,55 @@ def search_menu(query: str):
         menu = Menu.objects.get(id=top_id)
         return {"match_status": "matched", "item": menu, "score": top_score}
 
-    if top_score < NO_MATCH_BELOW:
+    return {"match_status": "no_match"}
+
+
+def search_menu(query: str):
+    """Search live against the DB (Menu name + MenuAlias) with fuzzy matching.
+
+    Returns a dict shaped as:
+      {"match_status": "matched", "item": <Menu>, "score": float}
+      {"match_status": "ambiguous", "candidates": [(Menu, score), ...]}
+      {"match_status": "no_match"}
+    """
+    query = (query or "").strip()
+    if not query:
         return {"match_status": "no_match"}
 
-    return {"match_status": "no_match"}
+    # An exact (case-insensitive) hit on an item's own name or one of its aliases is
+    # the strongest signal there is - stronger even than either check below. Without
+    # checking this first, a real standalone dish whose own name happens to contain a
+    # pasta-shape word ("Linguine Alle Vongole") would get wrongly rerouted into a
+    # build-your-own combo instead of being recognized verbatim.
+    exact_ids = set(Menu.objects.filter(item__iexact=query).values_list("id", flat=True))
+    exact_ids |= set(
+        MenuAlias.objects.filter(alias__iexact=query).values_list("menu_id", flat=True)
+    )
+    if len(exact_ids) == 1:
+        menu = Menu.objects.get(id=next(iter(exact_ids)))
+        return {"match_status": "matched", "item": menu, "score": 100.0}
+
+    byo = resolve_build_your_own(query)
+    fuzzy = _fuzzy_match(query)
+
+    if byo and fuzzy["match_status"] == "matched":
+        # A shape word alone doesn't automatically mean "build your own" - several
+        # real dishes (Marsala, Arrabbiata...) have that same shape as one of their
+        # OWN optional add-ons. "marsala angel hair" should stay Marsala with Angel
+        # Hair as its own pasta choice, not get rerouted into Build Your Own just
+        # because "Angel Hair" also happens to be a Build Your Own shape option.
+        shape_name = next(
+            p["option_name"] for p in byo["preselected"] if "pasta" in p["group_name"].lower()
+        )
+        menu = fuzzy["item"]
+        if shape_name.lower() in menu.item.lower() or _item_has_option_named(menu, shape_name):
+            return fuzzy
+        # The shape word isn't explained by this "match" at all (e.g. "spaghetti"
+        # has nothing to do with "Pappardelle Bolognese") - that's the signature of
+        # a coincidental substring collision, not a real match. Prefer Build Your Own.
+        return _format_byo_result(byo)
+
+    if byo:
+        return _format_byo_result(byo)
+
+    return fuzzy
