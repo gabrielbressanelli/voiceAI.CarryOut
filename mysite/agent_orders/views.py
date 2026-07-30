@@ -125,18 +125,23 @@ def _build_your_own_note(preselected):
 
 def _build_ambiguous_match(menu, score, preselected_modifiers=None, resolved_group_ids=None):
     """Candidate entry for an ambiguous result - includes each candidate's own
-    required/optional modifiers so the agent can resolve them straight from this
+    description (so the agent can distinguish unfamiliar-sounding options) and
+    required/optional modifiers, so the agent can resolve them straight from this
     result once the caller picks, without a second search call."""
     payload = _build_item_payload(menu)
     if resolved_group_ids:
         payload["required_modifiers"] = [
             g for g in payload["required_modifiers"] if g["id"] not in resolved_group_ids
         ]
+        payload["optional_modifiers"] = [
+            g for g in payload["optional_modifiers"] if g["id"] not in resolved_group_ids
+        ]
 
     entry = {
         "item_id": menu.id,
         "name": menu.item,
         "confidence": round(score / 100, 2),
+        "description": payload["description"],
         "required_modifiers": payload["required_modifiers"],
         "optional_modifiers": payload["optional_modifiers"],
     }
@@ -169,15 +174,24 @@ def _search_result_payload(query, result):
 
     if result["match_status"] == "ambiguous":
         byo_item_id = result.get("build_your_own_item_id")
-        matches = [
-            _build_ambiguous_match(
-                menu, score,
-                preselected_modifiers=result.get("build_your_own_preselected"),
-                resolved_group_ids=result.get("build_your_own_resolved_group_ids"),
-            ) if byo_item_id is not None and menu.id == byo_item_id
-            else _build_ambiguous_match(menu, score)
-            for menu, score in result["candidates"]
-        ]
+        ambiguous_preselected = result.get("ambiguous_preselected") or {}
+        matches = []
+        for menu, score in result["candidates"]:
+            if byo_item_id is not None and menu.id == byo_item_id:
+                matches.append(_build_ambiguous_match(
+                    menu, score,
+                    preselected_modifiers=result.get("build_your_own_preselected"),
+                    resolved_group_ids=result.get("build_your_own_resolved_group_ids"),
+                ))
+            elif menu.id in ambiguous_preselected:
+                preselect_list = ambiguous_preselected[menu.id]
+                matches.append(_build_ambiguous_match(
+                    menu, score,
+                    preselected_modifiers=preselect_list,
+                    resolved_group_ids={p["group_id"] for p in preselect_list},
+                ))
+            else:
+                matches.append(_build_ambiguous_match(menu, score))
 
         if result.get("build_your_own_fallback"):
             standalone_names = [m["name"] for m in matches[:-1]]

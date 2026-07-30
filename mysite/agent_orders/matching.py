@@ -235,19 +235,29 @@ def _standalone_dishes_for_shape(shape_name: str):
     )
 
 
-def _item_has_option_named(menu: Menu, name: str) -> bool:
-    """Does this item's own modifier vocabulary (required + optional, e.g.
-    Marsala's optional "pasta for saute" group) include an option with this name?
-    Several non-pasta items (Marsala, Arrabbiata, Milanese...) have their own
-    optional pasta-shape add-on, using the same option names as Build Your Own's
-    shape list - so a shape word isn't exclusively a Build Your Own signal."""
+def _own_option_matching(menu: Menu, name: str):
+    """If this item's own modifier vocabulary (required + optional, e.g.
+    Marsala's optional "pasta for saute" group) includes an option with this
+    name, return {group_id, group_name, option_id, option_name} for it. Several
+    non-pasta items (Marsala, Arrabbiata, Saltimboca...) have their own optional
+    pasta-shape add-on, using the same option names as Build Your Own's shape
+    list - so a shape word isn't exclusively a Build Your Own signal."""
     name_lower = name.lower()
     mmgs = menu.modifier_group.select_related("group").prefetch_related("group__options")
     for mmg in mmgs:
         for opt in mmg.group.options.filter(active=True):
             if opt.name.lower() == name_lower:
-                return True
-    return False
+                return {
+                    "group_id": mmg.group.id,
+                    "group_name": mmg.group.name,
+                    "option_id": opt.id,
+                    "option_name": opt.name,
+                }
+    return None
+
+
+def _item_has_option_named(menu: Menu, name: str) -> bool:
+    return _own_option_matching(menu, name) is not None
 
 
 def _format_byo_result(byo: dict):
@@ -366,6 +376,30 @@ def search_menu(query: str):
         # The shape word isn't explained by this "match" at all (e.g. "spaghetti"
         # has nothing to do with "Pappardelle Bolognese") - that's the signature of
         # a coincidental substring collision, not a real match. Prefer Build Your Own.
+        return _format_byo_result(byo)
+
+    if byo and fuzzy["match_status"] == "ambiguous":
+        # Same idea, but the underlying item identity is itself still an open
+        # question (e.g. "parm veal gluten free pasta" - ambiguous between Parms/
+        # Saltimboca/Limone/Arrabbiata). That ambiguity is real and shouldn't be
+        # short-circuited into Build Your Own just because a shape word is also
+        # present - instead, check each candidate independently: whichever ones
+        # actually offer that option get it pre-filled, so it's already resolved
+        # no matter which the caller picks. Candidates without it (Parms has no
+        # pasta side at all) are left untouched.
+        shape_name = next(
+            p["option_name"] for p in byo["preselected"] if "pasta" in p["group_name"].lower()
+        )
+        preselect_by_menu_id = {}
+        for menu, _score in fuzzy["candidates"]:
+            match = _own_option_matching(menu, shape_name)
+            if match:
+                preselect_by_menu_id[menu.id] = [match]
+        if preselect_by_menu_id:
+            fuzzy["ambiguous_preselected"] = preselect_by_menu_id
+            return fuzzy
+        # None of the real candidates offer it at all - more likely a genuine
+        # Build Your Own request than a modification to one of these dishes.
         return _format_byo_result(byo)
 
     if byo:
