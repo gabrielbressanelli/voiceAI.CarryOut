@@ -20,6 +20,7 @@ def index(request):
     seafood = Menu.objects.filter(food_type='seafood')
     dessert = Menu.objects.filter(food_type='dessert')
     beverage = Menu.objects.filter(food_type='beverage')
+    parms = Menu.objects.filter(food_type='parms')
 
     # Generating content from cart.py
     cart = Cart(request)
@@ -37,6 +38,7 @@ def index(request):
         'seafood': seafood,
         'dessert': dessert,
         'beverage': beverage,
+        'parms': parms,
         'cart_items': cart_items,
         'quantities': quantities,
         'totals':totals,
