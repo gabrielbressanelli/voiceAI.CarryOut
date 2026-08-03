@@ -160,6 +160,7 @@
           <a class="cat-link" href="#Pasta">Pasta</a>
           <a class="cat-link" href="#Grill">Grill</a>
           <a class="cat-link" href="#Saute">Saute</a>
+          <a class="cat-link" href="#Parms">Parms</a>
           <a class="cat-link" href="#Seafood">Seafood</a>
           <a class="cat-link" href="#Dessert">Dessert</a>
         </div>
@@ -217,6 +218,15 @@
             {% endfor %}
           </div>
       
+          <br>
+
+          <h2 id="Saute">Parms</h2>
+          <div class="row">
+            {% for item in parms %}
+              {% include "partials/_menu_card.html" %}
+            {% endfor %}
+          </div>
+
           <br>
       
           <h2 id="Seafood">Seafood</h2>
