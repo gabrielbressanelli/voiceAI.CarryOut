@@ -17,6 +17,7 @@ class Menu(models.Model):
         ('salad', 'Salad'),
         ('pasta', 'Pasta'),
         ('saute', 'Saute'),
+        ('parms', 'Parms'),
         ('grill', 'Grill'),
         ('seafood', 'Seafood'),
         ('dessert', 'Dessert'),
