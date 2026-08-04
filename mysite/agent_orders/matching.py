@@ -101,6 +101,16 @@ def _ids_for_token(token: str) -> set[int]:
         if token in synonyms:
             ids |= _dietary_tag_ids(tag_name)
 
+    # Nothing matched as a category/keyword-group/dietary-tag word - fall back to a
+    # plain name+description search on the raw word itself. This is what makes an
+    # unlisted ingredient noun ("eggplant", "veal", "salmon"...) work without having
+    # to hand-maintain a CATEGORY_KEYWORDS entry for every ingredient on the menu.
+    # Only runs when nothing more specific already matched, so it can't override or
+    # dilute a curated match - e.g. "sauté"/"sweet" are already claimed by
+    # CATEGORY_SYNONYMS (saute/dessert) and never reach this fallback.
+    if not ids:
+        ids |= _keyword_ids([token])
+
     return ids
 
 
