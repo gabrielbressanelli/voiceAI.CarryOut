@@ -300,13 +300,28 @@ def _format_byo_result(byo: dict):
 
 
 def _fuzzy_match(query: str):
-    """Plain name/alias fuzzy search - no Build Your Own awareness."""
+    """Plain name/alias fuzzy search - no Build Your Own awareness.
+
+    Uses token_set_ratio rather than WRatio: WRatio blends in a
+    length-scaled partial_ratio that dominates whenever the candidate name/
+    alias is much shorter than the (usually multi-word, spoken) query - which
+    is effectively always here. That scaling makes it converge on a ~85-90
+    plateau for names that share only a word or two with the query,
+    regardless of whether the item is actually relevant, which then falsely
+    crowds out a genuinely strong top match into a false "ambiguous" (e.g.
+    "grilled chicken and feta salad" scored Marsala/Saltimboca/Risotto - none
+    of them salads - within the ambiguous band of the real 95-scoring match,
+    purely from short aliases like "chicken marsala" partially aligning
+    against the long query). token_set_ratio doesn't have that scaling
+    artifact, so real near-duplicates still tie appropriately (e.g. "parm"
+    across Chicken/Eggplant Parm) without unrelated dishes crashing the party.
+    """
     pairs = _candidates()
     if not pairs:
         return {"match_status": "no_match"}
 
     texts = [text for _, text in pairs]
-    results = process.extract(query, texts, scorer=fuzz.WRatio, limit=None)
+    results = process.extract(query, texts, scorer=fuzz.token_set_ratio, limit=None)
 
     best_by_menu: dict[int, float] = {}
     for _text, score, idx in results:
