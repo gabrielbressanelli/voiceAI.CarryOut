@@ -104,14 +104,18 @@ def compute_total_from_summary(order_summary: str):
             continue
 
         options = _item_modifier_options(menu)
-        line_unit_price = menu.price
+        multiplier = Decimal("1.00")
+        addons = Decimal("0.00")
         for mod_text in modifier_texts:
             option = _match_modifier_option(options, mod_text)
             if not option:
                 warnings.append(f"Could not match modifier {mod_text!r} for item {menu.item!r}")
                 continue
-            line_unit_price += option.price_delta
+            if option.price_multiplier != 1:
+                multiplier *= option.price_multiplier
+            addons += option.price_delta
 
+        line_unit_price = menu.price * multiplier + addons
         total += line_unit_price * qty
 
     return total.quantize(Decimal("0.01")), warnings

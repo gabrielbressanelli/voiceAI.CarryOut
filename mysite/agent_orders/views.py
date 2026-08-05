@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods
 
 from MenuOrders.models import Menu
-from MenuOrders.pricing import validate_and_price
+from MenuOrders.pricing import effective_option_delta, validate_and_price
 
 from .matching import search_menu, search_menu_by_category
 from .models import AgentCallCart, AgentCallCartItem
@@ -42,7 +42,7 @@ def _build_modifier_group_payload(mmg):
             {
                 "id": opt.id,
                 "name": opt.name,
-                "price_adjustment": str(opt.price_delta),
+                "price_adjustment": str(effective_option_delta(mmg.menu, opt)),
             }
             for opt in grp.options.filter(active=True).order_by("sort_order")
         ],

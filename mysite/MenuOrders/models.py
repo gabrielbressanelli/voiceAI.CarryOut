@@ -67,6 +67,10 @@ class ModifierOption(models.Model):
     group = models.ForeignKey(ModifierGroup, on_delete=models.CASCADE, related_name="options")
     name = models.CharField(max_length=50)
     price_delta = models.DecimalField(max_digits=7, decimal_places=2, default=Decimal("0.00"))
+    # Applied to the menu item's base price only (never to other selected options'
+    # price_delta) - e.g. 0.50 for a "Half Portion" option. Default 1.00 (no effect)
+    # keeps every existing option's pricing unchanged.
+    price_multiplier = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal("1.00"))
     is_default = models.BooleanField(default=False)
     sort_order = models.PositiveIntegerField(default=0)
     active = models.BooleanField(default=True)

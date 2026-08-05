@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Menu, MenuModifierGroup, ModifierOption, ModifierGroup
+from .pricing import effective_option_delta
 from cart.cart import Cart
 from django.contrib import messages
 from django.conf import settings
@@ -73,7 +74,7 @@ def menu_modifiers(request, menu_id):
                 {
                     "id": opt.id,
                     "name": opt.name,
-                    "price_delta": opt.price_delta,
+                    "price_delta": effective_option_delta(menu, opt),
                     "is_default": opt.is_default,
                 }
                 for opt in grp.options.all()

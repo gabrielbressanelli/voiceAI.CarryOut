@@ -1,6 +1,7 @@
 import json
 from django.core.management.base import BaseCommand
 from MenuOrders.models import Menu
+from MenuOrders.pricing import effective_option_delta
 
 
 class Command(BaseCommand):
@@ -47,8 +48,10 @@ class Command(BaseCommand):
                     opts = []
                     for o in mmg.group.options.filter(active=True).order_by('sort_order'):
                         label = o.name
-                        if o.price_delta:
-                            label += f" (+${o.price_delta})"
+                        delta = effective_option_delta(item, o)
+                        if delta:
+                            sign = "+" if delta >= 0 else "-"
+                            label += f" ({sign}${abs(delta)})"
                         opts.append(label)
                     req_label = "required" if req else "optional"
                     lines.append(f"  - {mmg.group.name} ({req_label}): {', '.join(opts)}")
@@ -80,7 +83,7 @@ class Command(BaseCommand):
                         "min_choices": mmg.effective_min(),
                         "max_choices": mmg.effective_max(),
                         "options": [
-                            {"id": o.id, "name": o.name, "price_delta": str(o.price_delta)}
+                            {"id": o.id, "name": o.name, "price_delta": str(effective_option_delta(item, o))}
                             for o in mmg.group.options.filter(active=True).order_by('sort_order')
                         ]
                     }
