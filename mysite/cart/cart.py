@@ -25,7 +25,7 @@ class Cart():
 
         # Attempt to merge identical lines (same item + same options)
         for line in self.lines:
-            if line["menu_id"] == menu.id and sorted(line['options']) == sorted([o["id"]for o in options_snapshot]):
+            if line["menu_id"] == menu.id and sorted(o["id"] for o in line['options']) == sorted(o["id"] for o in options_snapshot):
                 line["qty"] += int(quantity)
                 self._save()
                 return
