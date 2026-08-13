@@ -396,11 +396,32 @@ def search_menu(query: str):
             p["option_name"] for p in byo["preselected"] if "pasta" in p["group_name"].lower()
         )
         menu = fuzzy["item"]
-        if shape_name.lower() in menu.item.lower() or _item_has_option_named(menu, shape_name):
+        shape_explained = (
+            shape_name.lower() in menu.item.lower() or _item_has_option_named(menu, shape_name)
+        )
+
+        # A matched dish also has to account for any sauce the caller named, not
+        # just the shape - "ravioli palomino" matches Ravioli Sicilian Cassatelle by
+        # name/alias on "ravioli" alone, but that dish serves tomato basil sauce and
+        # has no idea what "palomino" means. A shape-only check would silently drop
+        # the sauce the caller asked for instead of surfacing it via Build Your Own.
+        sauce_pre = next(
+            (p for p in byo["preselected"] if "sauce" in p["group_name"].lower()), None
+        )
+        sauce_explained = True
+        if sauce_pre:
+            sauce_name = sauce_pre["option_name"]
+            sauce_explained = (
+                sauce_name.lower() in menu.item.lower()
+                or sauce_name.lower() in menu.description.lower()
+                or _item_has_option_named(menu, sauce_name)
+            )
+
+        if shape_explained and sauce_explained:
             return fuzzy
-        # The shape word isn't explained by this "match" at all (e.g. "spaghetti"
-        # has nothing to do with "Pappardelle Bolognese") - that's the signature of
-        # a coincidental substring collision, not a real match. Prefer Build Your Own.
+        # The shape or sauce word isn't explained by this "match" at all - that's
+        # the signature of a coincidental substring/alias collision, not a real
+        # match. Prefer Build Your Own.
         return _format_byo_result(byo)
 
     if byo and fuzzy["match_status"] == "ambiguous":
