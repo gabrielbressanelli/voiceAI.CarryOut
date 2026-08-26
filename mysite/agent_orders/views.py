@@ -34,9 +34,8 @@ def _cleanup_stale_carts():
 
 def _build_modifier_group_payload(mmg):
     grp = mmg.group
-    return {
+    payload = {
         "id": grp.id,
-        "question": f"Which {grp.name.lower()} would you like?",
         "type": "single_choice" if mmg.effective_max() == 1 else "multi_choice",
         "options": [
             {
@@ -47,6 +46,9 @@ def _build_modifier_group_payload(mmg):
             for opt in grp.options.filter(active=True).order_by("sort_order")
         ],
     }
+    if mmg.effective_required():
+        payload["question"] = f"Which {grp.name.lower()} would you like?"
+    return payload
 
 
 def _build_item_payload(menu: Menu):
