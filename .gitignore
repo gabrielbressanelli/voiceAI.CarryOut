@@ -22,3 +22,6 @@ env/
 .DS_Store
 .DS_Store__pycache__/
 *.pyc
+
+# agent memory
+AGENTS.md
