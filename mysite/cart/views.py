@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .cart import Cart
 from MenuOrders.models import Menu, ModifierOption
+from MenuOrders.modifier_matching import match_modifier_option
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from django.contrib import messages
@@ -195,12 +196,12 @@ def import_cart(request):
 
         selected_ids = []
         for mod in item.get("modifiers", []):
-            option = ModifierOption.objects.filter(
+            options = ModifierOption.objects.filter(
                 group__menumodifiergroup__menu=menu,
                 group__name__iexact=mod.get("name", ""),
-                name__iexact=mod.get("value", ""),
                 active=True,
-            ).first()
+            ).prefetch_related("aliases")
+            option = match_modifier_option(options, mod.get("value", ""))
             if option:
                 selected_ids.append(option.id)
             else:
@@ -251,11 +252,11 @@ def _resolve_menu_by_name(name, menu_kb):
 
 
 def _resolve_modifier_option(menu, value):
-    return ModifierOption.objects.filter(
+    options = ModifierOption.objects.filter(
         group__menumodifiergroup__menu=menu,
-        name__iexact=(value or "").strip(),
         active=True,
-    ).first()
+    ).prefetch_related("aliases")
+    return match_modifier_option(options, value)
 
 
 @csrf_exempt
@@ -311,6 +312,5 @@ def cart_import_link(request):
 def cart_count(request):
     cart = Cart(request)
     return JsonResponse({"cart_qty": len(cart)}, headers={"Cache-control":"no-store"})
-
 
 

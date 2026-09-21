@@ -36,18 +36,20 @@ def _build_modifier_group_payload(mmg):
     grp = mmg.group
     payload = {
         "id": grp.id,
+        "name": grp.name,
         "type": "single_choice" if mmg.effective_max() == 1 else "multi_choice",
+        "min_choices": max(mmg.effective_min(), int(mmg.effective_required())),
+        "max_choices": mmg.effective_max(),
         "options": [
             {
                 "id": opt.id,
                 "name": opt.name,
                 "price_adjustment": str(effective_option_delta(mmg.menu, opt)),
+                **({"aliases": aliases} if (aliases := [a.alias for a in opt.aliases.all()]) else {}),
             }
-            for opt in grp.options.filter(active=True).order_by("sort_order")
+            for opt in grp.options.all() if opt.active
         ],
     }
-    if mmg.effective_required():
-        payload["question"] = f"Which {grp.name.lower()} would you like?"
     return payload
 
 
@@ -55,7 +57,7 @@ def _build_item_payload(menu: Menu):
     mmgs = (
         menu.modifier_group
         .select_related("group")
-        .prefetch_related("group__options")
+        .prefetch_related("group__options__aliases")
         .order_by("sort_order")
     )
     required_modifiers = []
@@ -109,22 +111,6 @@ def _parse_line_id(line_id: str):
     return int(raw)
 
 
-def _build_your_own_note(preselected):
-    parts = []
-    for p in preselected:
-        group_name = p["group_name"].lower()
-        if "pasta" in group_name:
-            parts.append(f"{p['option_name']} pasta")
-        elif "sauce" in group_name:
-            parts.append(f"{p['option_name']} sauce")
-        else:
-            parts.append(p["option_name"])
-    return (
-        "This isn't a fixed menu item here - it's our Build Your Own Pasta with "
-        + " and ".join(parts) + "."
-    )
-
-
 def _build_ambiguous_match(menu, score, preselected_modifiers=None, resolved_group_ids=None):
     """Candidate entry for an ambiguous result - includes each candidate's own
     description (so the agent can distinguish unfamiliar-sounding options) and
@@ -164,7 +150,6 @@ def _search_result_payload(query, result):
             return {
                 "match_status": "matched",
                 "resolution": "build_your_own",
-                "note": _build_your_own_note(result["preselected"]),
                 "item": item_payload,
                 "preselected_modifiers": result["preselected"],
             }
@@ -195,21 +180,10 @@ def _search_result_payload(query, result):
             else:
                 matches.append(_build_ambiguous_match(menu, score))
 
-        if result.get("build_your_own_fallback"):
-            standalone_names = [m["name"] for m in matches[:-1]]
-            clarification_question = (
-                "Did you mean " + " or ".join(standalone_names)
-                + ", or would you like a custom pasta with a different sauce?"
-            )
-        else:
-            names = " or ".join(m["name"] for m in matches[:2])
-            clarification_question = f"Did you mean the {names}?"
-
         return {
             "match_status": "ambiguous",
             "query": query,
             "matches": matches,
-            "clarification_question": clarification_question,
         }
 
     return {"match_status": "no_match", "query": query}

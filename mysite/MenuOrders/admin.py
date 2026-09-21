@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Menu, Cart, ModifierGroup, ModifierOption, MenuModifierGroup, MenuAlias, DietaryTag
+from .models import Menu, Cart, ModifierGroup, ModifierOption, ModifierOptionAlias, MenuModifierGroup, MenuAlias, DietaryTag
 
 
 class MenuAliasInline(admin.TabularInline):
@@ -18,8 +18,19 @@ class MenuAdmin(admin.ModelAdmin):
 admin.site.register(Menu, MenuAdmin)
 admin.site.register(Cart)
 admin.site.register(ModifierGroup)
-admin.site.register(ModifierOption)
+class ModifierOptionAliasInline(admin.TabularInline):
+    model = ModifierOptionAlias
+    extra = 1
+
+
+@admin.register(ModifierOption)
+class ModifierOptionAdmin(admin.ModelAdmin):
+    list_display = ("name", "group", "active")
+    list_filter = ("group", "active")
+    search_fields = ("name", "aliases__alias")
+    inlines = [ModifierOptionAliasInline]
+
+
 admin.site.register(MenuModifierGroup)
 admin.site.register(DietaryTag)
-
 

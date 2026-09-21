@@ -15,7 +15,7 @@ class Command(BaseCommand):
         items = (
             Menu.objects
             .all()
-            .prefetch_related('modifier_group__group__options')
+            .prefetch_related('modifier_group__group__options__aliases')
             .order_by('food_type', 'item')
         )
 
@@ -38,7 +38,7 @@ class Command(BaseCommand):
             mmgs = list(
                 item.modifier_group
                 .select_related('group')
-                .prefetch_related('group__options')
+                .prefetch_related('group__options__aliases')
                 .order_by('sort_order')
             )
             if mmgs:
@@ -46,8 +46,13 @@ class Command(BaseCommand):
                 for mmg in mmgs:
                     req = mmg.effective_required()
                     opts = []
-                    for o in mmg.group.options.filter(active=True).order_by('sort_order'):
+                    for o in mmg.group.options.all():
+                        if not o.active:
+                            continue
                         label = o.name
+                        aliases = [a.alias for a in o.aliases.all()]
+                        if aliases:
+                            label += f" [aliases: {', '.join(aliases)}]"
                         delta = effective_option_delta(item, o)
                         if delta:
                             sign = "+" if delta >= 0 else "-"
@@ -67,7 +72,7 @@ class Command(BaseCommand):
             mmgs = list(
                 item.modifier_group
                 .select_related('group')
-                .prefetch_related('group__options')
+                .prefetch_related('group__options__aliases')
                 .order_by('sort_order')
             )
             out.append({
@@ -83,8 +88,12 @@ class Command(BaseCommand):
                         "min_choices": mmg.effective_min(),
                         "max_choices": mmg.effective_max(),
                         "options": [
-                            {"id": o.id, "name": o.name, "price_delta": str(effective_option_delta(item, o))}
-                            for o in mmg.group.options.filter(active=True).order_by('sort_order')
+                            {
+                                "id": o.id, "name": o.name,
+                                "price_delta": str(effective_option_delta(item, o)),
+                                **({"aliases": aliases} if (aliases := [a.alias for a in o.aliases.all()]) else {}),
+                            }
+                            for o in mmg.group.options.all() if o.active
                         ]
                     }
                     for mmg in mmgs

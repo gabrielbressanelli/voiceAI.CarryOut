@@ -2,6 +2,7 @@ from django.db.models import Q
 from rapidfuzz import fuzz, process
 
 from MenuOrders.models import Menu, MenuAlias
+from MenuOrders.modifier_matching import match_modifier_option
 
 MATCH_SCORE_MIN = 88
 MATCH_LEAD_MARGIN = 12
@@ -168,22 +169,7 @@ def _build_your_own_pasta_menu():
 
 
 def _find_option_in_query(query_lower: str, options):
-    """Find the one option (if any) the query is referring to. Options can be
-    multi-word ("Al Funghi", "Butter and Cheese"), so substring containment is
-    checked first; a fuzzy fallback only catches single-word typos."""
-    options = list(options)
-    for opt in options:
-        if opt.name.lower() in query_lower:
-            return opt
-
-    tokens = query_lower.split()
-    best_opt, best_score = None, 0
-    for opt in options:
-        for token in tokens:
-            score = fuzz.ratio(token, opt.name.lower())
-            if score > best_score:
-                best_score, best_opt = score, opt
-    return best_opt if best_score >= 85 else None
+    return match_modifier_option(options, query_lower, in_query=True, fuzzy_threshold=85)
 
 
 def resolve_build_your_own(query: str):
@@ -196,7 +182,7 @@ def resolve_build_your_own(query: str):
         return None
 
     mmgs = list(
-        menu.modifier_group.select_related("group").prefetch_related("group__options")
+        menu.modifier_group.select_related("group").prefetch_related("group__options__aliases")
     )
     shape_group = next((m for m in mmgs if "pasta" in m.group.name.lower()), None)
     sauce_group = next((m for m in mmgs if "sauce" in m.group.name.lower()), None)
@@ -205,7 +191,7 @@ def resolve_build_your_own(query: str):
         return None
 
     query_lower = query.lower()
-    shape_opt = _find_option_in_query(query_lower, shape_group.group.options.filter(active=True))
+    shape_opt = _find_option_in_query(query_lower, shape_group.group.options.all())
     if not shape_opt:
         return None
 
@@ -215,7 +201,7 @@ def resolve_build_your_own(query: str):
         if not mmg:
             continue
         opt = shape_opt if mmg is shape_group else _find_option_in_query(
-            query_lower, mmg.group.options.filter(active=True)
+            query_lower, mmg.group.options.all()
         )
         if opt:
             preselected.append({
@@ -252,17 +238,16 @@ def _own_option_matching(menu: Menu, name: str):
     non-pasta items (Marsala, Arrabbiata, Saltimboca...) have their own optional
     pasta-shape add-on, using the same option names as Build Your Own's shape
     list - so a shape word isn't exclusively a Build Your Own signal."""
-    name_lower = name.lower()
-    mmgs = menu.modifier_group.select_related("group").prefetch_related("group__options")
+    mmgs = menu.modifier_group.select_related("group").prefetch_related("group__options__aliases")
     for mmg in mmgs:
-        for opt in mmg.group.options.filter(active=True):
-            if opt.name.lower() == name_lower:
-                return {
-                    "group_id": mmg.group.id,
-                    "group_name": mmg.group.name,
-                    "option_id": opt.id,
-                    "option_name": opt.name,
-                }
+        opt = match_modifier_option(mmg.group.options.all(), name)
+        if opt:
+            return {
+                "group_id": mmg.group.id,
+                "group_name": mmg.group.name,
+                "option_id": opt.id,
+                "option_name": opt.name,
+            }
     return None
 
 

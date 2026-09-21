@@ -4,6 +4,7 @@ from decimal import Decimal
 from rapidfuzz import fuzz, process
 
 from MenuOrders.models import Menu
+from MenuOrders.modifier_matching import match_modifier_option
 
 ITEM_NAME_MATCH_MIN = 85
 MODIFIER_NAME_MATCH_MIN = 80
@@ -53,27 +54,15 @@ def _match_menu_item(name: str):
 
 
 def _item_modifier_options(menu):
-    mmgs = menu.modifier_group.select_related("group").prefetch_related("group__options")
+    mmgs = menu.modifier_group.select_related("group").prefetch_related("group__options__aliases")
     options = []
     for mmg in mmgs:
-        options.extend(mmg.group.options.filter(active=True))
+        options.extend(opt for opt in mmg.group.options.all() if opt.active)
     return options
 
 
 def _match_modifier_option(options, mod_text: str):
-    mod_text = (mod_text or "").strip()
-    if not mod_text or not options:
-        return None
-
-    for opt in options:
-        if opt.name.lower() == mod_text.lower():
-            return opt
-
-    names = [o.name for o in options]
-    best = process.extractOne(mod_text, names, scorer=fuzz.WRatio)
-    if best and best[1] >= MODIFIER_NAME_MATCH_MIN:
-        return next((o for o in options if o.name == best[0]), None)
-    return None
+    return match_modifier_option(options, mod_text, fuzzy_threshold=MODIFIER_NAME_MATCH_MIN)
 
 
 def compute_total_from_summary(order_summary: str):

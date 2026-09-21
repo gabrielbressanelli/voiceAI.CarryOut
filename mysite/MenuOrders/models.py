@@ -83,6 +83,18 @@ class ModifierOption(models.Model):
         sign = "+" if self.price_delta >= 0 else "-"
         return f"{self.name} ({sign}${abs(self.price_delta)})" if self.price_delta else self.name
     
+class ModifierOptionAlias(models.Model):
+    """Alternate spoken names/misspellings for a modifier option."""
+    option = models.ForeignKey(ModifierOption, on_delete=models.CASCADE, related_name="aliases")
+    alias = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ("option", "alias")
+
+    def __str__(self):
+        return f"{self.alias} -> {self.option.name}"
+
+
 class MenuModifierGroup(models.Model):
     """ Attach Specific gorups to Specific Menu Items
         Sauce options will appear for items like 'Build Your Own Pasta' and girll temps for example
@@ -115,4 +127,3 @@ class Cart(models.Model):
     product_amount = models.IntegerField()
     total_price = models.DecimalField(max_digits=6, decimal_places=2)
     
-
