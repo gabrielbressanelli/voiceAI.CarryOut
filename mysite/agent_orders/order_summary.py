@@ -89,7 +89,7 @@ def compute_total_from_summary(order_summary: str):
 
         menu = _match_menu_item(item_name)
         if not menu:
-            warnings.append(f"Could not match item: {item_name!r}")
+            warnings.append(f"Could not price item: {item_name!r}")
             continue
 
         options = _item_modifier_options(menu)
@@ -98,7 +98,7 @@ def compute_total_from_summary(order_summary: str):
         for mod_text in modifier_texts:
             option = _match_modifier_option(options, mod_text)
             if not option:
-                warnings.append(f"Could not match modifier {mod_text!r} for item {menu.item!r}")
+                warnings.append(f"Could not price modifier {mod_text!r} for item {menu.item!r}")
                 continue
             if option.price_multiplier != 1:
                 multiplier *= option.price_multiplier
